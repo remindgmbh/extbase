@@ -1,0 +1,74 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes" ?>
+<xliff version="1.0">
+    <file source-language="en" datatype="plaintext" original="EXT:rmnd_extbase/Resources/Private/Language/locallang.xlf" product-name="rmnd_extbase">
+        <header/>
+        <body>
+            <trans-unit id="data">
+                <source>Data</source>
+            </trans-unit>
+            <trans-unit id="data.source">
+                <source>Source</source>
+            </trans-unit>
+            <trans-unit id="data.source.default">
+                <source>Default</source>
+            </trans-unit>
+            <trans-unit id="data.source.record">
+                <source>Record</source>
+            </trans-unit>
+            <trans-unit id="data.record">
+                <source>Record</source>
+            </trans-unit>
+            <trans-unit id="data.records">
+                <source>Records</source>
+            </trans-unit>
+            <trans-unit id="filter">
+                <source>Filter</source>
+            </trans-unit>
+            <trans-unit id="filter.list.values">
+                <source>%s Values (empty = no filter)</source>
+            </trans-unit>
+            <trans-unit id="filter.mode">
+                <source>%s Mode</source>
+            </trans-unit>
+            <trans-unit id="filter.mode.and">
+                <source>And</source>
+            </trans-unit>
+            <trans-unit id="filter.mode.or">
+                <source>Or</source>
+            </trans-unit>
+            <trans-unit id="filter.values">
+                <source>Available %s Values (empty = filter not available)</source>
+            </trans-unit>
+            <trans-unit id="list">
+                <source>List</source>
+            </trans-unit>
+            <trans-unit id="list.detailPage">
+                <source>Detail Page</source>
+            </trans-unit>
+            <trans-unit id="list.orderBy">
+                <source>Order By</source>
+            </trans-unit>
+            <trans-unit id="list.orderBy.none">
+                <source>None</source>
+            </trans-unit>
+            <trans-unit id="list.orderDirection">
+                <source>Order Direction</source>
+            </trans-unit>
+            <trans-unit id="list.orderDirection.asc">
+                <source>Ascending</source>
+            </trans-unit>
+            <trans-unit id="list.orderDirection.desc">
+                <source>Descending</source>
+            </trans-unit>
+            <trans-unit id="list.pagination.itemsPerPage">
+                <source>Items Per Page</source>
+            </trans-unit>
+            <trans-unit id="list.pagination.limit">
+                <source>Limit</source>
+            </trans-unit>
+            <trans-unit id="settings">
+                <source>Settings</source>
+            </trans-unit>
+        </body>
+    </file>
+</xliff>
