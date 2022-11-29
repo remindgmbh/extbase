@@ -4,12 +4,11 @@ declare(strict_types=1);
 
 namespace Remind\Extbase\Utility;
 
-use Remind\Extbase\Dto\PluginType;
-use Remind\Extbase\FlexForms\DetailDataSheet;
-use Remind\Extbase\FlexForms\FilterSheet;
-use Remind\Extbase\FlexForms\ListFilterSheet;
-use Remind\Extbase\FlexForms\ListSheet;
-use Remind\Extbase\FlexForms\SelectionDataSheet;
+use Remind\Extbase\FlexForms\DetailDataSheets;
+use Remind\Extbase\FlexForms\ListFiltersSheets;
+use Remind\Extbase\FlexForms\ListSheets;
+use Remind\Extbase\FlexForms\SelectionDataSheets;
+use Remind\Extbase\Utility\Dto\PluginType;
 use RuntimeException;
 use TYPO3\CMS\Core\Configuration\FlexForm\FlexFormTools;
 use TYPO3\CMS\Core\Utility\ArrayUtility;
@@ -131,13 +130,15 @@ class PluginUtility
         string $extensionName,
         string $fieldName,
         string $label,
-        string $tableName,
-        string $repository
+        ?string $tableName = null,
+        ?string $repository = null,
+        ?bool $mm = false
     ): void {
         $GLOBALS['TYPO3_CONF_VARS']['EXTENSIONS'][strtolower($extensionName)]['filter'][$fieldName] = [
             'label' => $label,
             'table' => $tableName,
             'repository' => $repository,
+            'mm' => $mm,
         ];
     }
 
@@ -206,18 +207,15 @@ class PluginUtility
 
         switch ($pluginType) {
             case PluginType::DETAIL:
-                $sheets = DetailDataSheet::getSheet($extensionName, $tableName);
-                break;
-            case PluginType::FILTER:
-                $sheets = FilterSheet::getSheet($extensionName);
+                $sheets = DetailDataSheets::getSheets($extensionName, $tableName);
                 break;
             case PluginType::FILTERABLE_LIST:
-                $sheets = ListSheet::getSheet();
-                ArrayUtility::mergeRecursiveWithOverrule($sheets, ListFilterSheet::getSheet($extensionName));
+                $sheets = ListSheets::getSheets();
+                ArrayUtility::mergeRecursiveWithOverrule($sheets, ListFiltersSheets::getSheets($extensionName));
                 break;
             case PluginType::SELECTION_LIST:
-                $sheets = ListSheet::getSheet();
-                ArrayUtility::mergeRecursiveWithOverrule($sheets, SelectionDataSheet::getSheet($tableName));
+                $sheets = ListSheets::getSheets();
+                ArrayUtility::mergeRecursiveWithOverrule($sheets, SelectionDataSheets::getSheets($tableName));
                 break;
             default:
                 break;

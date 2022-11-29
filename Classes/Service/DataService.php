@@ -4,16 +4,17 @@ declare(strict_types=1);
 
 namespace Remind\Extbase\Service;
 
+use Remind\Extbase\Domain\Repository\Dto\Conjunction;
+use Remind\Extbase\Domain\Repository\Dto\RepositoryFilter;
 use Remind\Extbase\Domain\Repository\FilterableRepository;
-use Remind\Extbase\Dto\Conjunction;
-use Remind\Extbase\Dto\FilterData;
-use Remind\Extbase\Dto\ListData;
-use Remind\Extbase\Dto\ListFilter;
-use Remind\Extbase\FlexForms\DetailDataSheet;
-use Remind\Extbase\FlexForms\FilterSheet;
-use Remind\Extbase\FlexForms\ListFilterSheet;
-use Remind\Extbase\FlexForms\ListSheet;
-use Remind\Extbase\FlexForms\SelectionDataSheet;
+use Remind\Extbase\FlexForms\DetailDataSheets;
+use Remind\Extbase\FlexForms\ListFiltersSheets;
+use Remind\Extbase\FlexForms\ListSheets;
+use Remind\Extbase\FlexForms\SelectionDataSheets;
+use Remind\Extbase\Service\Dto\FilterableListResult;
+use Remind\Extbase\Service\Dto\FilterValue;
+use Remind\Extbase\Service\Dto\FrontendFilter;
+use Remind\Extbase\Service\Dto\ListResult;
 use Remind\Extbase\Utility\PluginUtility;
 use TYPO3\CMS\Core\Pagination\SimplePagination;
 use TYPO3\CMS\Core\Utility\GeneralUtility;
@@ -46,53 +47,21 @@ class DataService
         FilterableRepository $repository,
         int $currentPage,
         ?array $filters = null
-    ): ListData {
-        $listFilters = $this->getListFilters($filters);
-        return $this->getListData($repository, $currentPage, $listFilters);
+    ): FilterableListResult {
+        $repositoryFilters = $this->getRepositoryFilters($filters);
+        $listResult = $this->getListResult($repository, $currentPage, $repositoryFilters);
+        $filterableListResult = new FilterableListResult($listResult);
+        $frontendFilters = $this->getFrontendFilters($repository, $repositoryFilters);
+        $filterableListResult->setFrontendFilters($frontendFilters);
+        return $filterableListResult;
     }
 
-    public function getSelectionList(FilterableRepository $repository, int $currentPage,): ListData
+    public function getSelectionList(FilterableRepository $repository, int $currentPage,): ListResult
     {
-        $recordUids = $this->settings[SelectionDataSheet::RECORDS];
+        $recordUids = $this->settings[SelectionDataSheets::RECORDS];
         $recordUids = GeneralUtility::intExplode(',', $recordUids, true);
-        $filters = [new ListFilter(false, Conjunction::OR, 'uid', $recordUids)];
-        return $this->getListData($repository, $currentPage, $filters);
-    }
-
-    /**
-     * @return FilterData[]
-     */
-    public function getFilters(): array
-    {
-        $filtersSettings = $this->settings[FilterSheet::FILTER] ?? [];
-        $filters = PluginUtility::getFilters($this->extensionName);
-
-        $result = [];
-        foreach ($filtersSettings as $fieldName => $filterSetting) {
-            $filter = $filters[$fieldName];
-            $filterValueString = $filterSetting[FilterSheet::VALUES] ?? null;
-
-            if (!$filterValueString) {
-                continue;
-            }
-
-            $filterData = new FilterData();
-            $filterData->setName($fieldName);
-            $filterData->setLabel(LocalizationUtility::translate($filter['label']));
-
-            $filterValues = GeneralUtility::intExplode(',', $filterValueString, true);
-
-            foreach ($filterValues as $uid) {
-                $repositoryClassName = $filter['repository'];
-                /** @var \TYPO3\CMS\Extbase\Persistence\Repository $repository */
-                $repository = GeneralUtility::makeInstance($repositoryClassName);
-                $object = $repository->findByUid($uid);
-                $filterData->addValue($object);
-            }
-
-            $result[] = $filterData;
-        }
-        return $result;
+        $filters = [new RepositoryFilter('uid', $recordUids, false, Conjunction::OR)];
+        return $this->getListResult($repository, $currentPage, $filters);
     }
 
     public function getDetailEntity(
@@ -100,12 +69,12 @@ class DataService
         ?AbstractEntity $entity,
         callable $callback
     ): ?AbstractEntity {
-        $source = $this->settings[DetailDataSheet::SOURCE];
+        $source = $this->settings[DetailDataSheets::SOURCE];
         switch ($source) {
-            case DetailDataSheet::SOURCE_DEFAULT:
+            case DetailDataSheets::SOURCE_DEFAULT:
                 return $entity;
-            case DetailDataSheet::SOURCE_RECORD:
-                $uid = (int) ($this->settings[DetailDataSheet::RECORD] ?? null);
+            case DetailDataSheets::SOURCE_RECORD:
+                $uid = (int) ($this->settings[DetailDataSheets::RECORD] ?? null);
                 return $repository->findByUid($uid);
             default:
                 /** @var \TYPO3\CMS\Core\Routing\PageArguments $routing */
@@ -139,14 +108,18 @@ class DataService
         }
     }
 
-    private function getListData(FilterableRepository $repository, int $currentPage, ?array $filters = []): ListData
+    /**
+     * @param FilterableRepository $repository
+     * @param int $currentPage
+     * @param RepositoryFilter[] $filters
+     */
+    private function getListResult(FilterableRepository $repository, int $currentPage, ?array $filters = []): ListResult
     {
-        $result = new ListData();
-
-        $limit = (int) ($this->settings[ListSheet::LIMIT] ?? null);
-        $orderBy = $this->settings[ListSheet::ORDER_BY] ?? null;
-        $orderDirection = $this->settings[ListSheet::ORDER_DIRECTION] ?? null;
-        $itemsPerPage = (int) ($this->settings[ListSheet::ITEMS_PER_PAGE] ?? null);
+        $result = new ListResult();
+        $limit = (int) ($this->settings[ListSheets::LIMIT] ?? null);
+        $orderBy = $this->settings[ListSheets::ORDER_BY] ?? null;
+        $orderDirection = $this->settings[ListSheets::ORDER_DIRECTION] ?? null;
+        $itemsPerPage = (int) ($this->settings[ListSheets::ITEMS_PER_PAGE] ?? null);
 
         $queryResult = $repository->findByFilters(
             $filters,
@@ -169,21 +142,100 @@ class DataService
     }
 
     /**
-     * @return ListFilter[]
+     * @param RepositoryFilter[] $repositoryFilters
+     * @return FrontendFilter[]
      */
-    private function getListFilters(?array $valueOverrides = []): array
+    private function getFrontendFilters(FilterableRepository $filterableRepository, array $repositoryFilters): array
     {
-        $allowedFilterFields = GeneralUtility::trimExplode(',', $this->settings['allowedFilterFields'] ?? '', true);
+        $filtersSettings = $this->settings[ListFiltersSheets::FRONTEND_FILTERS] ?? [];
+        $filtersConfig = PluginUtility::getFilters($this->extensionName);
+
         $result = [];
-        foreach ($this->settings[ListFilterSheet::FILTER] ?? [] as $fieldName => $filterConfig) {
-            $value = $valueOverrides[$fieldName] ?? $filterConfig[ListFilterSheet::VALUES];
-            if (in_array($fieldName, $allowedFilterFields) && $value) {
+        foreach ($filtersSettings as $fieldName => $filterSetting) {
+            $filterConfig = $filtersConfig[$fieldName];
+            $filterValueString = $filterSetting[ListFiltersSheets::VALUES] ?? null;
+
+            if (!$filterValueString) {
+                continue;
+            }
+
+            $label = $filterConfig['label'];
+            $frontendFilter = new FrontendFilter(
+                $fieldName,
+                str_starts_with($label, 'LLL:') ? LocalizationUtility::translate($label) : $label,
+                $filterConfig['mm']
+            );
+
+            if (!$filterConfig['table']) {
+                $filterValues = GeneralUtility::trimExplode(PHP_EOL, $filterValueString, true);
+            } else {
+                $filterRepositoryClassName = $filterConfig['repository'];
+                /** @var \TYPO3\CMS\Extbase\Persistence\Repository $filterRepository */
+                $filterRepository = GeneralUtility::makeInstance($filterRepositoryClassName);
+                $filterValues = GeneralUtility::intExplode(',', $filterValueString, true);
+                $filterValues = array_map(function (int $uid) use ($filterRepository) {
+                    return $filterRepository->findByUid($uid);
+                }, $filterValues);
+            }
+
+            $repositoryFilter = $repositoryFilters[$fieldName] ?? null;
+            $activeValues = [];
+            if ($repositoryFilter) {
+                $activeValues = $repositoryFilter->getValues();
+            }
+            $tmpRepositoryFilters = array_filter($repositoryFilters, function (string $key) use ($fieldName) {
+                return $key !== $fieldName;
+            }, ARRAY_FILTER_USE_KEY);
+
+            foreach ($filterValues as $value) {
+                $filterValue = new FilterValue($value);
+                $argumentValue = $filterValue->getArgumentValue();
+                $tmpRepositoryFilters[$fieldName] = new RepositoryFilter(
+                    $fieldName,
+                    [$argumentValue],
+                    $frontendFilter->isMm(),
+                    Conjunction::OR
+                );
+                $queryResult = $filterableRepository->findByFilters($tmpRepositoryFilters);
+                $count = $queryResult->count();
+                $filterValue->setDisabled(!$count);
+                $isActive = in_array($argumentValue, $activeValues);
+                $filterValue->setActive($isActive);
+                $frontendFilter->addValue($filterValue);
+            }
+
+            $result[] = $frontendFilter;
+        }
+        return $result;
+    }
+
+    /**
+     * @return RepositoryFilter[]
+     */
+    private function getRepositoryFilters(?array $valueOverrides = []): array
+    {
+        $result = [];
+        $filters = PluginUtility::getFilters($this->extensionName);
+        $filterSettings = $this->settings[ListFiltersSheets::BACKEND_FILTERS] ?? [];
+        foreach ($filters as $fieldName => $filterConfig) {
+            /** @var string $values */
+            $values = $valueOverrides[$fieldName] ?? $filterSettings[$fieldName][ListFiltersSheets::VALUES] ?? null;
+            if ($values) {
                 /** @var Conjunction $conjunction */
-                $conjunction = Conjunction::from($filterConfig[ListFilterSheet::CONJUNCTION] ?? Conjunction::OR->value);
-                if ($filterConfig['multi'] ?? false) {
-                    $value = GeneralUtility::trimExplode(',', $value, true);
+                $conjunction = Conjunction::from(
+                    $filterSettings[ListFiltersSheets::CONJUNCTION] ?? Conjunction::OR->value
+                );
+                if ($filterConfig['table']) {
+                    $values = GeneralUtility::intExplode(',', $values, true);
+                } else {
+                    $values = GeneralUtility::trimExplode(PHP_EOL, $values, true);
                 }
-                $result[] = new ListFilter((bool) ($filterConfig['mm'] ?? false), $conjunction, $fieldName, $value);
+                $result[$fieldName] = new RepositoryFilter(
+                    $fieldName,
+                    $values,
+                    $filterConfig['mm'] ?? false,
+                    $conjunction
+                );
             }
         }
         return $result;

@@ -2,16 +2,19 @@
 
 declare(strict_types=1);
 
-namespace Remind\Extbase\Dto;
+namespace Remind\Extbase\Service\Dto;
 
 use TYPO3\CMS\Core\Pagination\PaginationInterface;
 use TYPO3\CMS\Extbase\Persistence\QueryResultInterface;
 
-class ListData
+class ListResult
 {
     protected ?QueryResultInterface $queryResult = null;
+
     protected ?PaginationInterface $pagination = null;
+
     protected int $count = 0;
+
     protected int $currentPage = 0;
 
     public function getQueryResult(): ?QueryResultInterface

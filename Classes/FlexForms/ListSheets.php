@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace Remind\Extbase\FlexForms;
 
-class ListSheet
+class ListSheets
 {
     public const SHEET_ID = 1669192689;
     public const DETAIL_PAGE = 'detailPage';
@@ -14,7 +14,7 @@ class ListSheet
     public const LIMIT = 'limit';
     private const LOCALLANG = 'LLL:EXT:rmnd_extbase/Resources/Private/Language/locallang.xlf:';
 
-    public static function getSheet(): array
+    public static function getSheets(): array
     {
         return [
             self::SHEET_ID => [

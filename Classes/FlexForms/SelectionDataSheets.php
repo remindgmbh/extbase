@@ -6,13 +6,13 @@ namespace Remind\Extbase\FlexForms;
 
 use Remind\Extbase\Backend\ItemsProc;
 
-class SelectionDataSheet
+class SelectionDataSheets
 {
     public const SHEET_ID = 1669192705;
     public const RECORDS = 'records';
     private const LOCALLANG = 'LLL:EXT:rmnd_extbase/Resources/Private/Language/locallang.xlf:';
 
-    public static function getSheet(string $tableName): array
+    public static function getSheets(string $tableName): array
     {
         return [
             self::SHEET_ID => [

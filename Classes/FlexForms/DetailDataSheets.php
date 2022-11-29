@@ -6,7 +6,7 @@ namespace Remind\Extbase\FlexForms;
 
 use Remind\Extbase\Backend\ItemsProc;
 
-class DetailDataSheet
+class DetailDataSheets
 {
     public const SHEET_ID = 1669192667;
     public const RECORD = 'record';
@@ -15,7 +15,7 @@ class DetailDataSheet
     public const SOURCE_RECORD = 'record';
     private const LOCALLANG = 'LLL:EXT:rmnd_extbase/Resources/Private/Language/locallang.xlf:';
 
-    public static function getSheet(string $extensionName, string $tableName): array
+    public static function getSheets(string $extensionName, string $tableName): array
     {
         return [
             self::SHEET_ID => [
@@ -51,7 +51,7 @@ class DetailDataSheet
                         ],
                         'settings.' . self::RECORD => [
                             'label' => self::LOCALLANG . 'data.record',
-                            'displayCond' => 'FIELD:settings.source:=:record',
+                            'displayCond' => 'FIELD:settings.' . self::SOURCE . ':=:' . self::SOURCE_RECORD,
                             'config' => [
                                 'type' => 'select',
                                 'renderType' => 'selectSingle',

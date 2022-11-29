@@ -21,22 +21,25 @@
             <trans-unit id="data.records">
                 <source>Records</source>
             </trans-unit>
-            <trans-unit id="filter">
-                <source>Filter</source>
+            <trans-unit id="filters.backend">
+                <source>Backend Filters</source>
             </trans-unit>
-            <trans-unit id="filter.list.values">
-                <source>%s Values (empty = no filter)</source>
-            </trans-unit>
-            <trans-unit id="filter.mode">
+            <trans-unit id="filters.backend.conjunction">
                 <source>%s Mode</source>
             </trans-unit>
-            <trans-unit id="filter.mode.and">
+            <trans-unit id="filters.backend.conjunction.and">
                 <source>And</source>
             </trans-unit>
-            <trans-unit id="filter.mode.or">
+            <trans-unit id="filters.backend.conjunction.or">
                 <source>Or</source>
             </trans-unit>
-            <trans-unit id="filter.values">
+            <trans-unit id="filters.backend.values">
+                <source>%s Values (empty = no filter)</source>
+            </trans-unit>
+            <trans-unit id="filters.frontend">
+                <source>Frontend Filters</source>
+            </trans-unit>
+            <trans-unit id="filters.frontend.values">
                 <source>Available %s Values (empty = filter not available)</source>
             </trans-unit>
             <trans-unit id="list">

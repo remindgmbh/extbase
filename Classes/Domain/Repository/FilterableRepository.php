@@ -2,7 +2,7 @@
 
 namespace Remind\Extbase\Domain\Repository;
 
-use Remind\Extbase\Dto\Conjunction;
+use Remind\Extbase\Domain\Repository\Dto\Conjunction;
 use TYPO3\CMS\Extbase\Persistence\QueryInterface;
 use TYPO3\CMS\Extbase\Persistence\QueryResultInterface;
 use TYPO3\CMS\Extbase\Persistence\Repository;
@@ -10,45 +10,37 @@ use TYPO3\CMS\Extbase\Persistence\Repository;
 class FilterableRepository extends Repository
 {
     /**
-     * @param \Remind\Extbase\Dto\ListFilter[] $filters
+     * @param \Remind\Extbase\Domain\Repository\Dto\RepositoryFilter[] $filters
      */
     public function findByFilters(
         array $filters,
-        ?int $limit,
-        ?string $orderBy,
-        ?string $orderDirection
+        ?int $limit = null,
+        ?string $orderBy = null,
+        ?string $orderDirection = null
     ): QueryResultInterface {
         $query = $this->createQuery();
         /** @var \TYPO3\CMS\Extbase\Persistence\Generic\Qom\ConstraintInterface[] $constraints */
         $constraints = [];
         foreach ($filters as $filter) {
-            $value = $filter->getValue();
+            $values = $filter->getValues();
             $field = $filter->getFieldName();
 
-            if (is_array($value)) {
-                $arrayConstraints = [];
-                foreach ($value as $arrayValue) {
-                    if ($filter->isMm()) {
-                        $arrayConstraints[] = $query->contains($field, $arrayValue);
-                    } else {
-                        $arrayConstraints[] = $query->equals($field, $arrayValue);
-                    }
-                }
-                if (!empty($arrayConstraints)) {
-                    switch ($filter->getConjunction()) {
-                        case Conjunction::AND:
-                            $constraints[] = $query->logicalAnd($arrayConstraints);
-                            break;
-                        case Conjunction::OR:
-                            $constraints[] = $query->logicalOr($arrayConstraints);
-                            break;
-                    }
-                }
-            } else {
+            $arrayConstraints = [];
+            foreach ($values as $value) {
                 if ($filter->isMm()) {
-                    $constraints[] = $query->contains($field, $value);
+                    $arrayConstraints[] = $query->contains($field, $value);
                 } else {
-                    $constraints[] = $query->equals($field, $value);
+                    $arrayConstraints[] = $query->equals($field, $value);
+                }
+            }
+            if (!empty($arrayConstraints)) {
+                switch ($filter->getConjunction()) {
+                    case Conjunction::AND:
+                        $constraints[] = $query->logicalAnd($arrayConstraints);
+                        break;
+                    case Conjunction::OR:
+                        $constraints[] = $query->logicalOr($arrayConstraints);
+                        break;
                 }
             }
         }
