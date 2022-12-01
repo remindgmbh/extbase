@@ -4,9 +4,11 @@ declare(strict_types=1);
 
 namespace Remind\Extbase\Domain\Model;
 
+use FriendsOfTYPO3\Headless\Utility\FileUtility;
 use JsonSerializable;
 use TYPO3\CMS\Core\Utility\GeneralUtility;
 use TYPO3\CMS\Extbase\Configuration\ConfigurationManagerInterface;
+use TYPO3\CMS\Extbase\Domain\Model\FileReference;
 use TYPO3\CMS\Extbase\DomainObject\AbstractEntity;
 use TYPO3\CMS\Extbase\Persistence\ObjectStorage;
 
@@ -21,6 +23,7 @@ abstract class AbstractJsonSerializableEntity extends AbstractEntity implements 
 
         $configurationManager = GeneralUtility::makeInstance(ConfigurationManagerInterface::class);
         $settings = $configurationManager->getConfiguration(ConfigurationManagerInterface::CONFIGURATION_TYPE_SETTINGS);
+        $fileUtility = GeneralUtility::makeInstance(FileUtility::class);
         $result = [
             'uid' => $this->uid,
             'pid' => $this->pid,
@@ -38,7 +41,13 @@ abstract class AbstractJsonSerializableEntity extends AbstractEntity implements 
                     }
                     if ($property) {
                         if ($property instanceof ObjectStorage) {
-                            $property = $property->toArray();
+                            $property = array_map(function (mixed $object) use ($fileUtility) {
+                                if ($object instanceof FileReference) {
+                                    return $fileUtility->processFile($object->getOriginalResource());
+                                } else {
+                                    return $object;
+                                }
+                            }, $property->toArray());
                         }
                         $result[$field] = $property;
                     }
