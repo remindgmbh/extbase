@@ -1,6 +1,6 @@
 {
     "name": "remind/extbase",
-    "description": "",
+    "description": "REMIND - Extbase",
     "type": "typo3-cms-extension",
     "keywords": ["TYPO3", "CMS", "REMIND", "extbase"],
     "license": ["GPL-3.0-or-later"],
