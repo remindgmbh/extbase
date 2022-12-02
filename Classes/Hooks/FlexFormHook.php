@@ -39,15 +39,23 @@ class FlexFormHook
             if (is_array($dataStructure['sheets'][ListFiltersSheets::FRONTEND_SHEET_ID]['ROOT']['el'])) {
                 foreach ($dataStructure['sheets'][ListFiltersSheets::FRONTEND_SHEET_ID]['ROOT']['el'] as $key => &$value) {
                     if (
-                        str_starts_with($key, 'settings.' . ListFiltersSheets::FRONTEND_FILTERS) &&
-                        str_ends_with($key, '.' . ListFiltersSheets::VALUES)
+                        str_starts_with($key, 'settings.' . ListFiltersSheets::FRONTEND_FILTERS) 
                     ) {
                         $label = $this->getLabel($value['label']);
-                        $value['label'] = LocalizationUtility::translate(
-                            'filters.frontend.values',
-                            'rmnd_extbase',
-                            [$label]
-                        );
+                        if (str_ends_with($key, '.' . ListFiltersSheets::VALUES)) {
+                            $value['label'] = LocalizationUtility::translate(
+                                'filters.frontend.values',
+                                'rmnd_extbase',
+                                [$label]
+                            );
+                        }
+                        if (str_ends_with($key, '.' . ListFiltersSheets::EXCLUSIVE)) {
+                            $value['label'] = LocalizationUtility::translate(
+                                'filters.frontend.exclusive',
+                                'rmnd_extbase',
+                                [$label]
+                            );
+                        }
                     }
                 }
             }

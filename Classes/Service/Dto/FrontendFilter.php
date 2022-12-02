@@ -10,18 +10,15 @@ class FrontendFilter
 
     private string $label = '';
 
-    private bool $mm = false;
-
     /**
      * @var FilterValue[] $values
      */
     private array $values = [];
 
-    public function __construct(string $fieldName, string $label, bool $mm)
+    public function __construct(string $fieldName, string $label)
     {
         $this->label = $label;
         $this->fieldName = $fieldName;
-        $this->mm = $mm;
     }
 
     /**
@@ -40,7 +37,7 @@ class FrontendFilter
     public function getActiveArgumentValues(): array
     {
         return array_map(function (FilterValue $filterValue) {
-            return $filterValue->getArgumentValue();
+            return $filterValue->getValue();
         }, $this->getActiveValues());
     }
 
@@ -64,18 +61,6 @@ class FrontendFilter
     public function setLabel(string $label): self
     {
         $this->label = $label;
-
-        return $this;
-    }
-
-    public function isMm(): bool
-    {
-        return $this->mm;
-    }
-
-    public function setMm(bool $mm): self
-    {
-        $this->mm = $mm;
 
         return $this;
     }

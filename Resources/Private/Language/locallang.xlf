@@ -25,7 +25,7 @@
                 <source>Backend Filters</source>
             </trans-unit>
             <trans-unit id="filters.backend.conjunction">
-                <source>%s Mode</source>
+                <source>%s: Mode</source>
             </trans-unit>
             <trans-unit id="filters.backend.conjunction.and">
                 <source>And</source>
@@ -34,13 +34,22 @@
                 <source>Or</source>
             </trans-unit>
             <trans-unit id="filters.backend.values">
-                <source>%s Values (empty = no filter)</source>
+                <source>%s: Values (empty = no filter)</source>
             </trans-unit>
             <trans-unit id="filters.frontend">
                 <source>Frontend Filters</source>
             </trans-unit>
+            <trans-unit id="filters.frontend.exclusive">
+                <source>%s: Exclusive</source>
+            </trans-unit>
             <trans-unit id="filters.frontend.values">
-                <source>Available %s Values (empty = filter not available)</source>
+                <source>%s: Available Values (empty = filter not available)</source>
+            </trans-unit>
+            <trans-unit id="invalidValue">
+                <source>INVALID VALUE ("%s")</source>
+            </trans-unit>
+            <trans-unit id="label">
+                <source>Label</source>
             </trans-unit>
             <trans-unit id="list">
                 <source>List</source>
@@ -71,6 +80,9 @@
             </trans-unit>
             <trans-unit id="settings">
                 <source>Settings</source>
+            </trans-unit>
+            <trans-unit id="value">
+                <source>Value</source>
             </trans-unit>
         </body>
     </file>

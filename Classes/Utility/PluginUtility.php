@@ -17,6 +17,13 @@ use TYPO3\CMS\Core\Utility\GeneralUtility;
 
 class PluginUtility
 {
+    public const DETAIL_SOURCE_REPOSITORY = 'repository';
+    public const DETAIL_SOURCE_ARGUMENT = 'argument';
+    public const DETAIL_SOURCE_LABEL = 'label';
+    public const FILTER_FIELD_NAME = 'fieldName';
+    public const FILTER_LABEL = 'label';
+    public const FILTER_TABLE_NAME = 'tableName';
+
     /**
      *  Add content element plugin to TCA types and add corresponding flex form sheets
      *  Has to be called in Configuration/TCA/*
@@ -25,14 +32,14 @@ class PluginUtility
      *                ExtensionUtility::registerPlugin('Contacts', 'FilterableList',...) the type
      *                would be 'contacts_filterablelist'
      *  @param PluginType $pluginType Type of plugin to determine flex form sheets to be added
-     *  @param string $foreignTable only required for some flex form sheets as foreign_table parameter
+     *  @param string|null $tableName required for some flex form sheets as parameter
      *                e.g. for contacts_detail to display available contacts the value
      *                would be tx_contacts_model_domain_contact
      *  @return void
      */
-    public static function addTcaType(string $type, ?PluginType $pluginType = null, ?string $foreignTable = null)
+    public static function addTcaType(string $type, PluginType $pluginType, ?string $tableName = null)
     {
-        $flexForm = self::getFlexFormByPluginType($type, $pluginType, $foreignTable);
+        $flexForm = self::getFlexFormByPluginType($type, $pluginType, $tableName);
 
         ExtensionManagementUtility::addPiFlexFormValue('*', $flexForm, $type);
 
@@ -90,8 +97,6 @@ class PluginUtility
      *                will be converted to lower case, e.g. 'contacts'
      *  @param string $pluginSignature Signature of the source plugin with tx_ prefix like used in
      *                extbase query parameters, e.g. 'tx_products_detail'
-     *  @param string $repository Class path of the source repository the entity should be fetched from
-     *                e.g. Vendor\Products\Domain\Repository\ProductRepository::class
      *  @param string $argument Name of the source argument like used in extbase query parameters, e.g. 'product'
      *  @return void
      */
@@ -103,9 +108,9 @@ class PluginUtility
         ?string $label = null
     ): void {
         $GLOBALS['TYPO3_CONF_VARS']['EXTENSIONS'][strtolower($extensionName)]['detailSources'][$pluginSignature] = [
-            'repository' => $repository,
-            'argument' => $argument,
-            'label' => $label,
+            self::DETAIL_SOURCE_REPOSITORY => $repository,
+            self::DETAIL_SOURCE_ARGUMENT => $argument,
+            self::DETAIL_SOURCE_LABEL => $label,
         ];
     }
 
@@ -128,23 +133,25 @@ class PluginUtility
      */
     public static function addFilter(
         string $extensionName,
+        string $pluginName,
         string $fieldName,
+        string $tableName,
         string $label,
-        ?string $tableName = null,
-        ?string $repository = null,
-        ?bool $mm = false
     ): void {
-        $GLOBALS['TYPO3_CONF_VARS']['EXTENSIONS'][strtolower($extensionName)]['filter'][$fieldName] = [
-            'label' => $label,
-            'table' => $tableName,
-            'repository' => $repository,
-            'mm' => $mm,
+        $extensionName = strtolower($extensionName);
+        $pluginName = strtolower($pluginName);
+        $GLOBALS['TYPO3_CONF_VARS']['EXTENSIONS'][$extensionName][$pluginName]['filters'][] = [
+            self::FILTER_FIELD_NAME => $fieldName,
+            self::FILTER_LABEL => $label,
+            self::FILTER_TABLE_NAME => $tableName,
         ];
     }
 
-    public static function getFilters(string $extensionName): array
+    public static function getFilters(string $extensionName, string $pluginName): array
     {
-        return $GLOBALS['TYPO3_CONF_VARS']['EXTENSIONS'][strtolower($extensionName)]['filter'] ?? [];
+        $extensionName = strtolower($extensionName);
+        $pluginName = strtolower($pluginName);
+        return $GLOBALS['TYPO3_CONF_VARS']['EXTENSIONS'][$extensionName][$pluginName]['filters'] ?? [];
     }
 
     /**
@@ -198,10 +205,10 @@ class PluginUtility
 
     private static function getFlexFormByPluginType(
         string $type,
-        ?PluginType $pluginType,
-        ?string $tableName = null
+        PluginType $pluginType,
+        ?string $tableName
     ): string {
-        [$extensionName] = GeneralUtility::trimExplode('_', $type, true);
+        [$extensionName, $pluginName] = GeneralUtility::trimExplode('_', $type, true);
 
         $sheets = [];
 
@@ -211,7 +218,10 @@ class PluginUtility
                 break;
             case PluginType::FILTERABLE_LIST:
                 $sheets = ListSheets::getSheets();
-                ArrayUtility::mergeRecursiveWithOverrule($sheets, ListFiltersSheets::getSheets($extensionName));
+                ArrayUtility::mergeRecursiveWithOverrule(
+                    $sheets,
+                    ListFiltersSheets::getSheets($extensionName, $pluginName)
+                );
                 break;
             case PluginType::SELECTION_LIST:
                 $sheets = ListSheets::getSheets();

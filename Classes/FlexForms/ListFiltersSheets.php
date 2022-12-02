@@ -14,11 +14,12 @@ class ListFiltersSheets
     public const FRONTEND_FILTERS = 'frontendFilters';
     public const CONJUNCTION = 'conjunction';
     public const VALUES = 'values';
+    public const EXCLUSIVE = 'exclusive';
     private const LOCALLANG = 'LLL:EXT:rmnd_extbase/Resources/Private/Language/locallang.xlf:';
 
-    public static function getSheets(string $extensionName): array
+    public static function getSheets(string $extensionName, string $pluginName): array
     {
-        $filters = PluginUtility::getFilters($extensionName);
+        $filters = PluginUtility::getFilters($extensionName, $pluginName);
         return [
             self::BACKEND_SHEET_ID => [
                 'ROOT' => [
@@ -29,7 +30,7 @@ class ListFiltersSheets
                             implode('.', ['settings', self::BACKEND_FILTERS, $fieldName, self::CONJUNCTION])
                                 => self::getConjunction($label),
                             implode('.', ['settings', self::BACKEND_FILTERS, $fieldName, self::VALUES])
-                                => self::getValue($label, $tableName),
+                                => self::getBackendValue($label, $tableName, $fieldName),
                         ];
                     }),
                 ],
@@ -40,8 +41,10 @@ class ListFiltersSheets
                     'type' => 'array',
                     'el' => self::getFilters($filters, function ($fieldName, $label, $tableName) {
                         return [
+                            implode('.', ['settings', self::FRONTEND_FILTERS, $fieldName, self::EXCLUSIVE])
+                                => self::getExclusive($label),
                             implode('.', ['settings', self::FRONTEND_FILTERS, $fieldName, self::VALUES])
-                                => self::getValue($label, $tableName),
+                                => self::getFrontendValue($label, $tableName, $fieldName),
                         ];
                     }),
                 ],
@@ -53,15 +56,28 @@ class ListFiltersSheets
     {
         return array_merge(
             ...array_map(
-                function (string $fieldName, array $filterConfig) use ($callback) {
-                    $label = $filterConfig['label'];
-                    $tableName = $filterConfig['table'] ?? null;
+                function (array $filterConfig) use ($callback) {
+                    $fieldName = $filterConfig[PluginUtility::FILTER_FIELD_NAME];
+                    $label = $filterConfig[PluginUtility::FILTER_LABEL];
+                    $tableName = $filterConfig[PluginUtility::FILTER_TABLE_NAME];
                     return $callback($fieldName, $label, $tableName);
                 },
-                array_keys($filters),
                 $filters
             )
         );
+    }
+
+    private static function getExclusive(string $label): array
+    {
+        return [
+            'label' => $label,
+            'config' => [
+                'type' => 'check',
+                'items' => [
+                    [''],
+                ],
+            ],
+        ];
     }
 
     private static function getConjunction(string $label): array
@@ -89,20 +105,28 @@ class ListFiltersSheets
         ];
     }
 
-    private static function getValue(string $label, ?string $tableName): array
+    private static function getBackendValue(string $label, string $tableName, string $fieldName): array
     {
         return [
             'label' => $label,
-            'config' => $tableName ? [
-                'type' => 'select',
-                'renderType' => 'selectMultipleSideBySide',
-                'size' => '7',
-                'minitems' => '0',
-                'multipe' => '0',
-                'foreign_table' => $tableName,
-            ] : [
-                'type' => 'text',
-                'renderType' => 'list',
+            'config' => [
+                'type' => 'user',
+                'renderType' => 'selectMultipleSideBySideJson',
+                'tableName' => $tableName,
+                'fieldName' => $fieldName,
+            ],
+        ];
+    }
+
+    private static function getFrontendValue(string $label, string $tableName, string $fieldName): array
+    {
+        return [
+            'label' => $label,
+            'config' => [
+                'type' => 'user',
+                'renderType' => 'frontendFilter',
+                'tableName' => $tableName,
+                'fieldName' => $fieldName,
             ],
         ];
     }

@@ -35,6 +35,13 @@ class RepositoryFilter
         return $this;
     }
 
+    public function addValue(string|int $value): self
+    {
+        $this->values[] = $value;
+
+        return $this;
+    }
+
     public function getValues(): array
     {
         return $this->values;

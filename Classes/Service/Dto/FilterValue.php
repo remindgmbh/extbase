@@ -8,28 +8,38 @@ use TYPO3\CMS\Extbase\DomainObject\AbstractEntity;
 
 class FilterValue
 {
-    protected AbstractEntity|string|null $value = null;
+    protected string $value = '';
+    protected string $label = '';
     protected bool $active = false;
     protected bool $disabled = false;
+    protected string $link = '';
 
-    public function __construct(AbstractEntity|string $value)
+    public function __construct(string $value, string $label)
     {
         $this->value = $value;
+        $this->label = $label;
     }
 
-    public function getArgumentValue(): string
-    {
-        return $this->value instanceof AbstractEntity ? strval($this->value->getUid()) : $this->value;
-    }
-
-    public function getValue(): AbstractEntity|string|null
+    public function getValue(): string
     {
         return $this->value;
     }
 
-    public function setValue(AbstractEntity|string|null $value): self
+    public function setValue(string $value): self
     {
         $this->value = $value;
+
+        return $this;
+    }
+
+    public function getLabel(): string
+    {
+        return $this->label;
+    }
+
+    public function setLabel(string $label): self
+    {
+        $this->label = $label;
 
         return $this;
     }
@@ -54,6 +64,18 @@ class FilterValue
     public function setDisabled(bool $disabled): self
     {
         $this->disabled = $disabled;
+
+        return $this;
+    }
+
+    public function getLink(): string
+    {
+        return $this->link;
+    }
+
+    public function setLink(string $link): self
+    {
+        $this->link = $link;
 
         return $this;
     }
