@@ -15,10 +15,18 @@ class FlexFormHook
     {
         if (isset($dataStructure['sheets'][ListFiltersSheets::BACKEND_SHEET_ID])) {
             if (is_array($dataStructure['sheets'][ListFiltersSheets::BACKEND_SHEET_ID]['ROOT']['el'])) {
-                foreach ($dataStructure['sheets'][ListFiltersSheets::BACKEND_SHEET_ID]['ROOT']['el'] as $key => &$value) {
+                foreach (
+                    $dataStructure['sheets'][ListFiltersSheets::BACKEND_SHEET_ID]['ROOT']['el'] as $key => &$value
+                ) {
                     if (str_starts_with($key, 'settings.' . ListFiltersSheets::BACKEND_FILTERS)) {
                         $label = $this->getLabel($key, $dataStructure);
-                        $this->setLabel($value, $key, ListFiltersSheets::CONJUNCTION, 'filters.backend.conjunction', $label);
+                        $this->setLabel(
+                            $value,
+                            $key,
+                            ListFiltersSheets::CONJUNCTION,
+                            'filters.backend.conjunction',
+                            $label
+                        );
                         $this->setLabel($value, $key, ListFiltersSheets::VALUES, 'filters.backend.values', $label);
                     }
                 }
@@ -26,14 +34,29 @@ class FlexFormHook
         }
         if (isset($dataStructure['sheets'][ListFiltersSheets::FRONTEND_SHEET_ID])) {
             if (is_array($dataStructure['sheets'][ListFiltersSheets::FRONTEND_SHEET_ID]['ROOT']['el'])) {
-                foreach ($dataStructure['sheets'][ListFiltersSheets::FRONTEND_SHEET_ID]['ROOT']['el'] as $key => &$value) {
+                foreach (
+                    $dataStructure['sheets'][ListFiltersSheets::FRONTEND_SHEET_ID]['ROOT']['el'] as $key => &$value
+                ) {
                     if (
-                        str_starts_with($key, 'settings.' . ListFiltersSheets::FRONTEND_FILTERS) 
+                        str_starts_with($key, 'settings.' . ListFiltersSheets::FRONTEND_FILTERS)
                     ) {
                         $label = $this->getLabel($key, $dataStructure);
                         $this->setLabel($value, $key, ListFiltersSheets::VALUES, 'filters.frontend.values', $label);
-                        $this->setLabel($value, $key, ListFiltersSheets::EXCLUSIVE, 'filters.frontend.exclusive', $label);
+                        $this->setLabel(
+                            $value,
+                            $key,
+                            ListFiltersSheets::EXCLUSIVE,
+                            'filters.frontend.exclusive',
+                            $label
+                        );
                         $this->setLabel($value, $key, ListFiltersSheets::LABEL, 'filters.frontend.label', $label);
+                        if (str_ends_with($key, '.' . ListFiltersSheets::LABEL)) {
+                            $value['config']['placeholder'] = LocalizationUtility::translate(
+                                'filters.frontend.label.placeholder',
+                                'rmnd_extbase',
+                                [$label]
+                            );
+                        }
                     }
                 }
             }
@@ -64,7 +87,8 @@ class FlexFormHook
         $key = str_replace('settings.' . ListFiltersSheets::BACKEND_FILTERS . '.', '', $key);
         $key = str_replace('settings.' . ListFiltersSheets::FRONTEND_FILTERS . '.', '', $key);
         $key = explode('.', $key)[0];
-        $config = $array['settings.' . ListFiltersSheets::FRONTEND_FILTERS . '.' . $key . '.' . ListFiltersSheets::VALUES]['config'];
+        $path = implode('.', ['settings', ListFiltersSheets::FRONTEND_FILTERS, $key, ListFiltersSheets::VALUES]);
+        $config = $array[$path]['config'];
         $tableName = $config[ListFiltersSheets::TABLE_NAME];
         $fieldName = $config[ListFiltersSheets::FIELD_NAME];
 

@@ -48,6 +48,9 @@
             <trans-unit id="filters.frontend.label">
                 <source>%s: Label</source>
             </trans-unit>
+            <trans-unit id="filters.frontend.label.placeholder">
+                <source>Default Value: "%s"</source>
+            </trans-unit>
             <trans-unit id="filters.frontend.values">
                 <source>%s: Available Values (empty = filter not available)</source>
             </trans-unit>

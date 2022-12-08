@@ -27,6 +27,7 @@ use TYPO3\CMS\Extbase\Mvc\Web\Routing\UriBuilder;
 use TYPO3\CMS\Extbase\Pagination\QueryResultPaginator;
 use TYPO3\CMS\Extbase\Persistence\PersistenceManagerInterface;
 use TYPO3\CMS\Extbase\Persistence\RepositoryInterface;
+use TYPO3\CMS\Extbase\Utility\LocalizationUtility;
 
 class DataService
 {
@@ -178,9 +179,17 @@ class DataService
                 continue;
             }
 
+            $label = $feFilterSetting[ListFiltersSheets::LABEL];
+            if (!$label) {
+                $label = BackendUtility::getItemLabel($tableName, $fieldName);
+                if (str_starts_with($label, 'LLL:')) {
+                    $label = LocalizationUtility::translate($label);
+                }
+            }
+
             $frontendFilter = new FrontendFilter(
                 $fieldName,
-                $feFilterSetting[ListFiltersSheets::LABEL],
+                $label,
             );
 
             $filterValues = json_decode($filterValuesString, true);

@@ -15,8 +15,12 @@ use TYPO3\CMS\Extbase\Utility\LocalizationUtility;
 
 class BackendUtility
 {
-    public static function getAvailableValues(string $tableName, string $fieldName, ?array $pageIds = [], ?int $recursive = 0): array
-    {
+    public static function getAvailableValues(
+        string $tableName,
+        string $fieldName,
+        ?array $pageIds = [],
+        ?int $recursive = 0
+    ): array {
         $fieldTca = T3BackendUtility::getTcaFieldConfiguration($tableName, $fieldName);
         $mmTable = $fieldTca['MM'] ?? null;
         $foreignTable = $fieldTca['foreign_table'] ?? null;
@@ -89,7 +93,6 @@ class BackendUtility
                     $tableName,
                     $queryBuilder->expr()->eq('mm.uid_local', $queryBuilder->quoteIdentifier($tableName . '.uid'))
                 );
-                
         } else {
             $queryBuilder
                 ->join(

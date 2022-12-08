@@ -40,7 +40,10 @@ class SelectMultipleSideBySideJsonElement extends SelectMultipleSideBySideElemen
             $value = trim($value);
             return str_starts_with($value, '<input type="hidden" name="' . htmlspecialchars($elementName));
         })));
-        $html[$index] = '<input type="hidden" data-separator="json" name="' . htmlspecialchars($elementName) . '" value="' . htmlspecialchars(json_encode($selectedItems)) . '" />';
+        $html[$index] = '<input ' .
+            'type="hidden" data-separator="json" ' .
+            'name="' . htmlspecialchars($elementName) . '" ' .
+            'value="' . htmlspecialchars(json_encode($selectedItems)) . '" />';
         $resultArray['html'] = implode(LF, $html);
 
         $resultArray['requireJsModules'][] = JavaScriptModuleInstruction::forRequireJS(
