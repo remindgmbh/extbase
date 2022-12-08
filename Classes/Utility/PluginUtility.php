@@ -21,7 +21,6 @@ class PluginUtility
     public const DETAIL_SOURCE_ARGUMENT = 'argument';
     public const DETAIL_SOURCE_LABEL = 'label';
     public const FILTER_FIELD_NAME = 'fieldName';
-    public const FILTER_LABEL = 'label';
     public const FILTER_TABLE_NAME = 'tableName';
 
     /**
@@ -135,14 +134,12 @@ class PluginUtility
         string $extensionName,
         string $pluginName,
         string $fieldName,
-        string $tableName,
-        string $label,
+        string $tableName
     ): void {
         $extensionName = strtolower($extensionName);
         $pluginName = strtolower($pluginName);
         $GLOBALS['TYPO3_CONF_VARS']['EXTENSIONS'][$extensionName][$pluginName]['filters'][] = [
             self::FILTER_FIELD_NAME => $fieldName,
-            self::FILTER_LABEL => $label,
             self::FILTER_TABLE_NAME => $tableName,
         ];
     }

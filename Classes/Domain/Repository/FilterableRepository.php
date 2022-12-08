@@ -30,7 +30,16 @@ class FilterableRepository extends Repository
                 if ($filter->isMm()) {
                     $arrayConstraints[] = $query->contains($field, $value);
                 } else {
-                    $arrayConstraints[] = $query->equals($field, $value);
+                    if (!$value) {
+                        // if $value is empty (should be '' because query param cannot be null) either
+                        // an empty string or null is allowed
+                        $arrayConstraints[] = $query->logicalOr([
+                            $query->equals($field, null),
+                            $query->equals($field, ''),
+                        ]);
+                    } else {
+                        $arrayConstraints[] = $query->equals($field, $value);
+                    }
                 }
             }
             if (!empty($arrayConstraints)) {

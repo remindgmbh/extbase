@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Remind\Extbase\Backend\Form\Element;
 
+use Remind\Extbase\FlexForms\ListFiltersSheets;
 use Remind\Extbase\Utility\BackendUtility;
 use TYPO3\CMS\Backend\Form\Element\SelectMultipleSideBySideElement;
 use TYPO3\CMS\Core\Page\JavaScriptModuleInstruction;
@@ -17,7 +18,17 @@ class SelectMultipleSideBySideJsonElement extends SelectMultipleSideBySideElemen
         $config = $parameterArray['fieldConf']['config'];
         $selectedItems = json_decode($parameterArray['itemFormElValue'], true) ?? [];
         $parameterArray['itemFormElValue'] = $selectedItems;
-        $possibleItems = BackendUtility::getAvailableValues($config['tableName'], $config['fieldName']);
+        $databaseRow = $this->data['databaseRow'];
+        $pages = array_map(function (array $page) {
+            return $page['uid'];
+        }, $databaseRow['pages']);
+        $recursive = (int) $databaseRow['recursive'][0];
+        $possibleItems = BackendUtility::getAvailableValues(
+            $config[ListFiltersSheets::TABLE_NAME],
+            $config[ListFiltersSheets::FIELD_NAME],
+            $pages,
+            $recursive
+        );
         $possibleItems = array_map(function (array $item) {
             return [$item['label'] ?? $item['value'], $item['value']];
         }, $possibleItems);

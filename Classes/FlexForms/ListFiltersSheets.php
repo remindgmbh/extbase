@@ -15,6 +15,9 @@ class ListFiltersSheets
     public const CONJUNCTION = 'conjunction';
     public const VALUES = 'values';
     public const EXCLUSIVE = 'exclusive';
+    public const LABEL = 'label';
+    public const TABLE_NAME = 'tableName';
+    public const FIELD_NAME = 'fieldName';
     private const LOCALLANG = 'LLL:EXT:rmnd_extbase/Resources/Private/Language/locallang.xlf:';
 
     public static function getSheets(string $extensionName, string $pluginName): array
@@ -25,12 +28,12 @@ class ListFiltersSheets
                 'ROOT' => [
                     'sheetTitle' => self::LOCALLANG . 'filters.backend',
                     'type' => 'array',
-                    'el' => self::getFilters($filters, function ($fieldName, $label, $tableName) {
+                    'el' => self::getFilters($filters, function ($fieldName, $tableName) {
                         return [
                             implode('.', ['settings', self::BACKEND_FILTERS, $fieldName, self::CONJUNCTION])
-                                => self::getConjunction($label),
+                             => self::getConjunction(),
                             implode('.', ['settings', self::BACKEND_FILTERS, $fieldName, self::VALUES])
-                                => self::getBackendValue($label, $tableName, $fieldName),
+                             => self::getBackendValue($tableName, $fieldName),
                         ];
                     }),
                 ],
@@ -39,12 +42,14 @@ class ListFiltersSheets
                 'ROOT' => [
                     'sheetTitle' => self::LOCALLANG . 'filters.frontend',
                     'type' => 'array',
-                    'el' => self::getFilters($filters, function ($fieldName, $label, $tableName) {
+                    'el' => self::getFilters($filters, function ($fieldName, $tableName) {
                         return [
+                            implode('.', ['settings', self::FRONTEND_FILTERS, $fieldName, self::LABEL])
+                             => self::getLabel(),
                             implode('.', ['settings', self::FRONTEND_FILTERS, $fieldName, self::EXCLUSIVE])
-                                => self::getExclusive($label),
+                             => self::getExclusive(),
                             implode('.', ['settings', self::FRONTEND_FILTERS, $fieldName, self::VALUES])
-                                => self::getFrontendValue($label, $tableName, $fieldName),
+                             => self::getFrontendValue($tableName, $fieldName),
                         ];
                     }),
                 ],
@@ -58,19 +63,26 @@ class ListFiltersSheets
             ...array_map(
                 function (array $filterConfig) use ($callback) {
                     $fieldName = $filterConfig[PluginUtility::FILTER_FIELD_NAME];
-                    $label = $filterConfig[PluginUtility::FILTER_LABEL];
                     $tableName = $filterConfig[PluginUtility::FILTER_TABLE_NAME];
-                    return $callback($fieldName, $label, $tableName);
+                    return $callback($fieldName, $tableName);
                 },
                 $filters
             )
         );
     }
 
-    private static function getExclusive(string $label): array
+    private static function getLabel(): array
     {
         return [
-            'label' => $label,
+            'config' => [
+                'type' => 'input',
+            ],
+        ];
+    }
+
+    private static function getExclusive(): array
+    {
+        return [
             'config' => [
                 'type' => 'check',
                 'items' => [
@@ -80,10 +92,9 @@ class ListFiltersSheets
         ];
     }
 
-    private static function getConjunction(string $label): array
+    private static function getConjunction(): array
     {
         return [
-            'label' => $label,
             'config' => [
                 'type' => 'select',
                 'renderType' => 'selectSingle',
@@ -105,28 +116,26 @@ class ListFiltersSheets
         ];
     }
 
-    private static function getBackendValue(string $label, string $tableName, string $fieldName): array
+    private static function getBackendValue(string $tableName, string $fieldName): array
     {
         return [
-            'label' => $label,
             'config' => [
                 'type' => 'user',
                 'renderType' => 'selectMultipleSideBySideJson',
-                'tableName' => $tableName,
-                'fieldName' => $fieldName,
+                self::TABLE_NAME => $tableName,
+                self::FIELD_NAME => $fieldName,
             ],
         ];
     }
 
-    private static function getFrontendValue(string $label, string $tableName, string $fieldName): array
+    private static function getFrontendValue(string $tableName, string $fieldName): array
     {
         return [
-            'label' => $label,
             'config' => [
                 'type' => 'user',
                 'renderType' => 'frontendFilter',
-                'tableName' => $tableName,
-                'fieldName' => $fieldName,
+                self::TABLE_NAME => $tableName,
+                self::FIELD_NAME => $fieldName,
             ],
         ];
     }

@@ -4,28 +4,26 @@ declare(strict_types=1);
 
 namespace Remind\Extbase\Service\Dto;
 
-use TYPO3\CMS\Extbase\DomainObject\AbstractEntity;
-
 class FilterValue
 {
-    protected string $value = '';
+    protected int|string $value = '';
     protected string $label = '';
     protected bool $active = false;
     protected bool $disabled = false;
     protected string $link = '';
 
-    public function __construct(string $value, string $label)
+    public function __construct(int|string $value, string $label)
     {
         $this->value = $value;
         $this->label = $label;
     }
 
-    public function getValue(): string
+    public function getValue(): int|string
     {
         return $this->value;
     }
 
-    public function setValue(string $value): self
+    public function setValue(int|string $value): self
     {
         $this->value = $value;
 

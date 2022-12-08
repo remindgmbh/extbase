@@ -27,7 +27,6 @@ use TYPO3\CMS\Extbase\Mvc\Web\Routing\UriBuilder;
 use TYPO3\CMS\Extbase\Pagination\QueryResultPaginator;
 use TYPO3\CMS\Extbase\Persistence\PersistenceManagerInterface;
 use TYPO3\CMS\Extbase\Persistence\RepositoryInterface;
-use TYPO3\CMS\Extbase\Utility\LocalizationUtility;
 
 class DataService
 {
@@ -169,7 +168,6 @@ class DataService
         }, $repositoryFilters);
         foreach ($filtersConfigs as $filterConfig) {
             $fieldName = $filterConfig[PluginUtility::FILTER_FIELD_NAME];
-            $label = $filterConfig[PluginUtility::FILTER_LABEL];
             $tableName = $filterConfig[PluginUtility::FILTER_TABLE_NAME];
 
             $feFilterSetting = $feFiltersSettings[$fieldName];
@@ -182,7 +180,7 @@ class DataService
 
             $frontendFilter = new FrontendFilter(
                 $fieldName,
-                str_starts_with($label, 'LLL:') ? LocalizationUtility::translate($label) : $label,
+                $feFilterSetting[ListFiltersSheets::LABEL],
             );
 
             $filterValues = json_decode($filterValuesString, true);
@@ -229,7 +227,7 @@ class DataService
     private function buildFrontendFilterUrl(
         array $activeFilterValues,
         string $fieldName,
-        string $value,
+        int|string $value,
         string $filtersArgumentName,
         bool $exclusive
     ): string {
@@ -262,7 +260,8 @@ class DataService
             $fieldName = $filterConfig[PluginUtility::FILTER_FIELD_NAME];
             $filterSetting = $filterSettings[$fieldName];
             /** @var string $valuesString */
-            $values = $valueOverrides[$fieldName] ?? json_decode($filterSetting[ListFiltersSheets::VALUES] ?? null, true);
+            $valuesString = $filterSetting[ListFiltersSheets::VALUES] ?? null;
+            $values = $valueOverrides[$fieldName] ?? json_decode($valuesString, true);
             if (!empty($values)) {
                 $tableName = $filterConfig[PluginUtility::FILTER_TABLE_NAME];
                 $result[$fieldName] = $this->getRepositoryFilter($fieldName, $tableName, $values);

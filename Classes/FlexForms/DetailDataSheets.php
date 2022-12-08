@@ -44,8 +44,8 @@ class DetailDataSheets
                                     ],
                                 ],
                                 'itemsProcFunc' => ItemsProc::class . '->getDetailSources',
-                                'itemsProcFuncParameters' => [
-                                    'extensionName' => $extensionName,
+                                ItemsProc::PARAMETERS => [
+                                    ItemsProc::PARAMETER_EXTENSION_NAME => $extensionName,
                                 ],
                             ],
                         ],
@@ -60,8 +60,8 @@ class DetailDataSheets
                                 'maxitems' => '1',
                                 'multiple' => '0',
                                 'itemsProcFunc' => ItemsProc::class . '->getRecordsInPages',
-                                'itemsProcFuncParameters' => [
-                                    'tableName' => $tableName,
+                                ItemsProc::PARAMETERS => [
+                                    ItemsProc::PARAMETER_TABLE_NAME => $tableName,
                                 ],
                             ],
                         ],

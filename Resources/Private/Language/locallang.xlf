@@ -21,6 +21,9 @@
             <trans-unit id="data.records">
                 <source>Records</source>
             </trans-unit>
+            <trans-unit id="emptyValue">
+                <source>(Value not set)</source>
+            </trans-unit>
             <trans-unit id="filters.backend">
                 <source>Backend Filters</source>
             </trans-unit>
@@ -41,6 +44,9 @@
             </trans-unit>
             <trans-unit id="filters.frontend.exclusive">
                 <source>%s: Exclusive</source>
+            </trans-unit>
+            <trans-unit id="filters.frontend.label">
+                <source>%s: Label</source>
             </trans-unit>
             <trans-unit id="filters.frontend.values">
                 <source>%s: Available Values (empty = filter not available)</source>

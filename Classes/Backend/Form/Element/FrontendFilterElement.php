@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Remind\Extbase\Backend\Form\Element;
 
+use Remind\Extbase\FlexForms\ListFiltersSheets;
 use Remind\Extbase\Utility\BackendUtility as RemindBackendUtility;
 use TYPO3\CMS\Backend\Form\Element\AbstractFormElement;
 use TYPO3\CMS\Core\Page\JavaScriptModuleInstruction;
@@ -48,7 +49,18 @@ class FrontendFilterElement extends AbstractFormElement
         $fieldWizardResult = $this->renderFieldWizard();
         $resultArray = $this->mergeChildReturnIntoExistingResult($resultArray, $fieldWizardResult, false);
 
-        $possibleItems = RemindBackendUtility::getAvailableValues($config['tableName'], $config['fieldName']);
+        $databaseRow = $this->data['databaseRow'];
+        $pages = array_map(function (array $page) {
+            return $page['uid'];
+        }, $databaseRow['pages']);
+        $recursive = (int) $databaseRow['recursive'][0];
+
+        $possibleItems = RemindBackendUtility::getAvailableValues(
+            $config[ListFiltersSheets::TABLE_NAME],
+            $config[ListFiltersSheets::FIELD_NAME],
+            $pages,
+            $recursive,
+        );
         $possibleItems = array_map(function ($item) {
             $value = $item['value'];
             return [
@@ -68,14 +80,15 @@ class FrontendFilterElement extends AbstractFormElement
             sprintf(
                 '<textarea %s>%s</textarea>',
                 GeneralUtility::implodeAttributes($attributes, true),
-                htmlspecialchars($itemValue)
+                htmlspecialchars($itemValue, ENT_NOQUOTES)
             ),
         ];
 
         $resultArray['requireJsModules'][] = JavaScriptModuleInstruction::forRequireJS(
             'TYPO3/CMS/RmndExtbase/Backend/Element/FrontendFilterElement'
         );
-        $resultArray['additionalInlineLanguageLabelFiles'][] = 'EXT:rmnd_extbase/Resources/Private/Language/locallang.xlf';
+        $resultArray
+            ['additionalInlineLanguageLabelFiles'][] = 'EXT:rmnd_extbase/Resources/Private/Language/locallang.xlf';
 
         $resultArray['html'] = implode(LF, $html);
         return $resultArray;

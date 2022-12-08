@@ -9,6 +9,11 @@ define(
           dataId: { type: String }
         }
       }
+      getUnusedItems(currentItem) {
+        return this.possibleItems.filter((item => {
+          return item.value == currentItem?.value || !this.entries.some((entry) => entry.value == item.value)
+        }))
+      }
       createRenderRoot() {
         return this
       }
@@ -26,12 +31,7 @@ define(
             <div class="form-control-wrap" style="overflow: auto">
               <div class="form-wizards-wrap">
                 <div>
-                  <div style="display: flex">
-                    <div style="width: 50%;">${lll('value')}</div>
-                    <div style="width: 50%;">${lll('label')}</div>
-                    <!-- Used to align labels above input fields -->
-                    <div style="height: 0; visibility: hidden;">${this.renderEntryButtons()}</div>
-                  </div>
+                  ${this.renderColumnHeaders()}
                   ${repeat(this.entries, (entry) => entry.value, (entry, index) => html`
                     <div style="display: flex; align-items: center; gap: 5px; padding: 0.5rem 0;">
                       <div style="width: 50%;">
@@ -50,6 +50,18 @@ define(
           </div>
         `
       }
+      renderColumnHeaders() {
+        if (this.entries.length > 0) {
+          return html`
+            <div style="display: flex">
+              <div style="width: 50%;">${lll('value')}</div>
+              <div style="width: 50%;">${lll('label')}</div>
+              <!-- Used to align labels above input fields -->
+              <div style="height: 0; visibility: hidden;">${this.renderEntryButtons()}</div>
+            </div>
+          `
+        }
+      }
       renderValue(entry, index) {
         const updateValue = (event) => {
           const value = event.target.value
@@ -57,10 +69,7 @@ define(
           this.updateEntries()
         }
 
-        const possibleItems = [
-          { value: '', label: ''},
-          ...this.possibleItems
-        ]
+        const possibleItems = this.getUnusedItems(entry)
 
         if (!possibleItems.some((item) => item.value == entry.value)) {
           possibleItems.push({ value: entry.value, label: lll('invalidValue').replace('%s', entry.value) })
@@ -85,12 +94,15 @@ define(
         `
       }
       renderAddButton() {
+        const unusedItems = this.getUnusedItems()
         const addEntry = () => {
-          this.entries.push({ label: "", value: "" })
+          const newValue = unusedItems[0].value
+          this.entries.push({ label: "", value: newValue })
           this.updateEntries()
         }
+        const disabled = unusedItems.length === 0
         return html`
-          <button class="btn btn-default" type="button" @click="${addEntry}">
+          <button class="btn btn-default" type="button" ?disabled="${disabled}" @click="${addEntry}">
             <typo3-backend-icon identifier="actions-add" size="small"></typo3-backend-icon>
           </button>
         `;

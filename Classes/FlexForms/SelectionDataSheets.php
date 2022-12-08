@@ -29,8 +29,8 @@ class SelectionDataSheets
                                 'minitems' => '0',
                                 'multiple' => '0',
                                 'itemsProcFunc' => ItemsProc::class . '->getRecordsInPages',
-                                'itemsProcFuncParameters' => [
-                                    'tableName' => $tableName,
+                                ItemsProc::PARAMETERS => [
+                                    ItemsProc::PARAMETER_TABLE_NAME => $tableName,
                                 ],
                             ],
                         ],
