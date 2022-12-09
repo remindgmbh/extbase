@@ -175,7 +175,8 @@ class DataService
             $filterValuesString = $feFilterSetting[ListFiltersSheets::VALUES] ?? null;
             $exclusive = (bool) $feFilterSetting[ListFiltersSheets::EXCLUSIVE];
 
-            if (!$filterValuesString) {
+            $filterValues = json_decode($filterValuesString, true);
+            if (empty($filterValues)) {
                 continue;
             }
 
@@ -191,8 +192,6 @@ class DataService
                 $fieldName,
                 $label,
             );
-
-            $filterValues = json_decode($filterValuesString, true);
 
             $activeFilterValues = $activeFiltersValues[$fieldName] ?? [];
             $tmpRepositoryFilters = $repositoryFilters;
