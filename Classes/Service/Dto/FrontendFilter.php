@@ -21,26 +21,6 @@ class FrontendFilter
         $this->fieldName = $fieldName;
     }
 
-    /**
-     * @return FilterValue[]
-     */
-    public function getActiveValues(): array
-    {
-        return array_values(array_filter($this->values, function (FilterValue $filterValue) {
-            return $filterValue->isActive();
-        }));
-    }
-
-    /**
-     * @return string[]
-     */
-    public function getActiveArgumentValues(): array
-    {
-        return array_map(function (FilterValue $filterValue) {
-            return $filterValue->getValue();
-        }, $this->getActiveValues());
-    }
-
     public function getFieldName(): string
     {
         return $this->fieldName;

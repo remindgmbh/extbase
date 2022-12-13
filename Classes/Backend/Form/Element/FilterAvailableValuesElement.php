@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Remind\Extbase\Backend\Form\Element;
 
+use Remind\Extbase\Backend\ItemsProc;
 use Remind\Extbase\FlexForms\ListFiltersSheets;
 use Remind\Extbase\Utility\BackendUtility as RemindBackendUtility;
 use TYPO3\CMS\Backend\Form\Element\AbstractFormElement;
@@ -11,8 +12,19 @@ use TYPO3\CMS\Core\Page\JavaScriptModuleInstruction;
 use TYPO3\CMS\Core\Utility\GeneralUtility;
 use TYPO3\CMS\Core\Utility\StringUtility;
 
-class FrontendFilterElement extends AbstractFormElement
+class FilterAvailableValuesElement extends AbstractFormElement
 {
+    /**
+     * Default field information enabled for this element.
+     *
+     * @var array
+     */
+    protected $defaultFieldInformation = [
+        'tcaDescription' => [
+            'renderType' => 'tcaDescription',
+        ],
+    ];
+
     public function render()
     {
         $parameterArray = $this->data['parameterArray'];
@@ -20,9 +32,6 @@ class FrontendFilterElement extends AbstractFormElement
 
         $itemValue = $parameterArray['itemFormElValue'];
         $config = $parameterArray['fieldConf']['config'];
-
-        $fieldInformationResult = $this->renderFieldInformation();
-        $resultArray = $this->mergeChildReturnIntoExistingResult($resultArray, $fieldInformationResult, false);
 
         $fieldId = StringUtility::getUniqueId('formengine-textarea-');
 
@@ -43,38 +52,50 @@ class FrontendFilterElement extends AbstractFormElement
             $this->getOnFieldChangeAttrs('change', $parameterArray['fieldChangeFunc'] ?? [])
         );
 
-        $fieldControlResult = $this->renderFieldControl();
-        $resultArray = $this->mergeChildReturnIntoExistingResult($resultArray, $fieldControlResult, false);
-
-        $fieldWizardResult = $this->renderFieldWizard();
-        $resultArray = $this->mergeChildReturnIntoExistingResult($resultArray, $fieldWizardResult, false);
-
         $databaseRow = $this->data['databaseRow'];
         $pages = array_map(function (array $page) {
             return $page['uid'];
         }, $databaseRow['pages']);
         $recursive = (int) $databaseRow['recursive'][0];
 
-        $possibleItems = RemindBackendUtility::getAvailableValues(
-            $config[ListFiltersSheets::TABLE_NAME],
-            $config[ListFiltersSheets::FIELD_NAME],
-            $pages,
-            $recursive,
-        );
-        $possibleItems = array_map(function ($item) {
-            $value = $item['value'];
-            return [
-                'value' => $value,
-                'label' => $this->appendValueToLabelInDebugMode($item['label'] ?? $value, $value),
-            ];
-        }, $possibleItems);
+        $fieldName = $this->data['flexFormRowData'][ListFiltersSheets::FIELD]['vDEF'][0] ?? null;
+        $tableName = $this->data
+            ['flexFormDataStructureArray']
+            [ListFiltersSheets::FIELD]
+            ['config']
+            [ItemsProc::PARAMETERS]
+            [ItemsProc::PARAMETER_TABLE_NAME] ?? null;
+
+        if ($fieldName && $tableName) {
+            $possibleItems = RemindBackendUtility::getAvailableValues(
+                $tableName,
+                $fieldName,
+                $pages,
+                $recursive,
+            );
+            $possibleItems = array_map(function ($item) {
+                $value = $item['value'];
+                return [
+                    'value' => $value,
+                    'label' => $this->appendValueToLabelInDebugMode($item['label'] ?? $value, $value),
+                ];
+            }, $possibleItems);
+        }
+
+        $fieldInformationResult = $this->renderFieldInformation();
+        $fieldInformationHtml = $fieldInformationResult['html'];
+        $resultArray = $this->mergeChildReturnIntoExistingResult($resultArray, $fieldInformationResult, false);
 
         $html = [
+            '<div class="formengine-field-item t3js-formengine-field-item">',
+            $fieldInformationHtml,
+            '<div class="form-control-wrap">',
+            '<div class="form-wizards-wrap">',
             sprintf(
-                '<typo3-backend-frontend-filter-element %s></typo3-backend-frontend-filter-element>',
+                '<typo3-backend-filter-available-values-element %s></typo3-backend-frontend-filter-element>',
                 GeneralUtility::implodeAttributes([
                     'dataId' => $attributes['id'],
-                    'possibleItems' => json_encode($possibleItems),
+                    'possibleItems' => json_encode($possibleItems ?? []),
                 ], true),
             ),
             sprintf(
@@ -82,10 +103,13 @@ class FrontendFilterElement extends AbstractFormElement
                 GeneralUtility::implodeAttributes($attributes, true),
                 htmlspecialchars($itemValue, ENT_NOQUOTES)
             ),
+            '</div>',
+            '</div>',
+            '</div>',
         ];
 
         $resultArray['requireJsModules'][] = JavaScriptModuleInstruction::forRequireJS(
-            'TYPO3/CMS/RmndExtbase/Backend/Element/FrontendFilterElement'
+            'TYPO3/CMS/RmndExtbase/Backend/Element/FilterAvailableValuesElement'
         );
         $resultArray
             ['additionalInlineLanguageLabelFiles'][] = 'EXT:rmnd_extbase/Resources/Private/Language/locallang.xlf';

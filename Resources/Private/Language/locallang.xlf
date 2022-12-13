@@ -24,35 +24,50 @@
             <trans-unit id="emptyValue">
                 <source>(Value not set)</source>
             </trans-unit>
-            <trans-unit id="filters.backend">
-                <source>Backend Filters</source>
+            <trans-unit id="filter">
+                <source>Filter</source>
             </trans-unit>
-            <trans-unit id="filters.backend.conjunction">
-                <source>%s: Mode</source>
+            <trans-unit id="filters">
+                <source>Filters</source>
             </trans-unit>
-            <trans-unit id="filters.backend.conjunction.and">
+            <trans-unit id="filters.appliedValues">
+                <source>Applied Values (empty = no filter)</source>
+            </trans-unit>
+            <trans-unit id="filters.appliedValues.description">
+                <source>Can be overwritten by frontend filtering</source>
+            </trans-unit>
+            <trans-unit id="filters.availableValues">
+                <source>Available Values (empty = filter not available)</source>
+            </trans-unit>
+            <trans-unit id="filters.availableValues.description">
+                <source>Define filter values which should be available for filtering in frontend</source>
+            </trans-unit>
+            <trans-unit id="filters.conjunction">
+                <source>Mode</source>
+            </trans-unit>
+            <trans-unit id="filters.conjunction.description">
+                <source>Determines whether filter values should be combined with 'AND' or 'OR'. Applies to 'Available Values' (unless exclusive is set) and 'Applied Values' </source>
+            </trans-unit>
+            <trans-unit id="filters.conjunction.items.and">
                 <source>And</source>
             </trans-unit>
-            <trans-unit id="filters.backend.conjunction.or">
+            <trans-unit id="filters.conjunction.items.or">
                 <source>Or</source>
             </trans-unit>
-            <trans-unit id="filters.backend.values">
-                <source>%s: Values (empty = no filter)</source>
+            <trans-unit id="filters.exclusive">
+                <source>Exclusive</source>
             </trans-unit>
-            <trans-unit id="filters.frontend">
-                <source>Frontend Filters</source>
+            <trans-unit id="filters.exclusive.description">
+                <source>If checked only one value for this field can be selected in frontend</source>
             </trans-unit>
-            <trans-unit id="filters.frontend.exclusive">
-                <source>%s: Exclusive</source>
+            <trans-unit id="filters.field">
+                <source>Field</source>
             </trans-unit>
-            <trans-unit id="filters.frontend.label">
-                <source>%s: Label</source>
+            <trans-unit id="filters.label">
+                <source>Label</source>
             </trans-unit>
-            <trans-unit id="filters.frontend.label.placeholder">
-                <source>Default Value: "%s"</source>
-            </trans-unit>
-            <trans-unit id="filters.frontend.values">
-                <source>%s: Available Values (empty = filter not available)</source>
+            <trans-unit id="filters.label.description">
+                <source>Visible in frontend filtering, defaults to label from field TCA</source>
             </trans-unit>
             <trans-unit id="invalidValue">
                 <source>INVALID VALUE ("%s")</source>

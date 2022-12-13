@@ -6,24 +6,24 @@ namespace Remind\Extbase\Service\Dto;
 
 class FilterValue
 {
-    protected int|string $value = '';
+    protected string $value = '';
     protected string $label = '';
     protected bool $active = false;
-    protected bool $disabled = false;
+    protected int $count = 0;
     protected string $link = '';
 
-    public function __construct(int|string $value, string $label)
+    public function __construct(string $value, string $label)
     {
         $this->value = $value;
         $this->label = $label;
     }
 
-    public function getValue(): int|string
+    public function getValue(): string
     {
         return $this->value;
     }
 
-    public function setValue(int|string $value): self
+    public function setValue(string $value): self
     {
         $this->value = $value;
 
@@ -54,14 +54,14 @@ class FilterValue
         return $this;
     }
 
-    public function isDisabled(): bool
+    public function getCount(): int
     {
-        return $this->disabled;
+        return $this->count;
     }
 
-    public function setDisabled(bool $disabled): self
+    public function setCount(int $count): self
     {
-        $this->disabled = $disabled;
+        $this->count = $count;
 
         return $this;
     }

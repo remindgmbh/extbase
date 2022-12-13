@@ -36,28 +36,25 @@ class PluginUtility
      *                would be tx_contacts_model_domain_contact
      *  @return void
      */
-    public static function addTcaType(string $type, PluginType $pluginType, ?string $tableName = null)
+    public static function addTcaType(string $type, PluginType $pluginType, string $tableName)
     {
         $flexForm = self::getFlexFormByPluginType($type, $pluginType, $tableName);
 
         ExtensionManagementUtility::addPiFlexFormValue('*', $flexForm, $type);
 
-        $columnOverrides = [];
-        if (in_array($pluginType, [PluginType::DETAIL, PluginType::SELECTION_LIST])) {
-            $columnOverrides = [
-                'pages' => [
-                    'onChange' => 'reload',
-                ],
-                'recursive' => [
-                    'onChange' => 'reload',
-                ],
-            ];
+        $columnOverrides = [
+            'pages' => [
+                'onChange' => 'reload',
+            ],
+            'recursive' => [
+                'onChange' => 'reload',
+            ],
+        ];
 
-            if ($pluginType === PluginType::DETAIL) {
-                $displayCond = 'USER:Remind\\Extbase\\Backend\\DisplayCond->equalsFlexFormValue:settings.source:record';
-                $columnOverrides['pages']['displayCond'] = $displayCond;
-                $columnOverrides['recursive']['displayCond'] = $displayCond;
-            }
+        if ($pluginType === PluginType::DETAIL) {
+            $displayCond = 'USER:Remind\\Extbase\\Backend\\DisplayCond->equalsFlexFormValue:settings.source:record';
+            $columnOverrides['pages']['displayCond'] = $displayCond;
+            $columnOverrides['recursive']['displayCond'] = $displayCond;
         }
 
         $GLOBALS['TCA']['tt_content']['types'][$type] = [
@@ -119,39 +116,6 @@ class PluginUtility
     }
 
     /**
-     *  Add filter to filter plugin and filterable list plugin
-     *  Must be called in ext_localconf.php
-     *
-     *  @param string $extensionName Name of the extension the filter is added to,
-     *                will be converted to lower case, e.g. 'contacts'
-     *  @param string $fieldName Name of the filter field
-     *  @param string $label Filter label as shown in backend and frontend
-     *  @param string $tableName used for available items in backend
-     *  @param string $repository Class path of the repository the filter entity should be fetched from
-     *  @return void
-     */
-    public static function addFilter(
-        string $extensionName,
-        string $pluginName,
-        string $fieldName,
-        string $tableName
-    ): void {
-        $extensionName = strtolower($extensionName);
-        $pluginName = strtolower($pluginName);
-        $GLOBALS['TYPO3_CONF_VARS']['EXTENSIONS'][$extensionName][$pluginName]['filters'][] = [
-            self::FILTER_FIELD_NAME => $fieldName,
-            self::FILTER_TABLE_NAME => $tableName,
-        ];
-    }
-
-    public static function getFilters(string $extensionName, string $pluginName): array
-    {
-        $extensionName = strtolower($extensionName);
-        $pluginName = strtolower($pluginName);
-        return $GLOBALS['TYPO3_CONF_VARS']['EXTENSIONS'][$extensionName][$pluginName]['filters'] ?? [];
-    }
-
-    /**
      * @param string $type plugin CType
      * @param array|string $dataStructure either a xml flexform file path, a xml flexform string or a flexform array
      */
@@ -203,7 +167,7 @@ class PluginUtility
     private static function getFlexFormByPluginType(
         string $type,
         PluginType $pluginType,
-        ?string $tableName
+        string $tableName
     ): string {
         [$extensionName, $pluginName] = GeneralUtility::trimExplode('_', $type, true);
 
@@ -217,7 +181,7 @@ class PluginUtility
                 $sheets = ListSheets::getSheets();
                 ArrayUtility::mergeRecursiveWithOverrule(
                     $sheets,
-                    ListFiltersSheets::getSheets($extensionName, $pluginName)
+                    ListFiltersSheets::getSheets($extensionName, $pluginName, $tableName)
                 );
                 break;
             case PluginType::SELECTION_LIST:

@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Remind\Extbase\Service;
 
+use Remind\Extbase\Backend\ItemsProc;
 use Remind\Extbase\Domain\Repository\Dto\Conjunction;
 use Remind\Extbase\Domain\Repository\Dto\RepositoryFilter;
 use Remind\Extbase\Domain\Repository\FilterableRepository;
@@ -17,6 +18,7 @@ use Remind\Extbase\Service\Dto\FrontendFilter;
 use Remind\Extbase\Service\Dto\ListResult;
 use Remind\Extbase\Utility\PluginUtility;
 use TYPO3\CMS\Backend\Utility\BackendUtility;
+use TYPO3\CMS\Core\Configuration\FlexForm\FlexFormTools;
 use TYPO3\CMS\Core\Pagination\SimplePagination;
 use TYPO3\CMS\Core\Utility\GeneralUtility;
 use TYPO3\CMS\Extbase\Configuration\ConfigurationManagerInterface;
@@ -28,6 +30,7 @@ use TYPO3\CMS\Extbase\Pagination\QueryResultPaginator;
 use TYPO3\CMS\Extbase\Persistence\PersistenceManagerInterface;
 use TYPO3\CMS\Extbase\Persistence\RepositoryInterface;
 use TYPO3\CMS\Extbase\Utility\LocalizationUtility;
+use TYPO3\CMS\Frontend\ContentObject\ContentObjectRenderer;
 
 class DataService
 {
@@ -35,13 +38,15 @@ class DataService
     private string $extensionName;
     private string $pluginName;
     private Request $request;
+    private ContentObjectRenderer $contentObject;
 
     public function __construct(
         private readonly PersistenceManagerInterface $persistenceManager,
         private readonly UriBuilder $uriBuilder,
+        private readonly FlexFormTools $flexFormTools,
         ConfigurationManagerInterface $configurationManager,
         Request $request,
-        RequestBuilder $requestBuilder,
+        RequestBuilder $requestBuilder
     ) {
         $configuration = $configurationManager->getConfiguration(
             ConfigurationManagerInterface::CONFIGURATION_TYPE_FRAMEWORK
@@ -51,6 +56,7 @@ class DataService
         $this->pluginName = $configuration['pluginName'];
         $this->request = $requestBuilder->build($request);
         $this->uriBuilder->setRequest($this->request);
+        $this->contentObject = $configurationManager->getContentObject();
     }
 
     public function getFilterableList(
@@ -59,10 +65,16 @@ class DataService
         ?array $filters = null,
         ?string $filtersArgumentName = 'filter',
     ): FilterableListResult {
-        $repositoryFilters = $this->getRepositoryFilters($filters);
+        $filterTable = $this->getFilterTable();
+        $repositoryFilters = $this->getRepositoryFilters($filterTable, $filters);
         $listResult = $this->getListResult($repository, $currentPage, $repositoryFilters);
         $filterableListResult = new FilterableListResult($listResult);
-        $frontendFilters = $this->getFrontendFilters($repository, $repositoryFilters, $filtersArgumentName);
+        $frontendFilters = $this->getFrontendFilters(
+            $repository,
+            $repositoryFilters,
+            $filtersArgumentName,
+            $filterTable
+        );
         $filterableListResult->setFrontendFilters($frontendFilters);
         return $filterableListResult;
     }
@@ -159,28 +171,27 @@ class DataService
     private function getFrontendFilters(
         FilterableRepository $filterableRepository,
         array $repositoryFilters,
-        string $filtersArgumentName
+        string $filtersArgumentName,
+        string $tableName
     ): array {
         $result = [];
-        $feFiltersSettings = $this->settings[ListFiltersSheets::FRONTEND_FILTERS] ?? [];
-        $filtersConfigs = PluginUtility::getFilters($this->extensionName, $this->pluginName);
+        $filterSettings = $this->settings[ListFiltersSheets::FILTERS] ?? [];
         $activeFiltersValues = array_map(function (RepositoryFilter $repositoryFilter) {
             return $repositoryFilter->getValues();
         }, $repositoryFilters);
-        foreach ($filtersConfigs as $filterConfig) {
-            $fieldName = $filterConfig[PluginUtility::FILTER_FIELD_NAME];
-            $tableName = $filterConfig[PluginUtility::FILTER_TABLE_NAME];
+        foreach ($filterSettings as $filterSetting) {
+            $filterSetting = $filterSetting[ListFiltersSheets::FILTER];
+            $fieldName = $filterSetting[ListFiltersSheets::FIELD];
 
-            $feFilterSetting = $feFiltersSettings[$fieldName];
-            $filterValuesString = $feFilterSetting[ListFiltersSheets::VALUES] ?? null;
-            $exclusive = (bool) $feFilterSetting[ListFiltersSheets::EXCLUSIVE];
+            $filterValuesString = $filterSetting[ListFiltersSheets::AVAILABLE_VALUES] ?? null;
+            $exclusive = (bool) $filterSetting[ListFiltersSheets::EXCLUSIVE];
 
             $filterValues = json_decode($filterValuesString, true);
             if (empty($filterValues)) {
                 continue;
             }
 
-            $label = $feFilterSetting[ListFiltersSheets::LABEL];
+            $label = $filterSetting[ListFiltersSheets::LABEL];
             if (!$label) {
                 $label = BackendUtility::getItemLabel($tableName, $fieldName);
                 if (str_starts_with($label, 'LLL:')) {
@@ -201,7 +212,7 @@ class DataService
                 $value = $filterValue->getValue();
 
                 $repositoryFilter = $this->getRepositoryFilter(
-                    $fieldName,
+                    $filterSetting,
                     $tableName,
                     (!$exclusive) ? $activeFilterValues : [],
                 );
@@ -211,7 +222,7 @@ class DataService
                 $tmpRepositoryFilters[$fieldName] = $repositoryFilter;
                 $queryResult = $filterableRepository->findByFilters($tmpRepositoryFilters);
                 $count = $queryResult->count();
-                $filterValue->setDisabled(!$count);
+                $filterValue->setCount($count);
                 $isActive = in_array($value, $activeFilterValues);
                 $filterValue->setActive($isActive);
 
@@ -259,33 +270,28 @@ class DataService
     /**
      * @return RepositoryFilter[]
      */
-    private function getRepositoryFilters(?array $valueOverrides = []): array
+    private function getRepositoryFilters(string $tableName, ?array $valueOverrides = []): array
     {
         $result = [];
-        $filterConfigs = PluginUtility::getFilters($this->extensionName, $this->pluginName);
-        $filterSettings = $this->settings[ListFiltersSheets::BACKEND_FILTERS] ?? [];
-        foreach ($filterConfigs as $filterConfig) {
-            $fieldName = $filterConfig[PluginUtility::FILTER_FIELD_NAME];
-            $filterSetting = $filterSettings[$fieldName];
+        $filterSettings = $this->settings[ListFiltersSheets::FILTERS] ?? [];
+        foreach ($filterSettings as $filterSetting) {
+            $filterSetting = $filterSetting[ListFiltersSheets::FILTER];
+            $fieldName = $filterSetting[ListFiltersSheets::FIELD];
             /** @var string $valuesString */
-            $valuesString = $filterSetting[ListFiltersSheets::VALUES] ?? null;
+            $valuesString = $filterSetting[ListFiltersSheets::APPLIED_VALUES] ?? null;
             $values = $valueOverrides[$fieldName] ?? json_decode($valuesString, true);
             if (!empty($values)) {
-                $tableName = $filterConfig[PluginUtility::FILTER_TABLE_NAME];
-                $result[$fieldName] = $this->getRepositoryFilter($fieldName, $tableName, $values);
+                $result[$fieldName] = $this->getRepositoryFilter($filterSetting, $tableName, $values);
             }
         }
         return $result;
     }
 
-    private function getRepositoryFilter(string $fieldName, string $tableName, ?array $values = []): RepositoryFilter
+    private function getRepositoryFilter(array $filterSetting, string $tableName, ?array $values = []): RepositoryFilter
     {
-        $filterSettings = $this->settings[ListFiltersSheets::BACKEND_FILTERS] ?? [];
-        $filterSetting = $filterSettings[$fieldName];
+        $fieldName = $filterSetting[ListFiltersSheets::FIELD];
         /** @var Conjunction $conjunction */
-        $conjunction = Conjunction::from(
-            $filterSetting[ListFiltersSheets::CONJUNCTION] ?? Conjunction::OR->value
-        );
+        $conjunction = Conjunction::from($filterSetting[ListFiltersSheets::CONJUNCTION] ?? Conjunction::OR->value);
         $fieldTca = BackendUtility::getTcaFieldConfiguration($tableName, $fieldName);
 
         return new RepositoryFilter(
@@ -294,5 +300,32 @@ class DataService
             isset($fieldTca['MM']),
             $conjunction
         );
+    }
+
+    private function getFilterTable(): ?string
+    {
+        $tca = $GLOBALS['TCA']['tt_content']['columns']['pi_flexform'];
+        $dataStructureIdentifier = $this->flexFormTools->getDataStructureIdentifier(
+            $tca,
+            'tt_content',
+            'pi_flexform',
+            $this->contentObject->data
+        );
+        $dataStructure = $this->flexFormTools->parseDataStructureByIdentifier($dataStructureIdentifier);
+        $listFiltersSheet = $dataStructure['sheets'][ListFiltersSheets::SHEET_ID] ?? null;
+        if ($listFiltersSheet) {
+            return $listFiltersSheet
+                ['ROOT']
+                ['el']
+                ['settings.' . ListFiltersSheets::FILTERS]
+                ['el']
+                [ListFiltersSheets::FILTER]
+                ['el']
+                [ListFiltersSheets::FIELD]
+                ['config']
+                [ItemsProc::PARAMETERS]
+                [ItemsProc::PARAMETER_TABLE_NAME];
+        }
+        return null;
     }
 }
