@@ -4,7 +4,9 @@ declare(strict_types=1);
 
 namespace Remind\Extbase\Utility;
 
+use Remind\Extbase\Backend\ItemsProc;
 use Remind\Extbase\Domain\Repository\PageRepository;
+use Remind\Extbase\FlexForms\ListFiltersSheets;
 use TYPO3\CMS\Backend\Utility\BackendUtility as T3BackendUtility;
 use TYPO3\CMS\Core\Database\ConnectionPool;
 use TYPO3\CMS\Core\Database\Query\QueryBuilder;
@@ -15,49 +17,118 @@ use TYPO3\CMS\Extbase\Utility\LocalizationUtility;
 
 class BackendUtility
 {
-    public static function getAvailableValues(
-        string $tableName,
-        string $fieldName,
-        ?array $pageIds = [],
-        ?int $recursive = 0
-    ): array {
-        $fieldTca = T3BackendUtility::getTcaFieldConfiguration($tableName, $fieldName);
-        $mmTable = $fieldTca['MM'] ?? null;
-        $foreignTable = $fieldTca['foreign_table'] ?? null;
-        $pageRepository = GeneralUtility::makeInstance(PageRepository::class);
-        $pageIds = $pageRepository->getPageIdsRecursive($pageIds, $recursive);
+    public static function getAvailableValues(array $data, ?array $currentValues = []): array
+    {
+        $databaseRow = $data['databaseRow'];
+        $pages = array_map(function (array $page) {
+            return $page['uid'];
+        }, $databaseRow['pages']);
+        $recursive = (int) $databaseRow['recursive'][0];
 
-        return $foreignTable
-            ? self::getValuesFromForeignTable($fieldName, $tableName, $foreignTable, $mmTable, $pageIds)
-            : self::getValuesFromField($fieldName, $tableName, $pageIds);
+        $pageRepository = GeneralUtility::makeInstance(PageRepository::class);
+        $pageIds = $pageRepository->getPageIdsRecursive($pages, $recursive);
+
+        $flexFormRowData = $data['flexFormRowData'];
+        $allowMultipleFields = (bool) $flexFormRowData[ListFiltersSheets::ALLOW_MULTIPLE_FIELDS]['vDEF'] ?? false;
+        $flexFormDataStructureArray = $data['flexFormDataStructureArray'];
+
+        $result = [];
+
+        if ($allowMultipleFields) {
+            $tableName = $flexFormDataStructureArray
+                [ListFiltersSheets::FIELDS]
+                ['config']
+                [ItemsProc::PARAMETERS]
+                [ItemsProc::PARAMETER_TABLE_NAME] ?? null;
+            $fieldNames = $flexFormRowData[ListFiltersSheets::FIELDS]['vDEF'] ?? [];
+            if (!empty($fieldNames)) {
+                $result = self::getValuesFromFields($fieldNames, $tableName, $pageIds);
+            }
+        } else {
+            $tableName = $flexFormDataStructureArray
+                [ListFiltersSheets::FIELD]
+                ['config']
+                [ItemsProc::PARAMETERS]
+                [ItemsProc::PARAMETER_TABLE_NAME] ?? null;
+            $fieldName = $flexFormRowData[ListFiltersSheets::FIELD]['vDEF'][0] ?? null;
+            if ($fieldName) {
+                $fieldTca = T3BackendUtility::getTcaFieldConfiguration($tableName, $fieldName);
+                $mmTable = $fieldTca['MM'] ?? null;
+                $foreignTable = $fieldTca['foreign_table'] ?? null;
+                $result = $foreignTable
+                    ? self::getValuesFromForeignTable($fieldName, $tableName, $foreignTable, $mmTable, $pageIds)
+                    : self::getValuesFromFields([$fieldName], $tableName, $pageIds);
+            }
+        }
+
+
+        $availablesValues = array_map(function (array $value) {
+            return $value[1];
+        }, $result);
+
+        $diff = array_diff($currentValues ?? [], $availablesValues);
+
+        $noMatchingLabel = '[ ' . LocalizationUtility::translate('LLL:EXT:core/Resources/Private/Language/locallang_core.xlf:labels.noMatchingValue') . ' ]';
+
+        array_unshift($result, ...array_map(function (string $value) use ($noMatchingLabel) {
+            return [
+                @sprintf($noMatchingLabel, $value),
+                $value,
+            ];
+        }, $diff));
+
+        return $result;
     }
 
-    protected static function getValuesFromField(string $fieldName, string $tableName, array $pageIds): array
+    protected static function getValuesFromFields(array $fieldNames, string $tableName, array $pageIds): array
     {
-        $fieldName = GeneralUtility::camelCaseToLowerCaseUnderscored($fieldName);
+        $fieldNames = array_map(function (string $fieldName) {
+            return GeneralUtility::camelCaseToLowerCaseUnderscored($fieldName);
+        }, $fieldNames);
 
         $queryBuilder = self::getQueryBuilder($tableName);
 
         $queryBuilder
-            ->select($fieldName)
+            ->select(...$fieldNames)
             ->from($tableName)
             ->distinct()
-            ->orderBy($fieldName)
             ->where('FIND_IN_SET(`' . $tableName . '`.`pid`, \'' . implode(',', $pageIds) . '\')');
+
+        foreach ($fieldNames as $fieldName) {
+            $queryBuilder->orderBy($fieldName);
+        }
 
         $queryResult = $queryBuilder->executeQuery();
 
-        $values = array_values(array_unique(array_map(function ($value) {
-            return $value ?? '';
-        }, $queryResult->fetchFirstColumn())));
+        $rows = $queryResult->fetchAllAssociative();
 
-        return array_map(function ($value) {
-            $result = ['value' => $value];
-            if (!$value) {
-                $result['label'] = LocalizationUtility::translate('emptyValue', 'rmnd_extbase');
+        $normalizedRows = array_map(function (array $row) {
+            return array_map(function ($column) {
+                return $column ?? '';
+            }, $row);
+        }, $rows);
+        $normalizedJsonRows = array_map(function (array $row) {
+            return json_encode($row);
+        }, $normalizedRows);
+
+        $uniqueJsonRows = array_unique($normalizedJsonRows);
+
+        $uniqueRows = array_intersect_key($normalizedRows, $uniqueJsonRows);
+
+        return array_map(function (array $row) {
+            if (count($row) === 1) {
+                $value = current($row);
+                return [
+                    $value ? $value : LocalizationUtility::translate('emptyValue', 'rmnd_extbase'),
+                    is_string($value) ? htmlspecialchars($value) : $value,
+                ];
+            } else {
+                return [
+                    implode(', ', $row),
+                    htmlspecialchars(json_encode($row)),
+                ];
             }
-            return $result;
-        }, $values);
+        }, $uniqueRows);
     }
 
     protected static function getValuesFromForeignTable(
@@ -110,10 +181,7 @@ class BackendUtility
 
         $result = array_map(function (array $row) use ($foreignTable) {
             $label = T3BackendUtility::getRecordTitle($foreignTable, $row);
-            return [
-                'value' => $row['uid'],
-                'label' => $label,
-            ];
+            return [$label, $row['uid']];
         }, $rows);
 
         // count records with no value set
@@ -129,10 +197,7 @@ class BackendUtility
         $count = $queryBuilder->executeQuery()->rowCount();
 
         if ($count > 0) {
-            $result[] = [
-                'label' => LocalizationUtility::translate('emptyValue', 'rmnd_extbase'),
-                'value' => '',
-            ];
+            $result[] = [LocalizationUtility::translate('emptyValue', 'rmnd_extbase'), ''];
         }
 
         sort($result);
@@ -152,7 +217,7 @@ class BackendUtility
         return $queryBuilder;
     }
 
-        /**
+    /**
      * Returns the current BE user.
      *
      * @return \TYPO3\CMS\Core\Authentication\BackendUserAuthentication

@@ -63,14 +63,17 @@
             <trans-unit id="filters.field">
                 <source>Field</source>
             </trans-unit>
+            <trans-unit id="filters.fields">
+                <source>Fields</source>
+            </trans-unit>
             <trans-unit id="filters.label">
                 <source>Label</source>
             </trans-unit>
             <trans-unit id="filters.label.description">
                 <source>Visible in frontend filtering, defaults to label from field TCA</source>
             </trans-unit>
-            <trans-unit id="invalidValue">
-                <source>INVALID VALUE ("%s")</source>
+            <trans-unit id="filters.multipleFields">
+                <source>Multiple Fields</source>
             </trans-unit>
             <trans-unit id="label">
                 <source>Label</source>

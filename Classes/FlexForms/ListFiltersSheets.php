@@ -17,6 +17,8 @@ class ListFiltersSheets
     public const LABEL = 'label';
     public const EXCLUSIVE = 'exclusive';
     public const AVAILABLE_VALUES = 'availableValues';
+    public const ALLOW_MULTIPLE_FIELDS = 'allowMultipleFields';
+    public const FIELDS = 'fields';
     private const LOCALLANG = 'LLL:EXT:rmnd_extbase/Resources/Private/Language/locallang.xlf:';
 
     public static function getSheets(string $extensionName, string $pluginName, string $tableName): array
@@ -34,21 +36,49 @@ class ListFiltersSheets
                                 self::FILTER => [
                                     'type' => 'array',
                                     'title' => self::LOCALLANG . 'filter',
-                                    'titleField' => self::FIELD,
+                                    'titleField' => self::FIELDS,
+                                    'titleField_alt' => self::FIELD,
                                     'el' => [
+                                        self::ALLOW_MULTIPLE_FIELDS => [
+                                            'label' => self::LOCALLANG . 'filters.multipleFields',
+                                            'onChange' => 'reload',
+                                            'config' => [
+                                                'type' => 'check',
+                                                'items' => [
+                                                    [''],
+                                                ],
+                                            ],
+                                        ],
                                         self::FIELD => [
                                             'label' => self::LOCALLANG . 'filters.field',
                                             'onChange' => 'reload',
+                                            'displayCond' => 'FIELD:' . self::ALLOW_MULTIPLE_FIELDS . ':REQ:false',
                                             'config' => [
                                                 'type' => 'select',
                                                 'renderType' => 'selectSingle',
                                                 'size' => '1',
-                                                'minitems' => '0',
+                                                'minitems' => '1',
                                                 'maxitems' => '1',
                                                 'multiple' => '0',
                                                 'itemsProcFunc' => ItemsProc::class . '->getFilterFields',
                                                 ItemsProc::PARAMETERS => [
                                                     ItemsProc::PARAMETER_TABLE_NAME => $tableName,
+                                                ],
+                                            ],
+                                        ],
+                                        self::FIELDS => [
+                                            'label' => self::LOCALLANG . 'filters.fields',
+                                            'onChange' => 'reload',
+                                            'displayCond' => 'FIELD:' . self::ALLOW_MULTIPLE_FIELDS . ':REQ:true',
+                                            'config' => [
+                                                'type' => 'select',
+                                                'renderType' => 'selectMultipleSideBySide',
+                                                'minitems' => '2',
+                                                'multiple' => '0',
+                                                'itemsProcFunc' => ItemsProc::class . '->getFilterFields',
+                                                ItemsProc::PARAMETERS => [
+                                                    ItemsProc::PARAMETER_TABLE_NAME => $tableName,
+                                                    ItemsProc::PARAMETER_PRIMITIVE => true,
                                                 ],
                                             ],
                                         ],

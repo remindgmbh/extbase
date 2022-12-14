@@ -6,24 +6,24 @@ namespace Remind\Extbase\Service\Dto;
 
 class FilterValue
 {
-    protected string $value = '';
+    protected string|array $value = [];
     protected string $label = '';
     protected bool $active = false;
     protected int $count = 0;
     protected string $link = '';
 
-    public function __construct(string $value, string $label)
+    public function __construct(string|array $value, string $label)
     {
         $this->value = $value;
         $this->label = $label;
     }
 
-    public function getValue(): string
+    public function getValue(): string|array
     {
         return $this->value;
     }
 
-    public function setValue(string $value): self
+    public function setValue(string|array $value): self
     {
         $this->value = $value;
 

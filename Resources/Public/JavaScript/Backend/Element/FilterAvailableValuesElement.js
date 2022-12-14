@@ -10,6 +10,7 @@ define(
                 }
             }
             getUnusedItems(currentItem) {
+                console.log(this.possibleItems)
                 return this.possibleItems.filter((item => {
                     return item.value == currentItem?.value || !this.entries.some((entry) => entry.value == item.value)
                 }))
@@ -70,10 +71,6 @@ define(
                 }
 
                 const possibleItems = this.getUnusedItems(entry)
-
-                if (!possibleItems.some((item) => item.value == entry.value)) {
-                    possibleItems.push({ value: entry.value, label: lll('invalidValue').replace('%s', entry.value) })
-                }
 
                 return html`
                     <select class="form-select" @change="${updateValue}">

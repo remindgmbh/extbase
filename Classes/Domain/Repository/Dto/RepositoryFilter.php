@@ -4,10 +4,11 @@ namespace Remind\Extbase\Domain\Repository\Dto;
 
 class RepositoryFilter
 {
-    private string $fieldName = '';
+    private string $filterName;
 
     /**
-     * @var array<int|string> $values
+     * Sequential array (outer array) containing fieldName -> value map (inner array)
+     * @var array<array<int|string>> $values
      */
     private array $values;
 
@@ -15,33 +16,36 @@ class RepositoryFilter
 
     private Conjunction $conjunction;
 
-    public function __construct(string $fieldName, array $values, bool $mm, Conjunction $conjunction)
+    public function __construct(string $filterName, array $values, bool $mm, Conjunction $conjunction)
     {
-        $this->fieldName = $fieldName;
+        $this->filterName = $filterName;
         $this->values = $values;
         $this->mm = $mm;
         $this->conjunction = $conjunction;
     }
 
-    public function getFieldName(): string
+    public function getFilterName(): string
     {
-        return $this->fieldName;
+        return $this->filterName;
     }
 
-    public function setFieldName(string $fieldName): self
+    public function setFilterName(string $filterName): self
     {
-        $this->fieldName = $fieldName;
+        $this->filterName = $filterName;
 
         return $this;
     }
 
-    public function addValue(string|int $value): self
+    public function addValue(array $value): self
     {
         $this->values[] = $value;
 
         return $this;
     }
 
+    /**
+     * @return array<array<string|int>>
+     */
     public function getValues(): array
     {
         return $this->values;

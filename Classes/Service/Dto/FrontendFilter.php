@@ -4,9 +4,11 @@ declare(strict_types=1);
 
 namespace Remind\Extbase\Service\Dto;
 
+use TYPO3\CMS\Core\Utility\GeneralUtility;
+
 class FrontendFilter
 {
-    private string $fieldName = '';
+    private string $filterName = '';
 
     private string $label = '';
 
@@ -15,20 +17,29 @@ class FrontendFilter
      */
     private array $values = [];
 
-    public function __construct(string $fieldName, string $label)
+    public function __construct(string $filterName, string $label, string $jsonValues)
     {
         $this->label = $label;
-        $this->fieldName = $fieldName;
+        $this->filterName = $filterName;
+        $filterValues = json_decode($jsonValues, true);
+        $fieldNames = GeneralUtility::trimExplode(',', $filterName);
+        foreach ($filterValues as $filterValue) {
+            $filterValueLabel = $filterValue['label'];
+            $filterValueValue = count($fieldNames) > 1 ?
+                json_decode(htmlspecialchars_decode($filterValue['value']), true) :
+                $filterValue['value'];
+            $this->addValue(new FilterValue($filterValueValue, $filterValueLabel));
+        }
     }
 
-    public function getFieldName(): string
+    public function getFilterName(): string
     {
-        return $this->fieldName;
+        return $this->filterName;
     }
 
-    public function setFieldName(string $fieldName): self
+    public function setFilterName(string $filterName): self
     {
-        $this->fieldName = $fieldName;
+        $this->filterName = $filterName;
 
         return $this;
     }

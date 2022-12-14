@@ -4,8 +4,6 @@ declare(strict_types=1);
 
 namespace Remind\Extbase\Backend\Form\Element;
 
-use Remind\Extbase\Backend\ItemsProc;
-use Remind\Extbase\FlexForms\ListFiltersSheets;
 use Remind\Extbase\Utility\BackendUtility as RemindBackendUtility;
 use TYPO3\CMS\Backend\Form\Element\AbstractFormElement;
 use TYPO3\CMS\Core\Page\JavaScriptModuleInstruction;
@@ -52,35 +50,21 @@ class FilterAvailableValuesElement extends AbstractFormElement
             $this->getOnFieldChangeAttrs('change', $parameterArray['fieldChangeFunc'] ?? [])
         );
 
-        $databaseRow = $this->data['databaseRow'];
-        $pages = array_map(function (array $page) {
-            return $page['uid'];
-        }, $databaseRow['pages']);
-        $recursive = (int) $databaseRow['recursive'][0];
+        $flexFormContainerFieldName = $this->data['flexFormContainerFieldName'];
+        $flexFormRowData = $this->data['flexFormRowData'];
+        $currentValues = json_decode($flexFormRowData[$flexFormContainerFieldName]['vDEF'], true) ?? [];
+        $currentValues = array_map(function (array $value) {
+            return $value['value'];
+        }, $currentValues);
 
-        $fieldName = $this->data['flexFormRowData'][ListFiltersSheets::FIELD]['vDEF'][0] ?? null;
-        $tableName = $this->data
-            ['flexFormDataStructureArray']
-            [ListFiltersSheets::FIELD]
-            ['config']
-            [ItemsProc::PARAMETERS]
-            [ItemsProc::PARAMETER_TABLE_NAME] ?? null;
-
-        if ($fieldName && $tableName) {
-            $possibleItems = RemindBackendUtility::getAvailableValues(
-                $tableName,
-                $fieldName,
-                $pages,
-                $recursive,
-            );
-            $possibleItems = array_map(function ($item) {
-                $value = $item['value'];
-                return [
-                    'value' => $value,
-                    'label' => $this->appendValueToLabelInDebugMode($item['label'] ?? $value, $value),
-                ];
-            }, $possibleItems);
-        }
+        $possibleItems = RemindBackendUtility::getAvailableValues($this->data, $currentValues);
+        $possibleItems = array_map(function ($item) {
+            [$label, $value] = $item;
+            return [
+                'value' => $value,
+                'label' => $this->appendValueToLabelInDebugMode($label, $value),
+            ];
+        }, $possibleItems);
 
         $fieldInformationResult = $this->renderFieldInformation();
         $fieldInformationHtml = $fieldInformationResult['html'];

@@ -18,6 +18,7 @@ class ItemsProc
     public const PARAMETERS = 'itemsProcFuncParameters';
     public const PARAMETER_EXTENSION_NAME = 'extensionName';
     public const PARAMETER_TABLE_NAME = 'tableName';
+    public const PARAMETER_PRIMITIVE = 'primitive';
     private const EXCLUDED_FILTER_FIELDS = [
         'uid',
         'pid',
@@ -89,15 +90,25 @@ class ItemsProc
     public function getFilterFields(array &$params): void
     {
         $tableName = $params['config'][self::PARAMETERS][self::PARAMETER_TABLE_NAME];
+        $primitive = $params['config'][self::PARAMETERS][self::PARAMETER_PRIMITIVE] ?? false;
         $fields = BackendUtility::getAllowedFieldsForTable($tableName);
         $fields = array_diff($fields, self::EXCLUDED_FILTER_FIELDS);
-        $params['items'] = [
-            ['', ''],
-            ...array_map(function (string $field) use ($tableName) {
+
+        $params['items'] = array_merge(
+            $params['items'],
+            array_reduce($fields, function (array $result, string $field) use ($tableName, $primitive) {
+                if ($primitive) {
+                    $fieldTca = BackendUtility::getTcaFieldConfiguration($tableName, $field);
+                    if (isset($fieldTca['foreign_table'])) {
+                        return $result;
+                    }
+                }
+                
                 $label = BackendUtility::getItemLabel($tableName, $field);
-                return [$label, $field];
-            }, $fields),
-        ];
+                $result[] = [$label, $field];
+                return $result;
+            }, [])
+        );
     }
 
     private function getBackendUser(): BackendUserAuthentication

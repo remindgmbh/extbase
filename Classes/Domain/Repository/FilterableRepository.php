@@ -3,6 +3,7 @@
 namespace Remind\Extbase\Domain\Repository;
 
 use Remind\Extbase\Domain\Repository\Dto\Conjunction;
+use TYPO3\CMS\Core\Utility\GeneralUtility;
 use TYPO3\CMS\Extbase\Persistence\QueryInterface;
 use TYPO3\CMS\Extbase\Persistence\QueryResultInterface;
 use TYPO3\CMS\Extbase\Persistence\Repository;
@@ -23,32 +24,40 @@ class FilterableRepository extends Repository
         $constraints = [];
         foreach ($filters as $filter) {
             $values = $filter->getValues();
-            $field = $filter->getFieldName();
+            $fields = GeneralUtility::trimExplode(',', $filter->getFilterName());
+            $filterConstraints = [];
 
-            $arrayConstraints = [];
             foreach ($values as $value) {
-                if ($filter->isMm()) {
-                    $arrayConstraints[] = $query->contains($field, $value);
-                } else {
-                    if (!$value) {
-                        // if $value is empty (should be '' because query param cannot be null) either
-                        // an empty string or null is allowed
-                        $arrayConstraints[] = $query->logicalOr([
-                            $query->equals($field, null),
-                            $query->equals($field, ''),
-                        ]);
+                $fieldConstraints = [];
+                foreach ($fields as $field) {
+                    $fieldValue = $value[$field];
+                    if ($filter->isMm()) {
+                        $fieldConstraints[] = $query->contains($field, $fieldValue);
                     } else {
-                        $arrayConstraints[] = $query->equals($field, $value);
+                        if (!$fieldValue) {
+                            // if $value is empty (should be '' because query param cannot be null) either
+                            // an empty string or null is allowed
+                            $fieldConstraints[] = $query->logicalOr([
+                                $query->equals($field, null),
+                                $query->equals($field, ''),
+                            ]);
+                        } else {
+                            $fieldConstraints[] = $query->equals($field, $fieldValue);
+                        }
                     }
                 }
+                if (!empty($fieldConstraints)) {
+                    $filterConstraints[] = $query->logicalAnd($fieldConstraints);
+                }
             }
-            if (!empty($arrayConstraints)) {
+
+            if (!empty($filterConstraints)) {
                 switch ($filter->getConjunction()) {
                     case Conjunction::AND:
-                        $constraints[] = $query->logicalAnd($arrayConstraints);
+                        $constraints[] = $query->logicalAnd($filterConstraints);
                         break;
                     case Conjunction::OR:
-                        $constraints[] = $query->logicalOr($arrayConstraints);
+                        $constraints[] = $query->logicalOr($filterConstraints);
                         break;
                 }
             }
