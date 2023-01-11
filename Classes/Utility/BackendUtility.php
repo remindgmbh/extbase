@@ -124,7 +124,9 @@ class BackendUtility
                 ];
             } else {
                 return [
-                    implode(', ', $row),
+                    implode(', ', array_map(function ($value) {
+                        return $value ? $value : LocalizationUtility::translate('emptyValue', 'rmnd_extbase');
+                    }, $row)),
                     htmlspecialchars(json_encode($row)),
                 ];
             }

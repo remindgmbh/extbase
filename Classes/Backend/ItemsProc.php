@@ -103,7 +103,6 @@ class ItemsProc
                         return $result;
                     }
                 }
-                
                 $label = BackendUtility::getItemLabel($tableName, $field);
                 $result[] = [$label, $field];
                 return $result;
