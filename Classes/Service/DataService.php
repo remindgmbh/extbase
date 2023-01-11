@@ -232,14 +232,14 @@ class DataService
      * @param string $filterName
      * @param RepositoryFilter[] $appliedRepositoryFilters
      * @param RepositoryFilter[] $queryRepositoryFilters
-     * @param array|string $value
+     * @param mixed $value
      * @return bool
      */
     private function getFrontendFilterActive(
         string $filterName,
         array $appliedRepositoryFilters,
         array $queryRepositoryFilters,
-        array|string $value,
+        mixed $value,
     ): bool {
         /**
          * @var RepositoryFilter[] $repositoryFilters
@@ -271,14 +271,14 @@ class DataService
     /**
      * @param string $filterName
      * @param RepositoryFilter[] $queryRepositoryFilters
-     * @param array|string $value
+     * @param mixed $value
      * @param bool $exclusive
      * @return string
      */
     private function getFrontendFilterLink(
         string $filterName,
         array $queryRepositoryFilters,
-        array|string $value,
+        mixed $value,
         bool $exclusive,
     ): string {
         $filterArguments = [];
@@ -326,7 +326,7 @@ class DataService
      * @param string $filterName
      * @param RepositoryFilter[] $appliedRepositoryFilters
      * @param RepositoryFilter[] $queryRepositoryFilters
-     * @param array|string $value
+     * @param mixed $value
      * @param bool $exclusive
      * @return int
      */
@@ -334,7 +334,7 @@ class DataService
         string $filterName,
         array $appliedRepositoryFilters,
         array $queryRepositoryFilters,
-        array|string $value,
+        mixed $value,
         bool $exclusive
     ): int {
         /**
