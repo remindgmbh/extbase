@@ -15,6 +15,7 @@ use Remind\Extbase\FlexForms\SelectionDataSheets;
 use Remind\Extbase\Service\Dto\FilterableListResult;
 use Remind\Extbase\Service\Dto\FrontendFilter;
 use Remind\Extbase\Service\Dto\ListResult;
+use Remind\Extbase\Utility\FilterUtility;
 use Remind\Extbase\Utility\PluginUtility;
 use TYPO3\CMS\Backend\Utility\BackendUtility;
 use TYPO3\CMS\Core\Configuration\FlexForm\FlexFormTools;
@@ -185,13 +186,7 @@ class DataService
                 continue;
             }
 
-            $label = $filterSetting[ListFiltersSheets::LABEL];
-            if (!$label) {
-                $label = BackendUtility::getItemLabel($this->filterTable, $filterName);
-                if (str_starts_with($label, 'LLL:')) {
-                    $label = LocalizationUtility::translate($label);
-                }
-            }
+            $label = $this->getFrontendFilterLabel($filterName, $filterSetting);
 
             $frontendFilter = new FrontendFilter(
                 $filterName,
@@ -266,6 +261,23 @@ class DataService
         }
 
         return false;
+    }
+
+    private function getFrontendFilterLabel(string $filterName, array $filterSetting): string
+    {
+        $label = $filterSetting[ListFiltersSheets::LABEL];
+        if (!$label) {
+            $fields = GeneralUtility::trimExplode(',', $filterName);
+            $labels = array_map(function (string $field) {
+                $label = BackendUtility::getItemLabel($this->filterTable, $field);
+                if (str_starts_with($label, 'LLL:')) {
+                    $label = LocalizationUtility::translate($label);
+                }
+                return $label;
+            }, $fields);
+            $label = implode(', ', $labels);
+        }
+        return $label;
     }
 
     /**
@@ -421,27 +433,8 @@ class DataService
      */
     private function getQueryRepositoryFilters(array $filters): array
     {
-        $result = [];
-        foreach ($filters as $filterName => $firstLevel) {
-            $result[$filterName] = [];
-            if (is_array($firstLevel)) {
-                $allowMultipleFields = count(array_filter(array_keys($firstLevel), 'is_string')) > 0;
-                if ($allowMultipleFields) {
-                    $result[$filterName][] = $this->getFieldValues($filterName, $firstLevel);
-                } else {
-                    foreach ($firstLevel as $secondLevel) {
-                        if (is_array($secondLevel)) {
-                            $result[$filterName][] = $this->getFieldValues($filterName, $secondLevel);
-                        } else {
-                            $result[$filterName][] = [$filterName => $secondLevel];
-                        }
-                    }
-                }
-            } else {
-                $result[$filterName] = [[$filterName => $firstLevel]];
-            }
-        }
-        return $this->getRepositoryFilters($result);
+        $filters = FilterUtility::normalizeQueryParameters($filters);
+        return $this->getRepositoryFilters($filters);
     }
 
     /**
@@ -454,16 +447,6 @@ class DataService
             $result[$filterName] = $this->getRepositoryFilter($filterName, $filter);
         }
         return $result;
-    }
-
-    private function getFieldValues(string $filterName, array $values): array
-    {
-        $fieldNames = GeneralUtility::trimExplode(',', $filterName);
-        $fieldValues = [];
-        foreach ($fieldNames as $fieldName) {
-            $fieldValues[$fieldName] = $values[$fieldName];
-        }
-        return $fieldValues;
     }
 
     private function getFilterName(array $filterSetting): string

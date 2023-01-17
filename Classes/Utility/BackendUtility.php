@@ -61,21 +61,29 @@ class BackendUtility
             }
         }
 
-
         $availablesValues = array_map(function (array $value) {
             return $value[1];
         }, $result);
 
         $diff = array_diff($currentValues ?? [], $availablesValues);
 
-        $noMatchingLabel = '[ ' . LocalizationUtility::translate('LLL:EXT:core/Resources/Private/Language/locallang_core.xlf:labels.noMatchingValue') . ' ]';
+        $noMatchingLabel = sprintf(
+            '[ %s ]',
+            LocalizationUtility::translate(
+                'LLL:EXT:core/Resources/Private/Language/locallang_core.xlf:labels.noMatchingValue'
+            )
+        );
 
-        array_unshift($result, ...array_map(function (string $value) use ($noMatchingLabel) {
-            return [
-                @sprintf($noMatchingLabel, $value),
-                $value,
-            ];
-        }, $diff));
+        // Add "INVALID VALUE" for every selected value not present in available values
+        array_unshift(
+            $result,
+            ...array_map(function (string $value) use ($noMatchingLabel) {
+                return [
+                    sprintf($noMatchingLabel, $value),
+                    $value,
+                ];
+            }, $diff)
+        );
 
         return $result;
     }

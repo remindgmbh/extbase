@@ -102,10 +102,12 @@ class QueryExtbasePluginEnhancer extends AbstractEnhancer implements
         foreach ($this->arguments as $mappedKey => $key) {
             $defaultValue = $this->defaults[$mappedKey] ?? null;
             try {
-                $value = ArrayUtility::getValueByPath($originalParameters[$this->namespace], $key);
+                $originalValue = ArrayUtility::getValueByPath($originalParameters[$this->namespace], $key);
                 $aspect = $variant->getAspect($mappedKey);
-                if ($value && $aspect instanceof MappableAspectInterface) {
-                    // $value = $aspect->generate($value);
+                if ($originalValue && $aspect instanceof MappableAspectInterface) {
+                    $value = is_array($originalValue) ? json_encode($originalValue) : $originalValue;
+                    $value = $aspect->generate($value);
+                    $value = is_array($originalValue) ? json_decode($value, true) : $value;
                 }
             } catch (MissingArrayPathException $e) {
                 $value = null;
@@ -156,10 +158,13 @@ class QueryExtbasePluginEnhancer extends AbstractEnhancer implements
                     $label = $labelAspect->modify();
                 }
 
-                $value = $remainingQueryParameters[$label ?? $mappedKey] ?? null;
+                $originalValue = $remainingQueryParameters[$label ?? $mappedKey] ?? null;
+                $value = null;
                 $aspect = $route->getAspect($mappedKey);
-                if ($value && $aspect instanceof MappableAspectInterface) {
+                if ($originalValue && $aspect instanceof MappableAspectInterface) {
+                    $value = is_array($originalValue) ? json_encode($originalValue) : $originalValue;
                     $value = $aspect->resolve($value);
+                    $value = (is_array($originalValue) && $value) ? json_decode($value, true) : $value;
                     if ($aspect instanceof StaticMappableAspectInterface) {
                         $static = true;
                     }
@@ -171,7 +176,7 @@ class QueryExtbasePluginEnhancer extends AbstractEnhancer implements
                     }
                 }
             } catch (MissingArrayPathException $e) {
-                $value = null;
+                // Do nothing and use null for $value
             }
             if ($defaultValue !== $value) {
                 if ($static) {
@@ -196,11 +201,25 @@ class QueryExtbasePluginEnhancer extends AbstractEnhancer implements
 
     protected function deflateParameters(Route $route, array $parameters): array
     {
+        $flattenParameters = $this->flattenArray($parameters);
         return $this->getVariableProcessor()->deflateNamespaceParameters(
-            $parameters,
+            $flattenParameters,
             $this->namespace,
             $route->getArguments()
         );
+    }
+
+    private function flattenArray(array $array, array &$result = [], ?string $currentKey = null): array
+    {
+        foreach ($array as $key => $value) {
+            $key = $currentKey ? $currentKey . '[' . $key . ']' : $key;
+            if (is_array($value)) {
+                $this->flattenArray($value, $result, $key);
+            } else {
+                $result[$key] = $value;
+            }
+        }
+        return $result;
     }
 
     private function getVariant(Route $defaultPageRoute): Route
