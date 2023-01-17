@@ -78,7 +78,6 @@ class ListFiltersSheets
                                                 'itemsProcFunc' => ItemsProc::class . '->getFilterFields',
                                                 ItemsProc::PARAMETERS => [
                                                     ItemsProc::PARAMETER_TABLE_NAME => $tableName,
-                                                    ItemsProc::PARAMETER_PRIMITIVE => true,
                                                 ],
                                             ],
                                         ],

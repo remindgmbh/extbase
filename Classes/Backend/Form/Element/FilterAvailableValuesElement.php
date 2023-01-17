@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace Remind\Extbase\Backend\Form\Element;
 
-use Remind\Extbase\Utility\BackendUtility as RemindBackendUtility;
+use Remind\Extbase\Utility\FilterUtility;
 use TYPO3\CMS\Backend\Form\Element\AbstractFormElement;
 use TYPO3\CMS\Core\Page\JavaScriptModuleInstruction;
 use TYPO3\CMS\Core\Utility\GeneralUtility;
@@ -57,7 +57,7 @@ class FilterAvailableValuesElement extends AbstractFormElement
             return $value['value'];
         }, $currentValues);
 
-        $possibleItems = RemindBackendUtility::getAvailableValues($this->data, $currentValues);
+        $possibleItems = FilterUtility::getAvailableValues($this->data, $currentValues);
         $possibleItems = array_map(function ($item) {
             [$label, $value] = $item;
             return [

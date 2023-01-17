@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace Remind\Extbase\Backend\Form\Element;
 
-use Remind\Extbase\Utility\BackendUtility;
+use Remind\Extbase\Utility\FilterUtility;
 use TYPO3\CMS\Backend\Form\Element\SelectMultipleSideBySideElement;
 use TYPO3\CMS\Core\Page\JavaScriptModuleInstruction;
 
@@ -21,7 +21,7 @@ class FilterAppliedValuesElement extends SelectMultipleSideBySideElement
         $flexFormRowData = $this->data['flexFormRowData'];
         $currentValues = json_decode($flexFormRowData[$flexFormContainerFieldName]['vDEF'], true);
 
-        $possibleItems = BackendUtility::getAvailableValues($this->data, $currentValues);
+        $possibleItems = FilterUtility::getAvailableValues($this->data, $currentValues);
         $parameterArray['fieldConf']['config']['items'] = $possibleItems;
         $parameterArray['fieldConf']['config']['maxitems'] = PHP_INT_MAX;
         $resultArray = parent::render();
