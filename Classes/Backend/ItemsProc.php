@@ -74,7 +74,11 @@ class ItemsProc
             $queryBuilder
                 ->select(...$fieldList)
                 ->from($tableName)
-                ->where($queryBuilder->expr()->inSet($tableName . '.pid', $pageIds));
+                ->where(sprintf(
+                    'FIND_IN_SET(%s, %s)',
+                    $queryBuilder->quoteIdentifier($tableName . '.pid'),
+                    $queryBuilder->createNamedParameter($pageIds)
+                ));
 
             $queryResult = $queryBuilder->executeQuery();
             $rows = $queryResult->fetchAllAssociative();

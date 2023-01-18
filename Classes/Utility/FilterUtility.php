@@ -7,7 +7,7 @@ namespace Remind\Extbase\Utility;
 use Remind\Extbase\Backend\ItemsProc;
 use Remind\Extbase\Domain\Repository\PageRepository;
 use Remind\Extbase\FlexForms\ListFiltersSheets;
-use TYPO3\CMS\Backend\Utility\BackendUtility as T3BackendUtility;
+use TYPO3\CMS\Backend\Utility\BackendUtility;
 use TYPO3\CMS\Core\Database\ConnectionPool;
 use TYPO3\CMS\Core\Database\Query\QueryBuilder;
 use TYPO3\CMS\Core\Database\Query\Restriction\DeletedRestriction;
@@ -52,6 +52,7 @@ class FilterUtility
 
         $pageRepository = GeneralUtility::makeInstance(PageRepository::class);
         $pageIds = $pageRepository->getPageIdsRecursive($pages, $recursive);
+        $pageIds = implode(',', $pageIds);
 
         $flexFormRowData = $data['flexFormRowData'];
         $allowMultipleFields = (bool) $flexFormRowData[ListFiltersSheets::ALLOW_MULTIPLE_FIELDS]['vDEF'] ?? false;
@@ -99,7 +100,7 @@ class FilterUtility
         return $result;
     }
 
-    protected static function getValuesFromFields(array $fieldNames, string $tableName, array $pageIds): array
+    protected static function getValuesFromFields(array $fieldNames, string $tableName, string $pageIds): array
     {
         $fieldNames = array_map(function (string $fieldName) {
             return GeneralUtility::camelCaseToLowerCaseUnderscored($fieldName);
@@ -111,7 +112,7 @@ class FilterUtility
         $foreignTables = [];
 
         foreach ($fieldNames as $fieldName) {
-            $fieldTca = T3BackendUtility::getTcaFieldConfiguration($tableName, $fieldName);
+            $fieldTca = BackendUtility::getTcaFieldConfiguration($tableName, $fieldName);
             $mmTable = $fieldTca['MM'] ?? null;
             $foreignTable = $fieldTca['foreign_table'] ?? null;
 
@@ -123,13 +124,19 @@ class FilterUtility
                             $tableName,
                             $mmTable,
                             $mmTable,
-                            $queryBuilder->expr()->eq($mmTable . '.uid_local', $tableName . '.uid')
+                            $queryBuilder->expr()->eq(
+                                $mmTable . '.uid_local',
+                                $queryBuilder->quoteIdentifier($tableName . '.uid')
+                            )
                         )
                         ->leftJoin(
                             $mmTable,
                             $foreignTable,
                             $foreignTable,
-                            $queryBuilder->expr()->eq($mmTable . '.uid_foreign', $foreignTable . '.uid')
+                            $queryBuilder->expr()->eq(
+                                $mmTable . '.uid_foreign',
+                                $queryBuilder->quoteIdentifier($foreignTable . '.uid')
+                            )
                         );
                 } else {
                     $queryBuilder
@@ -137,10 +144,13 @@ class FilterUtility
                             $tableName,
                             $foreignTable,
                             $foreignTable,
-                            $queryBuilder->expr()->eq($tableName . '.' . $fieldName, $foreignTable . '.uid')
+                            $queryBuilder->expr()->eq(
+                                $tableName . '.' . $fieldName,
+                                $queryBuilder->quoteIdentifier($foreignTable . '.uid')
+                            )
                         );
                 }
-                $foreignTableSelectFields = T3BackendUtility::getCommonSelectFields($foreignTable);
+                $foreignTableSelectFields = BackendUtility::getCommonSelectFields($foreignTable);
                 $foreignTableSelectFields = GeneralUtility::trimExplode(',', $foreignTableSelectFields);
                 $foreignTableSelectFields = array_map(function (string $field) use ($foreignTable) {
                     return self::formatSelectField($field, $foreignTable);
@@ -155,7 +165,11 @@ class FilterUtility
             ->select(...$selectFields)
             ->from($tableName, $tableName)
             ->distinct()
-            ->where($queryBuilder->expr()->inSet($tableName . '.pid', implode(',', $pageIds)));
+            ->where(sprintf(
+                'FIND_IN_SET(%s, %s)',
+                $queryBuilder->quoteIdentifier($tableName . '.pid'),
+                $queryBuilder->createNamedParameter($pageIds)
+            ));
 
         $queryResult = $queryBuilder->executeQuery();
 
@@ -181,7 +195,7 @@ class FilterUtility
                     $foreignTableRow = $data['foreignTableRows'][$table];
                     $value = $foreignTableRow['uid'] ?? '';
                     $label = $value
-                        ? T3BackendUtility::getRecordTitle($table, $foreignTableRow)
+                        ? BackendUtility::getRecordTitle($table, $foreignTableRow)
                         : LocalizationUtility::translate('emptyValue', 'rmnd_extbase');
                     $data['label'][] = $label;
                     $data['value'][$foreignTables[$table]] = $value;
