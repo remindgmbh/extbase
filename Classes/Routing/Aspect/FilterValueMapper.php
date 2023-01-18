@@ -5,7 +5,7 @@ declare(strict_types=1);
 namespace Remind\Extbase\Routing\Aspect;
 
 use Remind\Extbase\Utility\FilterUtility;
-use TYPO3\CMS\Core\Database\Connection;
+use TYPO3\CMS\Backend\Utility\BackendUtility;
 use TYPO3\CMS\Core\Routing\Aspect\PersistedAliasMapper;
 
 class FilterValueMapper extends PersistedAliasMapper
@@ -56,15 +56,39 @@ class FilterValueMapper extends PersistedAliasMapper
 
     private function exists(string $fieldName, string $value): bool
     {
+        $fieldTca = BackendUtility::getTcaFieldConfiguration($this->tableName, $fieldName);
+        $mmTable = $fieldTca['MM'] ?? null;
+        $foreignTable = $fieldTca['foreign_table'] ?? null;
+
         $queryBuilder = $this->createQueryBuilder();
-        $queryResult = $queryBuilder
+        $queryBuilder
             ->select('uid')
-            ->where($queryBuilder->expr()->eq(
-                $fieldName,
-                $queryBuilder->createNamedParameter($value, Connection::PARAM_STR)
-            ))
-            ->setMaxResults(1)
-            ->executeQuery();
+            ->setMaxResults(1);
+
+        if ($foreignTable && $mmTable) {
+            $queryBuilder
+                ->join(
+                    $this->tableName,
+                    $mmTable,
+                    $mmTable,
+                    $queryBuilder->expr()->eq(
+                        $mmTable . '.uid_local',
+                        $queryBuilder->quoteIdentifier($this->tableName . '.uid')
+                    )
+                )
+                ->where($queryBuilder->expr()->eq(
+                    $mmTable . '.uid_foreign',
+                    $queryBuilder->createNamedParameter($value)
+                ));
+        } else {
+            $queryBuilder
+                ->where($queryBuilder->expr()->eq(
+                    $fieldName,
+                    $queryBuilder->createNamedParameter($value)
+                ));
+        }
+
+        $queryResult = $queryBuilder->executeQuery();
         return $queryResult->rowCount() > 0;
     }
 }
