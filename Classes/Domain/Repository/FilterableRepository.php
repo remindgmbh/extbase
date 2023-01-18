@@ -24,7 +24,7 @@ class FilterableRepository extends Repository
         $constraints = [];
         foreach ($filters as $filter) {
             $values = $filter->getValues();
-            $fields = GeneralUtility::trimExplode(',', $filter->getFilterName());
+            $fields = GeneralUtility::trimExplode(',', $filter->getFilterName(), true);
             $filterConstraints = [];
 
             foreach ($values as $value) {

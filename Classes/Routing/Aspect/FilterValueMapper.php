@@ -36,15 +36,10 @@ class FilterValueMapper extends PersistedAliasMapper
 
     private function mapValue(string $originalValue): ?string
     {
-        $array = json_decode($originalValue, true);
-        $array = FilterUtility::normalizeQueryParameters($array);
-        $arrayValues = [];
-        array_walk_recursive($array, function ($value, $key) use (&$arrayValues) {
-            if (!in_array($value, $arrayValues[$key] ?? [])) {
-                $arrayValues[$key][] = $value;
-            }
-        });
-        foreach ($arrayValues as $field => $values) {
+        $parameters = json_decode($originalValue, true);
+        $normalizedParameters = FilterUtility::normalizeQueryParameters($parameters);
+
+        foreach ($normalizedParameters as $field => $values) {
             foreach ($values as $value) {
                 if (!$this->exists($field, $value)) {
                     return null;

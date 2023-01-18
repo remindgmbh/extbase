@@ -107,8 +107,14 @@ class ListFiltersSheets
                                             'label' => self::LOCALLANG . 'filters.appliedValues',
                                             'description' => self::LOCALLANG . 'filters.appliedValues.description',
                                             'config' => [
-                                                'type' => 'user',
-                                                'renderType' => 'filterAppliedValues',
+                                                'type' => 'select',
+                                                'renderType' => 'selectMultipleSideBySide',
+                                                'minitems' => '0',
+                                                'multiple' => '0',
+                                                'itemsProcFunc' => ItemsProc::class . '->getFilterValues',
+                                                ItemsProc::PARAMETERS => [
+                                                    ItemsProc::PARAMETER_TABLE_NAME => $tableName,
+                                                ],
                                             ],
                                         ],
                                         self::LABEL => [
@@ -133,7 +139,11 @@ class ListFiltersSheets
                                             'description' => self::LOCALLANG . 'filters.availableValues.description',
                                             'config' => [
                                                 'type' => 'user',
-                                                'renderType' => 'filterAvailableValues',
+                                                'renderType' => 'valueLabelPairs',
+                                                'itemsProcFunc' => ItemsProc::class . '->getFilterValues',
+                                                ItemsProc::PARAMETERS => [
+                                                    ItemsProc::PARAMETER_TABLE_NAME => $tableName,
+                                                ],
                                             ],
                                         ],
                                     ],

@@ -1,7 +1,7 @@
 define(
     ["lit", "lit/directives/repeat", "TYPO3/CMS/Core/lit-helper"],
     (function ({ html, LitElement }, { repeat }, { lll }) {
-        class FilterAvailableValuesElement extends LitElement {
+        class ValueLabelPairsElement extends LitElement {
             entries = []
             static get properties() {
                 return {
@@ -10,7 +10,6 @@ define(
                 }
             }
             getUnusedItems(currentItem) {
-                console.log(this.possibleItems)
                 return this.possibleItems.filter((item => {
                     return item.value == currentItem?.value || !this.entries.some((entry) => entry.value == item.value)
                 }))
@@ -20,13 +19,30 @@ define(
             }
             updateEntries() {
                 const data = document.getElementById(this.dataId)
-                data.value = JSON.stringify(this.entries)
+
+                const base64Entries = this.entries.map((entry) => {
+                    return btoa(JSON.stringify({
+                        label: entry['label'],
+                        value: JSON.parse(atob(entry['value']))
+                    }))
+                }).join(',')
+
+                data.value = base64Entries
                 data.dispatchEvent(new CustomEvent("change", { bubbles: false }))
                 this.requestUpdate()
             }
             render() {
                 const data = document.getElementById(this.dataId)
-                this.entries = data.value ? JSON.parse(data.value) : []
+                const base64Entries = data.value
+                if (base64Entries) {
+                    this.entries = base64Entries.split(',').map((entry) => {
+                        const result = JSON.parse(atob(entry))
+                        result['value'] = btoa(JSON.stringify(result['value']))
+                        return result
+                    })
+                } else {
+                    this.entries = []
+                }
                 return html`
                     <div class="formengine-field-item t3js-formengine-field-item">
                         <div class="form-control-wrap" style="overflow: auto">
@@ -143,7 +159,7 @@ define(
                 `
             }
         }
-        customElements.define('typo3-backend-filter-available-values-element', FilterAvailableValuesElement)
-        return FilterAvailableValuesElement
+        customElements.define('typo3-backend-value-label-pairs-element', ValueLabelPairsElement)
+        return ValueLabelPairsElement
     })
 )

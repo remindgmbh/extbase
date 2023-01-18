@@ -13,6 +13,7 @@ use Remind\Extbase\FlexForms\ListFiltersSheets;
 use Remind\Extbase\FlexForms\ListSheets;
 use Remind\Extbase\FlexForms\SelectionDataSheets;
 use Remind\Extbase\Service\Dto\FilterableListResult;
+use Remind\Extbase\Service\Dto\FilterValue;
 use Remind\Extbase\Service\Dto\FrontendFilter;
 use Remind\Extbase\Service\Dto\ListResult;
 use Remind\Extbase\Utility\FilterUtility;
@@ -20,6 +21,7 @@ use Remind\Extbase\Utility\PluginUtility;
 use TYPO3\CMS\Backend\Utility\BackendUtility;
 use TYPO3\CMS\Core\Configuration\FlexForm\FlexFormTools;
 use TYPO3\CMS\Core\Pagination\SimplePagination;
+use TYPO3\CMS\Core\Utility\ArrayUtility;
 use TYPO3\CMS\Core\Utility\GeneralUtility;
 use TYPO3\CMS\Extbase\Configuration\ConfigurationManagerInterface;
 use TYPO3\CMS\Extbase\DomainObject\AbstractEntity;
@@ -179,20 +181,26 @@ class DataService
             $filterSetting = $filterSetting[ListFiltersSheets::FILTER];
             $filterName = $this->getFilterName($filterSetting);
 
-            $filterValuesString = $filterSetting[ListFiltersSheets::AVAILABLE_VALUES] ?? null;
-            $exclusive = (bool) $filterSetting[ListFiltersSheets::EXCLUSIVE];
+            $filterValues = $this->parseBase64Values($filterSetting[ListFiltersSheets::AVAILABLE_VALUES] ?? '');
 
-            if (!$filterValuesString) {
+            if (empty($filterValues)) {
                 continue;
             }
+
+            $exclusive = (bool) $filterSetting[ListFiltersSheets::EXCLUSIVE];
 
             $label = $this->getFrontendFilterLabel($filterName, $filterSetting);
 
             $frontendFilter = new FrontendFilter(
                 $filterName,
-                $label,
-                $filterValuesString
+                $label
             );
+
+            foreach ($filterValues as $filterValue) {
+                $label = $filterValue['label'];
+                $value = $filterValue['value'];
+                $frontendFilter->addValue(new FilterValue($value, $label));
+            }
 
             foreach ($frontendFilter->getValues() as $filterValue) {
                 $value = $filterValue->getValue();
@@ -205,7 +213,12 @@ class DataService
                 );
                 $filterValue->setActive($active);
 
-                $link = $this->getFrontendFilterLink($filterName, $queryRepositoryFilters, $value, $exclusive);
+                $link = $this->getFrontendFilterLink(
+                    $filterName,
+                    $queryRepositoryFilters,
+                    $value,
+                    $exclusive
+                );
                 $filterValue->setLink($link);
 
                 $count = $this->getFrontendFilterCount(
@@ -245,18 +258,10 @@ class DataService
 
         if ($repositoryFilter) {
             $repositoryFilterValues = $repositoryFilter->getValues();
-            $fieldNames = GeneralUtility::trimExplode(',', $filterName);
             return count(
-                array_filter(
-                    $repositoryFilterValues,
-                    function (array $repositoryFilterValue) use ($value, $fieldNames) {
-                        if (count($fieldNames) > 1) {
-                            return $repositoryFilterValue == $value;
-                        } else {
-                            return current($repositoryFilterValue) == $value;
-                        }
-                    }
-                )
+                array_filter($repositoryFilterValues, function (array $repositoryFilterValue) use ($value) {
+                    return $repositoryFilterValue == $value;
+                })
             ) > 0;
         }
 
@@ -267,7 +272,7 @@ class DataService
     {
         $label = $filterSetting[ListFiltersSheets::LABEL];
         if (!$label) {
-            $fields = GeneralUtility::trimExplode(',', $filterName);
+            $fields = GeneralUtility::trimExplode(',', $filterName, true);
             $labels = array_map(function (string $field) {
                 $label = BackendUtility::getItemLabel($this->filterTable, $field);
                 if (str_starts_with($label, 'LLL:')) {
@@ -283,44 +288,38 @@ class DataService
     /**
      * @param string $filterName
      * @param RepositoryFilter[] $queryRepositoryFilters
-     * @param mixed $value
+     * @param array $values
      * @param bool $exclusive
      * @return string
      */
     private function getFrontendFilterLink(
         string $filterName,
         array $queryRepositoryFilters,
-        mixed $value,
+        array $values,
         bool $exclusive,
     ): string {
         $filterArguments = [];
 
-        $activeFilterValues = array_map(function (RepositoryFilter $repositoryFilter) {
+        $filters = array_map(function (RepositoryFilter $repositoryFilter) {
             return $repositoryFilter->getValues();
         }, $queryRepositoryFilters);
 
-        foreach ($activeFilterValues as $activeFilterKey => $activeFilterValue) {
-            $fieldNames = GeneralUtility::trimExplode(',', $activeFilterKey);
-            if (count($fieldNames) === 1) {
-                $filterArguments[$activeFilterKey] = array_map(function (array $value) use ($activeFilterKey) {
-                    return $value[$activeFilterKey];
-                }, $activeFilterValue);
-            } else {
-                $filterArguments[$activeFilterKey] = $activeFilterValue;
-            }
-        }
-
-        $index = array_search($value, $filterArguments[$filterName] ?? []);
+        $index = array_search($values, $filters[$filterName] ?? []);
         if ($index !== false) {
             // remove argument if it is already active so the link removes the filter
-            array_splice($filterArguments[$filterName], $index, 1);
+            array_splice($filters[$filterName], $index, 1);
         } else {
             if ($exclusive) {
-                $filterArguments[$filterName] = [$value];
+                $filters[$filterName] = [$values];
             } else {
-                $filterArguments[$filterName][] = $value;
+                $filters[$filterName][] = $values;
             }
         }
+        $filters = array_filter($filters);
+
+        array_walk_recursive($filters, function (mixed $value, string $key) use (&$filterArguments) {
+            $filterArguments[$key][] = $value;
+        });
 
         // if only one argument is defined remove [0] from query parameter
         foreach ($filterArguments as $activeFilterKey => $activeFilterValue) {
@@ -354,13 +353,9 @@ class DataService
          */
         $repositoryFilters = array_merge($appliedRepositoryFilters, $queryRepositoryFilters);
 
-        if (count(GeneralUtility::trimExplode(',', $filterName)) === 1) {
-            $value = [$filterName => $value];
-        }
-
-        $repositoryFilter = isset($repositoryFilters[$filterName]) ?
-            clone($repositoryFilters[$filterName]) :
-            $this->getRepositoryFilter($filterName, []);
+        $repositoryFilter = isset($repositoryFilters[$filterName])
+            ? clone($repositoryFilters[$filterName])
+            : $this->getRepositoryFilter($filterName, []);
         $repositoryFilters[$filterName] = $repositoryFilter;
 
         $index = array_search($value, $repositoryFilter->getValues());
@@ -403,27 +398,19 @@ class DataService
     private function getAppliedRepositoryFilters(): array
     {
         $result = [];
+
         $filterSettings = $this->settings[ListFiltersSheets::FILTERS] ?? [];
         foreach ($filterSettings as $filterSetting) {
             $filterSetting = $filterSetting[ListFiltersSheets::FILTER];
-            $allowMultipleFields = (bool) $filterSetting[ListFiltersSheets::ALLOW_MULTIPLE_FIELDS];
             $filterName = $this->getFilterName($filterSetting);
-            /** @var string $valuesString */
-            $valuesString = $filterSetting[ListFiltersSheets::APPLIED_VALUES] ?? null;
-            $values = json_decode($valuesString, true);
+
+            $values = $this->parseBase64Values($filterSetting[ListFiltersSheets::APPLIED_VALUES] ?? '');
+
             if (empty($values)) {
                 continue;
             }
 
-            if ($allowMultipleFields) {
-                $result[$filterName] = array_map(function (string $value) {
-                    return json_decode(htmlspecialchars_decode($value), true);
-                }, $values);
-            } else {
-                $result[$filterName] = array_map(function (string $value) use ($filterName) {
-                    return [$filterName => $value];
-                }, $values);
-            }
+            $result[$filterName] = $values;
         }
         return $this->getRepositoryFilters($result);
     }
@@ -434,6 +421,32 @@ class DataService
     private function getQueryRepositoryFilters(array $filters): array
     {
         $filters = FilterUtility::normalizeQueryParameters($filters);
+
+        foreach ($filters as $fieldName => &$values) {
+            foreach ($values as &$value) {
+                $value = [$fieldName => $value];
+            }
+        }
+
+        $filterSettings = $this->settings[ListFiltersSheets::FILTERS] ?? [];
+        foreach ($filterSettings as $filterSetting) {
+            $filterSetting = $filterSetting[ListFiltersSheets::FILTER];
+            $allowMultipleFields = (bool) $filterSetting[ListFiltersSheets::ALLOW_MULTIPLE_FIELDS];
+            if ($allowMultipleFields) {
+                $filterName = $filterSetting[ListFiltersSheets::FIELDS];
+                $fields = GeneralUtility::trimExplode(',', $filterName, true);
+                foreach ($fields as $field) {
+                    if (isset($filters[$field])) {
+                        if (!isset($filters[$filterName])) {
+                            $filters[$filterName] = [];
+                        }
+                        ArrayUtility::mergeRecursiveWithOverrule($filters[$filterName], $filters[$field]);
+                        unset($filters[$field]);
+                    }
+                }
+            }
+        }
+
         return $this->getRepositoryFilters($filters);
     }
 
@@ -453,6 +466,14 @@ class DataService
     {
         $allowMultipleFields = (bool) $filterSetting[ListFiltersSheets::ALLOW_MULTIPLE_FIELDS];
         return $filterSetting[$allowMultipleFields ? ListFiltersSheets::FIELDS : ListFiltersSheets::FIELD];
+    }
+
+    private function parseBase64Values(string $base64ValuesString): array
+    {
+        $base64ValuesArray = GeneralUtility::trimExplode(',', $base64ValuesString, true);
+        return array_map(function (string $value) {
+            return json_decode(base64_decode($value), true);
+        }, $base64ValuesArray);
     }
 
     private function getFilterTable(): ?string

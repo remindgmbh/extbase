@@ -6,9 +6,11 @@ namespace Remind\Extbase\Backend;
 
 use Remind\Extbase\Domain\Repository\PageRepository;
 use Remind\Extbase\FlexForms\ListFiltersSheets;
+use Remind\Extbase\Utility\FilterUtility;
 use Remind\Extbase\Utility\PluginUtility;
 use TYPO3\CMS\Backend\Utility\BackendUtility;
 use TYPO3\CMS\Core\Authentication\BackendUserAuthentication;
+use TYPO3\CMS\Core\Database\Connection;
 use TYPO3\CMS\Core\Database\ConnectionPool;
 use TYPO3\CMS\Core\Database\Query\Restriction\DeletedRestriction;
 use TYPO3\CMS\Core\Database\Query\Restriction\WorkspaceRestriction;
@@ -60,8 +62,6 @@ class ItemsProc
         $pageIds = $this->pageRepository->getPageIdsRecursive($pageIds, $recursive);
 
         if (count($pageIds) > 0) {
-            $pageIds = implode(',', $pageIds);
-
             $fieldList = BackendUtility::getCommonSelectFields($tableName, $tableName . '.');
             $fieldList = GeneralUtility::trimExplode(',', $fieldList, true);
 
@@ -76,10 +76,9 @@ class ItemsProc
             $queryBuilder
                 ->select(...$fieldList)
                 ->from($tableName)
-                ->where(sprintf(
-                    'FIND_IN_SET(%s, %s)',
-                    $queryBuilder->quoteIdentifier($tableName . '.pid'),
-                    $queryBuilder->createNamedParameter($pageIds)
+                ->where($queryBuilder->expr()->in(
+                    $tableName . '.pid',
+                    $queryBuilder->createNamedParameter($pageIds, Connection::PARAM_INT_ARRAY)
                 ));
 
             $queryResult = $queryBuilder->executeQuery();
@@ -116,7 +115,7 @@ class ItemsProc
             ['el'];
 
         if ($allowMultipleFields) {
-            $currentFields = array_filter(GeneralUtility::trimExplode(',', $row[ListFiltersSheets::FIELDS]));
+            $currentFields = GeneralUtility::trimExplode(',', $row[ListFiltersSheets::FIELDS], true);
         } else {
             $currentFields = [];
             $field = $row[ListFiltersSheets::FIELD];
@@ -130,7 +129,7 @@ class ItemsProc
             $allowMultipleFields = (bool) $filter[ListFiltersSheets::ALLOW_MULTIPLE_FIELDS]['vDEF'];
             if ($allowMultipleFields) {
                 $fields = $filter[ListFiltersSheets::FIELDS]['vDEF'] ?? [];
-                $fields = is_array($fields) ? $fields : GeneralUtility::trimExplode(',', $fields);
+                $fields = is_array($fields) ? $fields : GeneralUtility::trimExplode(',', $fields, true);
                 foreach ($fields as $field) {
                     if (!in_array($field, $currentFields)) {
                         $result[] = $field;
@@ -171,6 +170,24 @@ class ItemsProc
             $notMatchingFields,
             $fields
         );
+    }
+
+    public function getFilterValues(array &$params): void
+    {
+        $row = $params['row'];
+        $flexParentDatabaseRow = $params['flexParentDatabaseRow'];
+        $tableName = $params['config'][self::PARAMETERS][self::PARAMETER_TABLE_NAME];
+        $currentValues = GeneralUtility::trimExplode(',', $row[$params['field']], true);
+
+        if ($params['field'] === ListFiltersSheets::AVAILABLE_VALUES) {
+            $currentValues = array_map(function (string $base64Value) {
+                $value = json_decode(base64_decode($base64Value), true);
+                return base64_encode(json_encode($value['value']));
+            }, $currentValues);
+        }
+
+        $items = FilterUtility::getAvailableValues($tableName, $row, $flexParentDatabaseRow, $currentValues);
+        $params['items'] = array_merge($params['items'], $items);
     }
 
     private function getBackendUser(): BackendUserAuthentication

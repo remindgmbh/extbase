@@ -4,10 +4,10 @@ declare(strict_types=1);
 
 namespace Remind\Extbase\Utility;
 
-use Remind\Extbase\Backend\ItemsProc;
 use Remind\Extbase\Domain\Repository\PageRepository;
 use Remind\Extbase\FlexForms\ListFiltersSheets;
 use TYPO3\CMS\Backend\Utility\BackendUtility;
+use TYPO3\CMS\Core\Database\Connection;
 use TYPO3\CMS\Core\Database\ConnectionPool;
 use TYPO3\CMS\Core\Database\Query\QueryBuilder;
 use TYPO3\CMS\Core\Database\Query\Restriction\DeletedRestriction;
@@ -20,54 +20,29 @@ class FilterUtility
     public static function normalizeQueryParameters(array $filters): array
     {
         $result = [];
-        foreach ($filters as $filterName => $firstLevel) {
-            $result[$filterName] = [];
-            if (is_array($firstLevel)) {
-                $allowMultipleFields = count(array_filter(array_keys($firstLevel), 'is_string')) > 0;
-                if ($allowMultipleFields) {
-                    $result[$filterName][] = self::getQueryParamFieldValues($filterName, $firstLevel);
-                } else {
-                    foreach ($firstLevel as $secondLevel) {
-                        if (is_array($secondLevel)) {
-                            $result[$filterName][] = self::getQueryParamFieldValues($filterName, $secondLevel);
-                        } else {
-                            $result[$filterName][] = [$filterName => $secondLevel];
-                        }
-                    }
-                }
-            } else {
-                $result[$filterName] = [[$filterName => $firstLevel]];
-            }
+        foreach ($filters as $fieldName => $values) {
+            $result[$fieldName] = is_array($values) ? $values : [$values];
         }
         return $result;
     }
 
-    public static function getAvailableValues(array $data, ?array $currentValues = []): array
+    public static function getAvailableValues(string $tableName, array $row, array $flexParentDatabaseRow, array $currentValues = []): array
     {
-        $databaseRow = $data['databaseRow'];
-        $pages = array_map(function (array $page) {
-            return $page['uid'];
-        }, $databaseRow['pages']);
-        $recursive = (int) $databaseRow['recursive'][0];
-
+        $pages = $flexParentDatabaseRow['pages'];
+        $recursive = $flexParentDatabaseRow['recursive'];
         $pageRepository = GeneralUtility::makeInstance(PageRepository::class);
-        $pageIds = $pageRepository->getPageIdsRecursive($pages, $recursive);
-        $pageIds = implode(',', $pageIds);
+        $pageIds = GeneralUtility::trimExplode(',', $pages, true);
+        $pageIds = $pageRepository->getPageIdsRecursive($pageIds, $recursive);
 
-        $flexFormRowData = $data['flexFormRowData'];
-        $allowMultipleFields = (bool) $flexFormRowData[ListFiltersSheets::ALLOW_MULTIPLE_FIELDS]['vDEF'] ?? false;
-        $flexFormDataStructureArray = $data['flexFormDataStructureArray'];
+        $allowMultipleFields = (bool) $row[ListFiltersSheets::ALLOW_MULTIPLE_FIELDS] ?? false;
 
         $result = [];
 
         $fieldsElement = $allowMultipleFields ? ListFiltersSheets::FIELDS : ListFiltersSheets::FIELD;
-
-        $tableName = $flexFormDataStructureArray
-            [$fieldsElement]
-            ['config']
-            [ItemsProc::PARAMETERS]
-            [ItemsProc::PARAMETER_TABLE_NAME] ?? null;
-        $fieldNames = $flexFormRowData[$fieldsElement]['vDEF'];
+        $fieldNames = $row[$fieldsElement];
+        if (!is_array($fieldNames)) {
+            $fieldNames = GeneralUtility::trimExplode(',', $fieldNames, true);
+        }
 
         if (!empty($fieldNames)) {
             $result = self::getValuesFromFields($fieldNames, $tableName, $pageIds);
@@ -77,7 +52,7 @@ class FilterUtility
             return $value[1];
         }, $result);
 
-        $diff = array_diff($currentValues ?? [], $availablesValues);
+        $diff = array_diff($currentValues, $availablesValues);
 
         $noMatchingLabel = sprintf(
             '[ %s ]',
@@ -100,7 +75,7 @@ class FilterUtility
         return $result;
     }
 
-    protected static function getValuesFromFields(array $fieldNames, string $tableName, string $pageIds): array
+    protected static function getValuesFromFields(array $fieldNames, string $tableName, array $pageIds): array
     {
         $fieldNames = array_map(function (string $fieldName) {
             return GeneralUtility::camelCaseToLowerCaseUnderscored($fieldName);
@@ -151,7 +126,7 @@ class FilterUtility
                         );
                 }
                 $foreignTableSelectFields = BackendUtility::getCommonSelectFields($foreignTable);
-                $foreignTableSelectFields = GeneralUtility::trimExplode(',', $foreignTableSelectFields);
+                $foreignTableSelectFields = GeneralUtility::trimExplode(',', $foreignTableSelectFields, true);
                 $foreignTableSelectFields = array_map(function (string $field) use ($foreignTable) {
                     return self::formatSelectField($field, $foreignTable);
                 }, $foreignTableSelectFields);
@@ -165,10 +140,9 @@ class FilterUtility
             ->select(...$selectFields)
             ->from($tableName, $tableName)
             ->distinct()
-            ->where(sprintf(
-                'FIND_IN_SET(%s, %s)',
-                $queryBuilder->quoteIdentifier($tableName . '.pid'),
-                $queryBuilder->createNamedParameter($pageIds)
+            ->where($queryBuilder->expr()->in(
+                $tableName . '.pid',
+                $queryBuilder->createNamedParameter($pageIds, Connection::PARAM_INT_ARRAY)
             ));
 
         $queryResult = $queryBuilder->executeQuery();
@@ -202,14 +176,9 @@ class FilterUtility
                     unset($data['foreignTableRows']);
                 }
             }
-            $label = implode(', ', $data['label']);
 
-            if (count($fieldNames) === 1) {
-                $value = current($data['value']);
-                $value = is_string($value) ? htmlspecialchars($value) : $value;
-            } else {
-                $value = htmlspecialchars(json_encode($data['value']));
-            }
+            $label = implode(', ', $data['label']);
+            $value = base64_encode(json_encode($data['value']));
 
             return [$label, $value];
         }, $rows);
@@ -246,7 +215,7 @@ class FilterUtility
 
     private static function getQueryParamFieldValues(string $filterName, array $values): array
     {
-        $fieldNames = GeneralUtility::trimExplode(',', $filterName);
+        $fieldNames = GeneralUtility::trimExplode(',', $filterName, true);
         $fieldValues = [];
         foreach ($fieldNames as $fieldName) {
             $fieldValues[$fieldName] = $values[$fieldName];

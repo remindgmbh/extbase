@@ -4,13 +4,12 @@ declare(strict_types=1);
 
 namespace Remind\Extbase\Backend\Form\Element;
 
-use Remind\Extbase\Utility\FilterUtility;
 use TYPO3\CMS\Backend\Form\Element\AbstractFormElement;
 use TYPO3\CMS\Core\Page\JavaScriptModuleInstruction;
 use TYPO3\CMS\Core\Utility\GeneralUtility;
 use TYPO3\CMS\Core\Utility\StringUtility;
 
-class FilterAvailableValuesElement extends AbstractFormElement
+class ValueLabelPairsElement extends AbstractFormElement
 {
     /**
      * Default field information enabled for this element.
@@ -50,14 +49,7 @@ class FilterAvailableValuesElement extends AbstractFormElement
             $this->getOnFieldChangeAttrs('change', $parameterArray['fieldChangeFunc'] ?? [])
         );
 
-        $flexFormContainerFieldName = $this->data['flexFormContainerFieldName'];
-        $flexFormRowData = $this->data['flexFormRowData'];
-        $currentValues = json_decode($flexFormRowData[$flexFormContainerFieldName]['vDEF'], true) ?? [];
-        $currentValues = array_map(function (array $value) {
-            return $value['value'];
-        }, $currentValues);
-
-        $possibleItems = FilterUtility::getAvailableValues($this->data, $currentValues);
+        $possibleItems = $config['items'] ?? [];
         $possibleItems = array_map(function ($item) {
             [$label, $value] = $item;
             return [
@@ -76,7 +68,7 @@ class FilterAvailableValuesElement extends AbstractFormElement
             '<div class="form-control-wrap">',
             '<div class="form-wizards-wrap">',
             sprintf(
-                '<typo3-backend-filter-available-values-element %s></typo3-backend-frontend-filter-element>',
+                '<typo3-backend-value-label-pairs-element %s></typo3-backend-value-label-pairs-element>',
                 GeneralUtility::implodeAttributes([
                     'dataId' => $attributes['id'],
                     'possibleItems' => json_encode($possibleItems ?? []),
@@ -93,7 +85,7 @@ class FilterAvailableValuesElement extends AbstractFormElement
         ];
 
         $resultArray['requireJsModules'][] = JavaScriptModuleInstruction::forRequireJS(
-            'TYPO3/CMS/RmndExtbase/Backend/Element/FilterAvailableValuesElement'
+            'TYPO3/CMS/RmndExtbase/Backend/Element/ValueLabelPairsElement'
         );
         $resultArray
             ['additionalInlineLanguageLabelFiles'][] = 'EXT:rmnd_extbase/Resources/Private/Language/locallang.xlf';
