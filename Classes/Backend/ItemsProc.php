@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Remind\Extbase\Backend;
 
 use Remind\Extbase\Domain\Repository\PageRepository;
+use Remind\Extbase\FlexForms\ListFiltersSheets;
 use Remind\Extbase\Utility\PluginUtility;
 use TYPO3\CMS\Backend\Utility\BackendUtility;
 use TYPO3\CMS\Core\Authentication\BackendUserAuthentication;
@@ -12,6 +13,7 @@ use TYPO3\CMS\Core\Database\ConnectionPool;
 use TYPO3\CMS\Core\Database\Query\Restriction\DeletedRestriction;
 use TYPO3\CMS\Core\Database\Query\Restriction\WorkspaceRestriction;
 use TYPO3\CMS\Core\Utility\GeneralUtility;
+use TYPO3\CMS\Extbase\Utility\LocalizationUtility;
 
 class ItemsProc
 {
@@ -95,13 +97,79 @@ class ItemsProc
         $tableName = $params['config'][self::PARAMETERS][self::PARAMETER_TABLE_NAME];
         $fields = BackendUtility::getAllowedFieldsForTable($tableName);
         $fields = array_diff($fields, self::EXCLUDED_FILTER_FIELDS);
+        $row = $params['row'];
+        $allowMultipleFields = (bool) $row[ListFiltersSheets::ALLOW_MULTIPLE_FIELDS];
+
+        if (
+            !$allowMultipleFields && $params['field'] === ListFiltersSheets::FIELDS ||
+            $allowMultipleFields && $params['field'] === ListFiltersSheets::FIELD
+        ) {
+            return;
+        }
+
+        $filters = $params
+            ['flexParentDatabaseRow']
+            ['pi_flexform']['data']
+            [ListFiltersSheets::SHEET_ID]
+            ['lDEF']
+            ['settings.' . ListFiltersSheets::FILTERS]
+            ['el'];
+
+        if ($allowMultipleFields) {
+            $currentFields = array_filter(GeneralUtility::trimExplode(',', $row[ListFiltersSheets::FIELDS]));
+        } else {
+            $currentFields = [];
+            $field = $row[ListFiltersSheets::FIELD];
+            if ($field) {
+                $currentFields[] = $field;
+            }
+        }
+
+        $usedFields = array_reduce($filters, function (array $result, array $filter) use ($currentFields) {
+            $filter = $filter[ListFiltersSheets::FILTER]['el'];
+            $allowMultipleFields = (bool) $filter[ListFiltersSheets::ALLOW_MULTIPLE_FIELDS]['vDEF'];
+            if ($allowMultipleFields) {
+                $fields = $filter[ListFiltersSheets::FIELDS]['vDEF'] ?? [];
+                $fields = is_array($fields) ? $fields : GeneralUtility::trimExplode(',', $fields);
+                foreach ($fields as $field) {
+                    if (!in_array($field, $currentFields)) {
+                        $result[] = $field;
+                    }
+                }
+            } else {
+                $field = $filter[ListFiltersSheets::FIELD]['vDEF'];
+                $field = is_array($field) ? current($field) : $field;
+                if (!in_array($field, $currentFields)) {
+                    $result[] = $field;
+                }
+            }
+
+            return $result;
+        }, []);
+
+        $fields = array_diff($fields, $usedFields);
+
+        $noMatchingLabel = sprintf(
+            '[ %s ]',
+            LocalizationUtility::translate(
+                'LLL:EXT:core/Resources/Private/Language/locallang_core.xlf:labels.noMatchingValue'
+            )
+        );
+
+        $notMatchingFields = array_diff($currentFields, $fields);
+        $notMatchingFields = array_map(function (string $field) use ($noMatchingLabel) {
+            return [sprintf($noMatchingLabel, $field), $field];
+        }, $notMatchingFields);
+
+        $fields = array_map(function (string $field) use ($tableName) {
+            $label = BackendUtility::getItemLabel($tableName, $field);
+            return [$label, $field];
+        }, $fields);
 
         $params['items'] = array_merge(
             $params['items'],
-            array_map(function (string $field) use ($tableName) {
-                $label = BackendUtility::getItemLabel($tableName, $field);
-                return [$label, $field];
-            }, $fields)
+            $notMatchingFields,
+            $fields
         );
     }
 
