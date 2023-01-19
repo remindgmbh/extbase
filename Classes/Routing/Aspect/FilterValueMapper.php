@@ -14,16 +14,18 @@ use TYPO3\CMS\Core\Database\Query\QueryBuilder;
 use TYPO3\CMS\Core\Database\Query\Restriction\FrontendGroupRestriction;
 use TYPO3\CMS\Core\Database\Query\Restriction\FrontendRestrictionContainer;
 use TYPO3\CMS\Core\Routing\Aspect\AspectFactory;
-use TYPO3\CMS\Core\Routing\Aspect\MappableAspectInterface;
 use TYPO3\CMS\Core\Routing\Aspect\ModifiableAspectInterface;
+use TYPO3\CMS\Core\Routing\Aspect\PersistedMappableAspectInterface;
 use TYPO3\CMS\Core\Routing\Aspect\SiteAccessorTrait;
+use TYPO3\CMS\Core\Routing\Aspect\StaticMappableAspectInterface;
 use TYPO3\CMS\Core\Site\SiteAwareInterface;
 use TYPO3\CMS\Core\Site\SiteLanguageAwareInterface;
 use TYPO3\CMS\Core\Site\SiteLanguageAwareTrait;
 use TYPO3\CMS\Core\Utility\GeneralUtility;
 
 class FilterValueMapper implements
-    MappableAspectInterface,
+    PersistedMappableAspectInterface,
+    StaticMappableAspectInterface,
     ContextAwareInterface,
     SiteLanguageAwareInterface,
     SiteAwareInterface
@@ -82,6 +84,8 @@ class FilterValueMapper implements
             $result[$field] = $values;
         }
 
+        $result = FilterUtility::simplifyQueryParameters($result);
+
         return json_encode($result);
     }
 
@@ -104,6 +108,8 @@ class FilterValueMapper implements
         if (!$this->validateValues($result)) {
             return null;
         }
+
+        $result = FilterUtility::simplifyQueryParameters($result);
 
         return json_encode($result);
     }

@@ -26,8 +26,23 @@ class FilterUtility
         return $result;
     }
 
-    public static function getAvailableValues(string $tableName, array $row, array $flexParentDatabaseRow, array $currentValues = []): array
+    public static function simplifyQueryParameters(array $filters): array
     {
+        // if only one argument is defined remove [0] from query parameter
+        foreach ($filters as $fieldName => $values) {
+            if (count($values) === 1) {
+                $filters[$fieldName] = $values[0];
+            }
+        }
+        return $filters;
+    }
+
+    public static function getAvailableValues(
+        string $tableName,
+        array $row,
+        array $flexParentDatabaseRow,
+        array $currentValues = []
+    ): array {
         $pages = $flexParentDatabaseRow['pages'];
         $recursive = $flexParentDatabaseRow['recursive'];
         $pageRepository = GeneralUtility::makeInstance(PageRepository::class);

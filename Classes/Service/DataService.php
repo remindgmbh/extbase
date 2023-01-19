@@ -321,12 +321,7 @@ class DataService
             $filterArguments[$key][] = $value;
         });
 
-        // if only one argument is defined remove [0] from query parameter
-        foreach ($filterArguments as $activeFilterKey => $activeFilterValue) {
-            if (count($activeFilterValue) === 1) {
-                $filterArguments[$activeFilterKey] = $activeFilterValue[0];
-            }
-        }
+        $filterArguments = FilterUtility::simplifyQueryParameters($filterArguments);
 
         return $this->uriBuilder
             ->reset()
