@@ -77,7 +77,7 @@ class ValueLabelPairsElement extends AbstractFormElement
             sprintf(
                 '<textarea %s>%s</textarea>',
                 GeneralUtility::implodeAttributes($attributes, true),
-                htmlspecialchars($itemValue, ENT_NOQUOTES)
+                $itemValue
             ),
             '</div>',
             '</div>',
