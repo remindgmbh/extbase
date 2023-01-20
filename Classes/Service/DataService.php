@@ -4,7 +4,6 @@ declare(strict_types=1);
 
 namespace Remind\Extbase\Service;
 
-use Remind\Extbase\Backend\ItemsProc;
 use Remind\Extbase\Domain\Repository\Dto\Conjunction;
 use Remind\Extbase\Domain\Repository\Dto\RepositoryFilter;
 use Remind\Extbase\Domain\Repository\FilterableRepository;
@@ -473,28 +472,7 @@ class DataService
 
     private function getFilterTable(): ?string
     {
-        $tca = $GLOBALS['TCA']['tt_content']['columns']['pi_flexform'];
-        $dataStructureIdentifier = $this->flexFormTools->getDataStructureIdentifier(
-            $tca,
-            'tt_content',
-            'pi_flexform',
-            $this->contentObject->data
-        );
-        $dataStructure = $this->flexFormTools->parseDataStructureByIdentifier($dataStructureIdentifier);
-        $listFiltersSheet = $dataStructure['sheets'][ListFiltersSheets::SHEET_ID] ?? null;
-        if ($listFiltersSheet) {
-            return $listFiltersSheet
-                ['ROOT']
-                ['el']
-                ['settings.' . ListFiltersSheets::FILTERS]
-                ['el']
-                [ListFiltersSheets::FILTER]
-                ['el']
-                [ListFiltersSheets::FIELD]
-                ['config']
-                [ItemsProc::PARAMETERS]
-                [ItemsProc::PARAMETER_TABLE_NAME];
-        }
-        return null;
+        $tcaFieldConfig = BackendUtility::getTcaFieldConfiguration('tt_content', PluginUtility::COLUMN_TABLE_NAME);
+        return $tcaFieldConfig['default'] ?? null;
     }
 }

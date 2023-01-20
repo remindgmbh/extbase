@@ -12,7 +12,7 @@ class SelectionDataSheets
     public const RECORDS = 'records';
     private const LOCALLANG = 'LLL:EXT:rmnd_extbase/Resources/Private/Language/locallang.xlf:';
 
-    public static function getSheets(string $tableName): array
+    public static function getSheets(): array
     {
         return [
             self::SHEET_ID => [
@@ -29,9 +29,6 @@ class SelectionDataSheets
                                 'minitems' => '0',
                                 'multiple' => '0',
                                 'itemsProcFunc' => ItemsProc::class . '->getRecordsInPages',
-                                ItemsProc::PARAMETERS => [
-                                    ItemsProc::PARAMETER_TABLE_NAME => $tableName,
-                                ],
                             ],
                         ],
                     ],

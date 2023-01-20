@@ -21,7 +21,7 @@ class ListFiltersSheets
     public const FIELDS = 'fields';
     private const LOCALLANG = 'LLL:EXT:rmnd_extbase/Resources/Private/Language/locallang.xlf:';
 
-    public static function getSheets(string $extensionName, string $pluginName, string $tableName): array
+    public static function getSheets(): array
     {
         return [
             self::SHEET_ID => [
@@ -61,9 +61,6 @@ class ListFiltersSheets
                                                 'maxitems' => '1',
                                                 'multiple' => '0',
                                                 'itemsProcFunc' => ItemsProc::class . '->getFilterFields',
-                                                ItemsProc::PARAMETERS => [
-                                                    ItemsProc::PARAMETER_TABLE_NAME => $tableName,
-                                                ],
                                             ],
                                         ],
                                         self::FIELDS => [
@@ -76,9 +73,6 @@ class ListFiltersSheets
                                                 'minitems' => '2',
                                                 'multiple' => '0',
                                                 'itemsProcFunc' => ItemsProc::class . '->getFilterFields',
-                                                ItemsProc::PARAMETERS => [
-                                                    ItemsProc::PARAMETER_TABLE_NAME => $tableName,
-                                                ],
                                             ],
                                         ],
                                         self::CONJUNCTION => [
@@ -112,9 +106,6 @@ class ListFiltersSheets
                                                 'minitems' => '0',
                                                 'multiple' => '0',
                                                 'itemsProcFunc' => ItemsProc::class . '->getFilterValues',
-                                                ItemsProc::PARAMETERS => [
-                                                    ItemsProc::PARAMETER_TABLE_NAME => $tableName,
-                                                ],
                                             ],
                                         ],
                                         self::LABEL => [
@@ -141,9 +132,6 @@ class ListFiltersSheets
                                                 'type' => 'user',
                                                 'renderType' => 'valueLabelPairs',
                                                 'itemsProcFunc' => ItemsProc::class . '->getFilterValues',
-                                                ItemsProc::PARAMETERS => [
-                                                    ItemsProc::PARAMETER_TABLE_NAME => $tableName,
-                                                ],
                                             ],
                                         ],
                                     ],

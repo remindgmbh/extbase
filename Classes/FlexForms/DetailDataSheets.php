@@ -15,7 +15,7 @@ class DetailDataSheets
     public const SOURCE_RECORD = 'record';
     private const LOCALLANG = 'LLL:EXT:rmnd_extbase/Resources/Private/Language/locallang.xlf:';
 
-    public static function getSheets(string $extensionName, string $tableName): array
+    public static function getSheets(): array
     {
         return [
             self::SHEET_ID => [
@@ -44,9 +44,6 @@ class DetailDataSheets
                                     ],
                                 ],
                                 'itemsProcFunc' => ItemsProc::class . '->getDetailSources',
-                                ItemsProc::PARAMETERS => [
-                                    ItemsProc::PARAMETER_EXTENSION_NAME => $extensionName,
-                                ],
                             ],
                         ],
                         'settings.' . self::RECORD => [
@@ -60,9 +57,6 @@ class DetailDataSheets
                                 'maxitems' => '1',
                                 'multiple' => '0',
                                 'itemsProcFunc' => ItemsProc::class . '->getRecordsInPages',
-                                ItemsProc::PARAMETERS => [
-                                    ItemsProc::PARAMETER_TABLE_NAME => $tableName,
-                                ],
                             ],
                         ],
                     ],

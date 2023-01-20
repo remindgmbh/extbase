@@ -22,6 +22,8 @@ class PluginUtility
     public const DETAIL_SOURCE_LABEL = 'label';
     public const FILTER_FIELD_NAME = 'fieldName';
     public const FILTER_TABLE_NAME = 'tableName';
+    public const COLUMN_TABLE_NAME = 'tx_extbase_table_name';
+    public const COLUMN_EXTENSION_NAME = 'tx_extbase_extension_name';
 
     /**
      *  Add content element plugin to TCA types and add corresponding flex form sheets
@@ -38,9 +40,25 @@ class PluginUtility
      */
     public static function addTcaType(string $type, PluginType $pluginType, string $tableName)
     {
-        $flexForm = self::getFlexFormByPluginType($type, $pluginType, $tableName);
+        $flexForm = self::getFlexFormByPluginType($pluginType);
+        [$extensionName, $pluginName] = GeneralUtility::trimExplode('_', $type, true);
 
         ExtensionManagementUtility::addPiFlexFormValue('*', $flexForm, $type);
+
+        ExtensionManagementUtility::addTCAcolumns('tt_content', [
+            self::COLUMN_TABLE_NAME => [
+                'config' => [
+                    'type' => 'none',
+                    'default' => $tableName,
+                ],
+            ],
+            self::COLUMN_EXTENSION_NAME => [
+                'config' => [
+                    'type' => 'none',
+                    'default' => $extensionName,
+                ],
+            ],
+        ]);
 
         $columnOverrides = [
             'pages' => [
@@ -139,16 +157,6 @@ class PluginUtility
         self::mergeWithCurrentFlexForm($type, $dataStructure);
     }
 
-    public static function createFlexFormFromSheets(array $sheets): array
-    {
-        return [
-            'meta' => [
-                'langDisable' => 1,
-            ],
-            'sheets' => $sheets,
-        ];
-    }
-
     private static function getCurrentFlexForm($type): array
     {
         $type = '*,' . $type;
@@ -164,35 +172,35 @@ class PluginUtility
         ExtensionManagementUtility::addPiFlexFormValue('*', $flexForm, $type);
     }
 
-    private static function getFlexFormByPluginType(
-        string $type,
-        PluginType $pluginType,
-        string $tableName
-    ): string {
-        [$extensionName, $pluginName] = GeneralUtility::trimExplode('_', $type, true);
-
+    private static function getFlexFormByPluginType(PluginType $pluginType): string
+    {
         $sheets = [];
 
         switch ($pluginType) {
             case PluginType::DETAIL:
-                $sheets = DetailDataSheets::getSheets($extensionName, $tableName);
+                $sheets = DetailDataSheets::getSheets();
                 break;
             case PluginType::FILTERABLE_LIST:
                 $sheets = ListSheets::getSheets();
                 ArrayUtility::mergeRecursiveWithOverrule(
                     $sheets,
-                    ListFiltersSheets::getSheets($extensionName, $pluginName, $tableName)
+                    ListFiltersSheets::getSheets()
                 );
                 break;
             case PluginType::SELECTION_LIST:
                 $sheets = ListSheets::getSheets();
-                ArrayUtility::mergeRecursiveWithOverrule($sheets, SelectionDataSheets::getSheets($tableName));
+                ArrayUtility::mergeRecursiveWithOverrule($sheets, SelectionDataSheets::getSheets());
                 break;
             default:
                 break;
         }
 
-        $flexFormArray = self::createFlexFormFromSheets($sheets);
+        $flexFormArray = [
+            'meta' => [
+                'langDisable' => 1,
+            ],
+            'sheets' => $sheets,
+        ];
 
         return self::flexFormArrayToString($flexFormArray);
     }

@@ -19,9 +19,6 @@ use TYPO3\CMS\Extbase\Utility\LocalizationUtility;
 
 class ItemsProc
 {
-    public const PARAMETERS = 'itemsProcFuncParameters';
-    public const PARAMETER_EXTENSION_NAME = 'extensionName';
-    public const PARAMETER_TABLE_NAME = 'tableName';
     private const EXCLUDED_FILTER_FIELDS = [
         'uid',
         'pid',
@@ -45,7 +42,8 @@ class ItemsProc
 
     public function getDetailSources(array &$params): void
     {
-        $extensionName = $params['config'][self::PARAMETERS][self::PARAMETER_EXTENSION_NAME];
+        $flexParentDatabaseRow = $params['flexParentDatabaseRow'];
+        $extensionName = $flexParentDatabaseRow[PluginUtility::COLUMN_EXTENSION_NAME];
         $sources = PluginUtility::getDetailSources($extensionName);
         foreach ($sources as $pluginSignature => $config) {
             $params['items'][] = [$config['label'] ?? $pluginSignature, $pluginSignature];
@@ -54,7 +52,8 @@ class ItemsProc
 
     public function getRecordsInPages(array &$params): void
     {
-        $tableName = $params['config'][self::PARAMETERS][self::PARAMETER_TABLE_NAME];
+        $flexParentDatabaseRow = $params['flexParentDatabaseRow'];
+        $tableName = $flexParentDatabaseRow[PluginUtility::COLUMN_TABLE_NAME];
         $flexParentDatabaseRow = $params['flexParentDatabaseRow'];
         $pages = $flexParentDatabaseRow['pages'];
         $pageIds = GeneralUtility::intExplode(',', $pages, true);
@@ -93,7 +92,8 @@ class ItemsProc
 
     public function getFilterFields(array &$params): void
     {
-        $tableName = $params['config'][self::PARAMETERS][self::PARAMETER_TABLE_NAME];
+        $flexParentDatabaseRow = $params['flexParentDatabaseRow'];
+        $tableName = $flexParentDatabaseRow[PluginUtility::COLUMN_TABLE_NAME];
         $fields = BackendUtility::getAllowedFieldsForTable($tableName);
         $fields = array_diff($fields, self::EXCLUDED_FILTER_FIELDS);
         $row = $params['row'];
@@ -176,7 +176,7 @@ class ItemsProc
     {
         $row = $params['row'];
         $flexParentDatabaseRow = $params['flexParentDatabaseRow'];
-        $tableName = $params['config'][self::PARAMETERS][self::PARAMETER_TABLE_NAME];
+        $tableName = $flexParentDatabaseRow[PluginUtility::COLUMN_TABLE_NAME];
         $currentValues = GeneralUtility::trimExplode(',', $row[$params['field']], true);
 
         if ($params['field'] === ListFiltersSheets::AVAILABLE_VALUES) {
