@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Remind\Extbase\FlexForms;
 
 use Remind\Extbase\Backend\ItemsProc;
+use Remind\Extbase\Domain\Repository\Dto\Conjunction;
 
 class ListFiltersSheets
 {
@@ -88,11 +89,11 @@ class ListFiltersSheets
                                                 'items' => [
                                                     0 => [
                                                         0 => self::LOCALLANG . 'filters.conjunction.items.or',
-                                                        1 => 'OR',
+                                                        1 => Conjunction::OR->value,
                                                     ],
                                                     1 => [
                                                         0 => self::LOCALLANG . 'filters.conjunction.items.and',
-                                                        1 => 'AND',
+                                                        1 => Conjunction::AND->value,
                                                     ],
                                                 ],
                                             ],
@@ -105,7 +106,7 @@ class ListFiltersSheets
                                                 'renderType' => 'selectMultipleSideBySide',
                                                 'minitems' => '0',
                                                 'multiple' => '0',
-                                                'itemsProcFunc' => ItemsProc::class . '->getFilterValues',
+                                                'itemsProcFunc' => ItemsProc::class . '->getAppliedFilterValues',
                                             ],
                                         ],
                                         self::LABEL => [
@@ -131,7 +132,7 @@ class ListFiltersSheets
                                             'config' => [
                                                 'type' => 'user',
                                                 'renderType' => 'valueLabelPairs',
-                                                'itemsProcFunc' => ItemsProc::class . '->getFilterValues',
+                                                'itemsProcFunc' => ItemsProc::class . '->getAvailableFilterValues',
                                             ],
                                         ],
                                     ],

@@ -62,6 +62,7 @@ class DataService
         $this->request = $requestBuilder->build($request);
         $this->uriBuilder->setRequest($this->request);
         $this->contentObject = $configurationManager->getContentObject();
+        $this->filterTable = PluginUtility::getTableName($this->extensionName . '_' . $this->pluginName);
     }
 
     public function getFilterableList(
@@ -72,10 +73,12 @@ class DataService
     ): FilterableListResult {
         $this->repository = $repository;
         $this->filtersArgumentName = $filtersArgumentName;
-        $this->filterTable = $this->getFilterTable();
         $queryRepositoryFilters = $this->getQueryRepositoryFilters($filters);
         $appliedRepositoryFilters = $this->getAppliedRepositoryFilters();
-        $repositoryFilters = array_merge($appliedRepositoryFilters, $queryRepositoryFilters);
+        $repositoryFilters = array_merge(
+            array_values($appliedRepositoryFilters),
+            array_values($queryRepositoryFilters)
+        );
         $listResult = $this->getListResult($currentPage, $repositoryFilters);
         $filterableListResult = new FilterableListResult($listResult);
         $frontendFilters = $this->getFrontendFilters($appliedRepositoryFilters, $queryRepositoryFilters);
@@ -215,7 +218,6 @@ class DataService
 
                 $active = $this->getFrontendFilterActive(
                     $filterName,
-                    $appliedRepositoryFilters,
                     $queryRepositoryFilters,
                     $value
                 );
@@ -246,23 +248,16 @@ class DataService
 
     /**
      * @param string $filterName
-     * @param RepositoryFilter[] $appliedRepositoryFilters
      * @param RepositoryFilter[] $queryRepositoryFilters
      * @param mixed $value
      * @return bool
      */
     private function getFrontendFilterActive(
         string $filterName,
-        array $appliedRepositoryFilters,
         array $queryRepositoryFilters,
         mixed $value,
     ): bool {
-        /**
-         * @var RepositoryFilter[] $repositoryFilters
-         */
-        $repositoryFilters = array_merge($appliedRepositoryFilters, $queryRepositoryFilters);
-
-        $repositoryFilter = $repositoryFilters[$filterName] ?? null;
+        $repositoryFilter = $queryRepositoryFilters[$filterName] ?? null;
 
         if ($repositoryFilter) {
             $repositoryFilterValues = $repositoryFilter->getValues();
@@ -351,15 +346,12 @@ class DataService
         mixed $value,
         bool $exclusive
     ): int {
-        /**
-         * @var RepositoryFilter[] $repositoryFilters
-         */
-        $repositoryFilters = array_merge($appliedRepositoryFilters, $queryRepositoryFilters);
+        $tmpFilters = $queryRepositoryFilters;
 
-        $repositoryFilter = isset($repositoryFilters[$filterName])
-            ? clone($repositoryFilters[$filterName])
+        $repositoryFilter = isset($tmpFilters[$filterName])
+            ? clone($tmpFilters[$filterName])
             : $this->getRepositoryFilter($filterName, []);
-        $repositoryFilters[$filterName] = $repositoryFilter;
+        $tmpFilters[$filterName] = $repositoryFilter;
 
         $index = array_search($value, $repositoryFilter->getValues());
         if ($index === false) {
@@ -372,6 +364,11 @@ class DataService
             array_splice($repositoryFilterValues, $index, 1);
             $repositoryFilter->setValues($repositoryFilterValues);
         }
+
+        $repositoryFilters = array_merge(
+            array_values($appliedRepositoryFilters),
+            array_values($tmpFilters)
+        );
 
         $queryResult = $this->repository->findByFilters($repositoryFilters);
         return $queryResult->count();
@@ -477,11 +474,5 @@ class DataService
         return array_map(function (string $value) {
             return json_decode(base64_decode($value), true);
         }, $base64ValuesArray);
-    }
-
-    private function getFilterTable(): ?string
-    {
-        $tcaFieldConfig = BackendUtility::getTcaFieldConfiguration('tt_content', PluginUtility::COLUMN_TABLE_NAME);
-        return $tcaFieldConfig['default'] ?? null;
     }
 }

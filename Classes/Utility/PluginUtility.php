@@ -22,8 +22,8 @@ class PluginUtility
     public const DETAIL_SOURCE_LABEL = 'label';
     public const FILTER_FIELD_NAME = 'fieldName';
     public const FILTER_TABLE_NAME = 'tableName';
-    public const COLUMN_TABLE_NAME = 'tx_extbase_table_name';
-    public const COLUMN_EXTENSION_NAME = 'tx_extbase_extension_name';
+    private const TABLE_NAME = 'tableName';
+    private const EXTENSION_NAME = 'extensionName';
 
     /**
      *  Add content element plugin to TCA types and add corresponding flex form sheets
@@ -45,20 +45,15 @@ class PluginUtility
 
         ExtensionManagementUtility::addPiFlexFormValue('*', $flexForm, $type);
 
-        ExtensionManagementUtility::addTCAcolumns('tt_content', [
-            self::COLUMN_TABLE_NAME => [
-                'config' => [
-                    'type' => 'none',
-                    'default' => $tableName,
+        $GLOBALS['TCA']['tt_content']['ctrl']['EXT']['rmnd_extbase'] = array_merge(
+            self::getTcaExt(),
+            [
+                $type => [
+                    self::TABLE_NAME => $tableName,
+                    self::EXTENSION_NAME => $extensionName,
                 ],
-            ],
-            self::COLUMN_EXTENSION_NAME => [
-                'config' => [
-                    'type' => 'none',
-                    'default' => $extensionName,
-                ],
-            ],
-        ]);
+            ]
+        );
 
         $columnOverrides = [
             'pages' => [
@@ -101,6 +96,16 @@ class PluginUtility
             ',
             'columnsOverrides' => $columnOverrides,
         ];
+    }
+
+    public static function getTableName(string $pluginSignature): string
+    {
+        return self::getTcaExt()[strtolower($pluginSignature)][self::TABLE_NAME];
+    }
+
+    public static function getExtensionName(string $pluginSignature): string
+    {
+        return self::getTcaExt()[strtolower($pluginSignature)][self::EXTENSION_NAME];
     }
 
     /**
@@ -209,5 +214,10 @@ class PluginUtility
     {
         $flexFormTools = new FlexFormTools();
         return $flexFormTools->flexArray2Xml($flexForm, addPrologue: true);
+    }
+
+    private static function getTcaExt(): array
+    {
+        return $GLOBALS['TCA']['tt_content']['ctrl']['EXT']['rmnd_extbase'] ?? [];
     }
 }
