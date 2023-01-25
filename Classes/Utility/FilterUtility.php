@@ -198,6 +198,11 @@ class FilterUtility
             return [$label, $value];
         }, $rows);
 
+        // Sort entries in $result by label (index 0)
+        usort($result, function (array $a, array $b) {
+            return strnatcmp($a[0], $b[0]);
+        });
+
         return array_unique($result, SORT_REGULAR);
     }
 
