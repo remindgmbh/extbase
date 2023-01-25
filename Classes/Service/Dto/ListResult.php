@@ -15,6 +15,8 @@ class ListResult
 
     protected int $count = 0;
 
+    protected ?int $countWithoutLimit = null;
+
     protected int $currentPage = 0;
 
     public function getQueryResult(): ?QueryResultInterface
@@ -49,6 +51,18 @@ class ListResult
     public function setCount(int $count): self
     {
         $this->count = $count;
+
+        return $this;
+    }
+
+    public function getCountWithoutLimit(): ?int
+    {
+        return $this->countWithoutLimit;
+    }
+
+    public function setCountWithoutLimit(?int $countWithoutLimit): self
+    {
+        $this->countWithoutLimit = $countWithoutLimit;
 
         return $this;
     }

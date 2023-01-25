@@ -12,6 +12,7 @@ class FilterableListResult extends ListResult
     public function __construct(ListResult $listResult)
     {
         $this->setCount($listResult->getCount());
+        $this->setCountWithoutLimit($listResult->getCountWithoutLimit());
         $this->setCurrentPage($listResult->getCurrentPage());
         $this->setPagination($listResult->getPagination());
         $this->setQueryResult($listResult->getQueryResult());

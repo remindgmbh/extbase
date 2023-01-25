@@ -28,6 +28,7 @@ use TYPO3\CMS\Extbase\Mvc\Request;
 use TYPO3\CMS\Extbase\Mvc\Web\RequestBuilder;
 use TYPO3\CMS\Extbase\Mvc\Web\Routing\UriBuilder;
 use TYPO3\CMS\Extbase\Pagination\QueryResultPaginator;
+use TYPO3\CMS\Extbase\Persistence\Generic\Query;
 use TYPO3\CMS\Extbase\Persistence\PersistenceManagerInterface;
 use TYPO3\CMS\Extbase\Persistence\RepositoryInterface;
 use TYPO3\CMS\Extbase\Utility\LocalizationUtility;
@@ -155,6 +156,14 @@ class DataService
         );
         $result->setQueryResult($queryResult);
         $result->setCount($queryResult->count());
+
+        if ($limit) {
+            $queryWithoutLimit = $queryResult->getQuery();
+            if ($queryWithoutLimit instanceof Query) {
+                $queryWithoutLimit->unsetLimit();
+                $result->setCountWithoutLimit($queryWithoutLimit->count());
+            }
+        }
 
         if ($itemsPerPage) {
             $paginator = new QueryResultPaginator($queryResult, $currentPage, $itemsPerPage);
