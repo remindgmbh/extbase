@@ -208,6 +208,8 @@ class ItemsProc
 
         $fieldNames = $this->getFilterDefinitionFieldNames($row);
 
+        $result = [];
+
         if (!empty($fieldNames)) {
             $fieldNames = array_map(function (string $fieldName) {
                 return GeneralUtility::camelCaseToLowerCaseUnderscored($fieldName);
@@ -261,10 +263,9 @@ class ItemsProc
             });
 
             $result = array_unique($result, SORT_REGULAR);
+            $this->removeExcludedValues($result, $excludedValues);
+            $this->addInvalidValues($result, $currentValues);
         }
-
-        $this->removeExcludedValues($result, $excludedValues);
-        $this->addInvalidValues($result, $currentValues);
 
         return $result;
     }
