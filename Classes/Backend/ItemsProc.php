@@ -182,19 +182,15 @@ class ItemsProc
             return base64_encode(json_encode($value['value']));
         }, $currentValues);
 
-        $excludedValues = $params['row'][ListFiltersSheets::APPLIED_VALUES];
-        $excludedValues = GeneralUtility::trimExplode(',', $excludedValues, true);
-
         $constraints = $this->getAvailableFilterConstraints($params);
 
-        $items = $this->getFilterValues($params, $currentValues, $excludedValues, $constraints);
+        $items = $this->getFilterValues($params, $currentValues, $constraints);
         $params['items'] = array_merge($params['items'], $items);
     }
 
     private function getFilterValues(
         array $params,
         array $currentValues,
-        ?array $excludedValues = [],
         ?CompositeExpression $constraints = null,
     ): array {
         $row = $params['row'];
@@ -263,7 +259,6 @@ class ItemsProc
             });
 
             $result = array_unique($result, SORT_REGULAR);
-            $this->removeExcludedValues($result, $excludedValues);
             $this->addInvalidValues($result, $currentValues);
         }
 
@@ -434,16 +429,6 @@ class ItemsProc
                 ];
             }, $diff)
         );
-    }
-
-    private function removeExcludedValues(array &$result, array $excludedValues): void
-    {
-        $values = array_map(function (array $value) {
-            return $value[1];
-        }, $result);
-
-        $values = array_diff($values, $excludedValues);
-        $result = array_values(array_intersect_key($result, $values));
     }
 
     private function getFilterDefinitions(array $params): array
