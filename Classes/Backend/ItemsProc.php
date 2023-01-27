@@ -179,7 +179,7 @@ class ItemsProc
         $currentValues = $this->getCurrentFilterValues($params);
         $currentValues = array_map(function (string $base64Value) {
             $value = json_decode(base64_decode($base64Value), true);
-            return base64_encode(json_encode($value['value']));
+            return base64_encode(json_encode($value['value'], JSON_UNESCAPED_UNICODE));
         }, $currentValues);
 
         $constraints = $this->getAvailableFilterConstraints($params);
@@ -397,7 +397,7 @@ class ItemsProc
             }
 
             $label = implode(', ', $data['label']);
-            $value = base64_encode(json_encode($data['value']));
+            $value = base64_encode(json_encode($data['value'], JSON_UNESCAPED_UNICODE));
 
             return [$label, $value];
         }, $rows);
