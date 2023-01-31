@@ -100,12 +100,12 @@ class PluginUtility
 
     public static function getTableName(string $pluginSignature): string
     {
-        return self::getTcaExt()[strtolower($pluginSignature)][self::TABLE_NAME];
+        return self::getTcaExt()[strtolower($pluginSignature)][self::TABLE_NAME] ?? '';
     }
 
     public static function getExtensionName(string $pluginSignature): string
     {
-        return self::getTcaExt()[strtolower($pluginSignature)][self::EXTENSION_NAME];
+        return self::getTcaExt()[strtolower($pluginSignature)][self::EXTENSION_NAME] ?? '';
     }
 
     /**
