@@ -179,7 +179,7 @@ class ItemsProc
         $currentValues = $this->getCurrentFilterValues($params);
         $currentValues = array_map(function (string $base64Value) {
             $value = json_decode(base64_decode($base64Value), true);
-            return base64_encode(json_encode($value['value'], JSON_UNESCAPED_UNICODE));
+            return $this->getBase64Value($value['value']);
         }, $currentValues);
 
         $constraints = $this->getAvailableFilterConstraints($params);
@@ -357,11 +357,9 @@ class ItemsProc
             }
             $conjunction = $filter[ListFiltersSheets::CONJUNCTION];
 
-            if ($conjunction === Conjunction::AND->value) {
-                $constraints[] = $this->queryBuilder->expr()->and(...$filterConstraints);
-            } else {
-                $constraints[] = $this->queryBuilder->expr()->or(...$filterConstraints);
-            }
+            $constraints[] = ($conjunction === Conjunction::AND->value)
+                ? $this->queryBuilder->expr()->and(...$filterConstraints)
+                : $this->queryBuilder->expr()->or(...$filterConstraints);
         }
         return $this->queryBuilder->expr()->and(...$constraints);
     }
@@ -397,10 +395,16 @@ class ItemsProc
             }
 
             $label = implode(', ', $data['label']);
-            $value = base64_encode(json_encode($data['value'], JSON_UNESCAPED_UNICODE));
+            $value = $this->getBase64Value($data['value']);
 
             return [$label, $value];
         }, $rows);
+    }
+
+    private function getBase64Value(array $value): string
+    {
+        $jsonValue = json_encode($value, JSON_UNESCAPED_UNICODE|JSON_UNESCAPED_SLASHES);
+        return base64_encode($jsonValue);
     }
 
     private function addInvalidValues(array &$result, array $currentValues): void
