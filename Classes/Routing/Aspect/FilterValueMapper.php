@@ -139,7 +139,7 @@ class FilterValueMapper implements
 
         if ($foreignTable && $mmTable) {
             $queryBuilder
-                ->join(
+                ->leftJoin(
                     $this->tableName,
                     $mmTable,
                     $mmTable,
@@ -147,17 +147,25 @@ class FilterValueMapper implements
                         $mmTable . '.uid_local',
                         $queryBuilder->quoteIdentifier($this->tableName . '.uid')
                     )
-                )
-                ->where($queryBuilder->expr()->eq(
+                );
+
+            if (!$value) {
+                $queryBuilder->where($queryBuilder->expr()->isNull($mmTable . '.uid_foreign'));
+            } else {
+                $queryBuilder->where($queryBuilder->expr()->eq(
                     $mmTable . '.uid_foreign',
                     $queryBuilder->createNamedParameter($value)
                 ));
+            }
         } else {
-            $queryBuilder
-                ->where($queryBuilder->expr()->eq(
-                    $fieldName,
-                    $queryBuilder->createNamedParameter($value)
-                ));
+            $expression = $queryBuilder->expr()->eq($fieldName, $queryBuilder->createNamedParameter($value));
+            if (!$value) {
+                $expression = $queryBuilder->expr()->or(
+                    $expression,
+                    $queryBuilder->expr()->isNull($fieldName)
+                );
+            }
+            $queryBuilder->where($expression);
         }
 
         $queryResult = $queryBuilder->executeQuery();
