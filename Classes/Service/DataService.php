@@ -33,6 +33,7 @@ use TYPO3\CMS\Extbase\Persistence\PersistenceManagerInterface;
 use TYPO3\CMS\Extbase\Persistence\RepositoryInterface;
 use TYPO3\CMS\Extbase\Utility\LocalizationUtility;
 use TYPO3\CMS\Frontend\ContentObject\ContentObjectRenderer;
+use TYPO3\CMS\Frontend\Controller\TypoScriptFrontendController;
 
 class DataService
 {
@@ -83,6 +84,7 @@ class DataService
         $filterableListResult = new FilterableListResult($listResult);
         $frontendFilters = $this->getFrontendFilters($appliedRepositoryFilters, $queryRepositoryFilters);
         $filterableListResult->setFrontendFilters($frontendFilters);
+        $this->addCacheTag($this->filterTable);
         return $filterableListResult;
     }
 
@@ -92,6 +94,7 @@ class DataService
         $recordUids = $this->settings[SelectionDataSheets::RECORDS];
         $recordUids = GeneralUtility::intExplode(',', $recordUids, true);
         $filters = [new RepositoryFilter('uid', ['uid' => $recordUids], false, Conjunction::OR)];
+        $this->addCacheTag($this->filterTable);
         return $this->getListResult($currentPage, $filters);
     }
 
@@ -101,19 +104,26 @@ class DataService
         callable $callback
     ): ?AbstractEntity {
         $source = $this->settings[DetailDataSheets::SOURCE];
+        $result = null;
         switch ($source) {
             case DetailDataSheets::SOURCE_DEFAULT:
-                return $entity;
+                $result = $entity;
+                break;
             case DetailDataSheets::SOURCE_RECORD:
                 $uid = (int) ($this->settings[DetailDataSheets::RECORD] ?? null);
-                return $repository->findByUid($uid);
+                $result = $repository->findByUid($uid);
+                break;
             default:
                 /** @var \TYPO3\CMS\Core\Routing\PageArguments $routing */
                 $routing = $this->request->getAttribute('routing');
                 $arguments = $routing->getArguments();
-
-                return $this->getDetailEntityBySource($this->extensionName, $source, $arguments, $callback) ?? null;
+                $result = $this->getDetailEntityBySource($this->extensionName, $source, $arguments, $callback) ?? null;
+                break;
         }
+        if ($result) {
+            $this->addCacheTag($this->filterTable . '_' . $result->getUid());
+        }
+        return $result;
     }
 
     public function getDetailEntityBySource(
@@ -121,7 +131,7 @@ class DataService
         string $pluginSignature,
         array $arguments,
         callable $callback
-    ) {
+    ): ?AbstractEntity {
         $sources = PluginUtility::getDetailSources($extensionName);
         $source = $sources[$pluginSignature] ?? [];
         $argument = $source[PluginUtility::DETAIL_SOURCE_ARGUMENT] ?? null;
@@ -138,6 +148,15 @@ class DataService
             }
         }
     }
+
+    public function addCacheTag(string $cacheTag)
+    {
+        $typoScriptFrontendController = $this->getTypoScriptFrontendController();
+        if ($typoScriptFrontendController) {
+            $typoScriptFrontendController->addCacheTags([$cacheTag]);
+        }
+    }
+
 
     /**
      * @param int $currentPage
@@ -349,7 +368,7 @@ class DataService
         $tmpFilters = $queryRepositoryFilters;
 
         $repositoryFilter = isset($tmpFilters[$filterName])
-            ? clone($tmpFilters[$filterName])
+            ? clone ($tmpFilters[$filterName])
             : $this->getRepositoryFilter($filterName, []);
         $tmpFilters[$filterName] = $repositoryFilter;
 
@@ -474,5 +493,10 @@ class DataService
         return array_map(function (string $value) {
             return json_decode(base64_decode($value), true);
         }, $base64ValuesArray);
+    }
+
+    private function getTypoScriptFrontendController(): ?TypoScriptFrontendController
+    {
+        return $GLOBALS['TSFE'] ?? null;
     }
 }
