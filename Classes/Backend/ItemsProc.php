@@ -62,7 +62,7 @@ class ItemsProc
         $flexParentDatabaseRow = $params['flexParentDatabaseRow'];
         $pages = $flexParentDatabaseRow['pages'];
         $pageIds = GeneralUtility::intExplode(',', $pages, true);
-        $recursive = $flexParentDatabaseRow['recursive'];
+        $recursive = (int) $flexParentDatabaseRow['recursive'];
         $pageIds = $this->pageRepository->getPageIdsRecursive($pageIds, $recursive);
 
         if (count($pageIds) > 0) {
@@ -403,7 +403,7 @@ class ItemsProc
 
     private function getBase64Value(array $value): string
     {
-        $jsonValue = json_encode($value, JSON_UNESCAPED_UNICODE|JSON_UNESCAPED_SLASHES);
+        $jsonValue = json_encode($value, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES);
         return base64_encode($jsonValue);
     }
 

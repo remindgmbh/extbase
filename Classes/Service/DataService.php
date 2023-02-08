@@ -93,7 +93,11 @@ class DataService
         $this->repository = $repository;
         $recordUids = $this->settings[SelectionDataSheets::RECORDS];
         $recordUids = GeneralUtility::intExplode(',', $recordUids, true);
-        $filters = [new RepositoryFilter('uid', ['uid' => $recordUids], false, Conjunction::OR)];
+        $filters = [
+            new RepositoryFilter('uid', array_map(function (int $uid) {
+                return ['uid' => $uid];
+            }, $recordUids), false, Conjunction::OR),
+        ];
         $this->addCacheTag($this->filterTable);
         return $this->getListResult($currentPage, $filters);
     }
