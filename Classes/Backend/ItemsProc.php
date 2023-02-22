@@ -319,6 +319,11 @@ class ItemsProc
         $constraints = [];
 
         foreach ($filters as $filter) {
+            $disabled = (bool) ($filter[ListFiltersSheets::DISABLED] ?? false);
+            if ($disabled) {
+                continue;
+            }
+
             $appliedValues = $filter[ListFiltersSheets::APPLIED_VALUES];
             $appliedValues = is_array($appliedValues)
                 ? $appliedValues
