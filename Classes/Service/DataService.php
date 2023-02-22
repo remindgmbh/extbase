@@ -19,6 +19,8 @@ use Remind\Extbase\Utility\FilterUtility;
 use Remind\Extbase\Utility\PluginUtility;
 use TYPO3\CMS\Backend\Utility\BackendUtility;
 use TYPO3\CMS\Core\Configuration\FlexForm\FlexFormTools;
+use TYPO3\CMS\Core\Database\Connection;
+use TYPO3\CMS\Core\Database\ConnectionPool;
 use TYPO3\CMS\Core\Pagination\SimplePagination;
 use TYPO3\CMS\Core\Utility\ArrayUtility;
 use TYPO3\CMS\Core\Utility\GeneralUtility;
@@ -50,9 +52,10 @@ class DataService
         private readonly PersistenceManagerInterface $persistenceManager,
         private readonly UriBuilder $uriBuilder,
         private readonly FlexFormTools $flexFormTools,
+        private readonly ConnectionPool $connectionPool,
         ConfigurationManagerInterface $configurationManager,
         Request $request,
-        RequestBuilder $requestBuilder
+        RequestBuilder $requestBuilder,
     ) {
         $configuration = $configurationManager->getConfiguration(
             ConfigurationManagerInterface::CONFIGURATION_TYPE_FRAMEWORK
@@ -232,7 +235,6 @@ class DataService
             );
 
             foreach ($filterValues as $filterValue) {
-                // TODO: use tca title for foreign_table columns
                 $label = $filterValue['label'];
                 $value = $filterValue['value'];
                 $frontendFilter->addValue(new FilterValue($value, $label));
@@ -268,19 +270,20 @@ class DataService
 
             $result[] = $frontendFilter;
         }
+        $this->setFrontendFilterValueLabels($result);
         return $result;
     }
 
     /**
      * @param string $filterName
      * @param RepositoryFilter[] $queryRepositoryFilters
-     * @param mixed $value
+     * @param array $value
      * @return bool
      */
     private function getFrontendFilterActive(
         string $filterName,
         array $queryRepositoryFilters,
-        mixed $value,
+        array $value,
     ): bool {
         $repositoryFilter = $queryRepositoryFilters[$filterName] ?? null;
 
@@ -360,7 +363,7 @@ class DataService
      * @param string $filterName
      * @param RepositoryFilter[] $appliedRepositoryFilters
      * @param RepositoryFilter[] $queryRepositoryFilters
-     * @param mixed $value
+     * @param array $value
      * @param bool $exclusive
      * @return int
      */
@@ -368,7 +371,7 @@ class DataService
         string $filterName,
         array $appliedRepositoryFilters,
         array $queryRepositoryFilters,
-        mixed $value,
+        array $value,
         bool $exclusive
     ): int {
         $tmpFilters = $queryRepositoryFilters;
@@ -397,6 +400,68 @@ class DataService
 
         $queryResult = $this->repository->findByFilters($repositoryFilters);
         return $queryResult->count();
+    }
+
+    /**
+     * @param FrontendFilter[] $frontendFilters
+     */
+    private function setFrontendFilterValueLabels(array &$frontendFilters): void
+    {
+        $fields = [];
+        foreach ($frontendFilters as $frontendFilter) {
+            foreach ($frontendFilter->getValues() as $filterValue) {
+                if ($filterValue->getLabel()) {
+                    continue;
+                }
+                foreach ($filterValue->getValue() as $field => $value) {
+                    if (!isset($fields[$field])) {
+                        $fieldTca = BackendUtility::getTcaFieldConfiguration($this->filterTable, $field);
+                        if (isset($fieldTca['foreign_table'])) {
+                            $fields[$field]['tca'] = $fieldTca;
+                        } else {
+                            $fields[$field] = false;
+                        }
+                    }
+                    if ($fields[$field]) {
+                        $fields[$field]['values'][] = $value;
+                    }
+                }
+            }
+        }
+        $foreignTableFields = array_filter($fields);
+        $labels = [];
+        foreach ($foreignTableFields as $fieldName => $field) {
+            $foreignTable = $field['tca']['foreign_table'];
+            $selectFields = GeneralUtility::trimExplode(
+                ',',
+                BackendUtility::getCommonSelectFields($foreignTable),
+                true
+            );
+            $queryBuilder = $this->connectionPool->getQueryBuilderForTable($foreignTable);
+            $queryBuilder
+                ->select(...$selectFields)
+                ->from($foreignTable)
+                ->where(
+                    $queryBuilder->expr()->in(
+                        'uid',
+                        $queryBuilder->createNamedParameter($field['values'], Connection::PARAM_INT_ARRAY)
+                    )
+                );
+            $queryResult = $queryBuilder->executeQuery();
+            $rows = $queryResult->fetchAllAssociative();
+            foreach ($rows as $row) {
+                $labels[$fieldName][$row['uid']] = BackendUtility::getRecordTitle($foreignTable, $row);
+            }
+        }
+        foreach ($frontendFilters as &$frontendFilter) {
+            foreach ($frontendFilter->getValues() as &$filterValue) {
+                if (!$filterValue->getLabel()) {
+                    $filterValue->setLabel(implode(', ', array_map(function ($value) use ($labels, $fieldName) {
+                        return $labels[$fieldName][$value];
+                    }, $filterValue->getValue())));
+                }
+            }
+        }
     }
 
     private function getRepositoryFilter(string $filterName, array $values): RepositoryFilter
