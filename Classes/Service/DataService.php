@@ -215,9 +215,10 @@ class DataService
             $filterSetting = $filterSetting[ListFiltersSheets::FILTER];
             $filterName = $this->getFilterName($filterSetting);
 
+            $disabled = (bool) $filterSetting[ListFiltersSheets::DISABLED];
             $filterValues = $this->parseBase64Values($filterSetting[ListFiltersSheets::AVAILABLE_VALUES] ?? '');
 
-            if (empty($filterValues)) {
+            if ($disabled || empty($filterValues)) {
                 continue;
             }
 
@@ -231,6 +232,7 @@ class DataService
             );
 
             foreach ($filterValues as $filterValue) {
+                // TODO: use tca title for foreign_table columns
                 $label = $filterValue['label'];
                 $value = $filterValue['value'];
                 $frontendFilter->addValue(new FilterValue($value, $label));
@@ -427,9 +429,10 @@ class DataService
             $filterSetting = $filterSetting[ListFiltersSheets::FILTER];
             $filterName = $this->getFilterName($filterSetting);
 
+            $disabled = (bool) $filterSetting[ListFiltersSheets::DISABLED];
             $values = $this->parseBase64Values($filterSetting[ListFiltersSheets::APPLIED_VALUES] ?? '');
 
-            if (empty($values)) {
+            if ($disabled || empty($values)) {
                 continue;
             }
 

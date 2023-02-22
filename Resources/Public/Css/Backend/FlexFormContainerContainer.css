@@ -1,0 +1,8 @@
+.form-irre-object--hidden {
+    opacity: 0.4;
+    transition: opacity .15s ease-in;
+}
+
+.form-irre-object--hidden:hover {
+    opacity: 1;
+}

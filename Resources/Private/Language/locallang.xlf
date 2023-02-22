@@ -54,6 +54,9 @@
             <trans-unit id="filters.conjunction.items.or">
                 <source>Or</source>
             </trans-unit>
+            <trans-unit id="filters.disabled">
+                <source>Disabled</source>
+            </trans-unit>
             <trans-unit id="filters.exclusive">
                 <source>Exclusive</source>
             </trans-unit>

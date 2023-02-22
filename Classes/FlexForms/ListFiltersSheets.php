@@ -9,17 +9,18 @@ use Remind\Extbase\Domain\Repository\Dto\Conjunction;
 
 class ListFiltersSheets
 {
-    public const SHEET_ID = 1669190816;
-    public const FILTERS = 'filters';
-    public const FILTER = 'filter';
-    public const FIELD = 'field';
-    public const CONJUNCTION = 'conjunction';
-    public const APPLIED_VALUES = 'appliedValues';
-    public const LABEL = 'label';
-    public const EXCLUSIVE = 'exclusive';
-    public const AVAILABLE_VALUES = 'availableValues';
     public const ALLOW_MULTIPLE_FIELDS = 'allowMultipleFields';
+    public const APPLIED_VALUES = 'appliedValues';
+    public const AVAILABLE_VALUES = 'availableValues';
+    public const CONJUNCTION = 'conjunction';
+    public const DISABLED = 'disabled';
+    public const EXCLUSIVE = 'exclusive';
+    public const FIELD = 'field';
     public const FIELDS = 'fields';
+    public const FILTER = 'filter';
+    public const FILTERS = 'filters';
+    public const LABEL = 'label';
+    public const SHEET_ID = 1669190816;
     private const LOCALLANG = 'LLL:EXT:rmnd_extbase/Resources/Private/Language/locallang.xlf:';
 
     public static function getSheets(): array
@@ -39,7 +40,18 @@ class ListFiltersSheets
                                     'title' => self::LOCALLANG . 'filter',
                                     'titleField' => self::FIELDS,
                                     'titleField_alt' => self::FIELD,
+                                    'disabledField' => self::DISABLED,
                                     'el' => [
+                                        self::DISABLED => [
+                                            'label' => self::LOCALLANG . 'filters.disabled',
+                                            'onChange' => 'reload',
+                                            'config' => [
+                                                'type' => 'check',
+                                                'items' => [
+                                                    [''],
+                                                ],
+                                            ],
+                                        ],
                                         self::ALLOW_MULTIPLE_FIELDS => [
                                             'label' => self::LOCALLANG . 'filters.multipleFields',
                                             'onChange' => 'reload',

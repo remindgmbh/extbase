@@ -15,6 +15,9 @@ class FlexFormContainerContainer extends BaseFlexFormContainerContainer
         $dataStructure = $this->data['flexFormDataStructureArray'];
         $titleField = $dataStructure['titleField'] ?? null;
         $titleFieldAlt = $dataStructure['titleField_alt'] ?? null;
+        $disabledField = $dataStructure['disabledField'] ?? null;
+
+        $rowData = $this->data['flexFormRowData'];
 
         $properTitleField = null;
         if (isset($dataStructure['el'][$titleField])) {
@@ -24,7 +27,6 @@ class FlexFormContainerContainer extends BaseFlexFormContainerContainer
         }
 
         if ($properTitleField) {
-            $rowData = $this->data['flexFormRowData'];
             $value = $rowData[$properTitleField]['vDEF'] ?? null;
             if ($value) {
                 $index = current(array_keys(array_filter($html, function ($value) {
@@ -37,6 +39,15 @@ class FlexFormContainerContainer extends BaseFlexFormContainerContainer
                 // hide content preview
                 $html[$index + 2] = '<output class="content-preview" style="display: none"></output>';
             }
+        }
+
+        $disabled = (bool) ($rowData[$disabledField]['vDEF'] ?? false);
+
+        if ($disabled) {
+            $needle = 'class="';
+            $pos = strpos($html[0], $needle) + strlen($needle);
+            $html[0] = substr_replace($html[0], 'form-irre-object--hidden ', $pos, 0);
+            $resultArray['stylesheetFiles'][] = 'EXT:rmnd_extbase/Resources/Public/Css/Backend/FlexFormContainerContainer.css';
         }
 
         $resultArray['html'] = implode(LF, $html);
