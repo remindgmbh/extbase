@@ -113,6 +113,7 @@ class ListFiltersSheets
                                         self::APPLIED_VALUES => [
                                             'label' => self::LOCALLANG . 'filters.appliedValues',
                                             'description' => self::LOCALLANG . 'filters.appliedValues.description',
+                                            'onChange' => 'reload',
                                             'config' => [
                                                 'type' => 'select',
                                                 'renderType' => 'selectMultipleSideBySide',
