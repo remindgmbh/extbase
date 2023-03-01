@@ -27,7 +27,7 @@ Limit the route enhancer to certain page types, for example to enhance solr sear
 
 ### example for News Extension
 
-```
+```yaml
   News:
     limitToPages: [20]
     type: QueryExtbase
@@ -64,3 +64,31 @@ Limit the route enhancer to certain page types, for example to enhance solr sear
             value: kategorie
 
 ```
+
+## FilterValueMapper
+
+Used to modify filter keys and check filter values. Filter query parameters use an array syntax like `?filter[name]=...&filter[title]=...` and the `FilterValueMapper` allows to change the array key by using aspects. In addition, only values that are present in the database are allowed for values.
+
+Example for `?filter[name]=...&filter[title]=...`:
+
+```yaml
+aspects:
+  filter:
+    type: FilterValueMapper
+    tableName: tx_contacts_domain_model_contact
+    parameters:
+      name: Name
+      title:
+        type: LocaleModifier
+        default: Title
+        localeMap:
+          -
+            locale: 'de_DE.*'
+            value: Titel
+
+```
+With this settings, the query parameters will look like this:
+
+English: `?filter[Name]=...&filter[Title]=...`
+
+German: `?filter[Name]=...&filter[Titel]=...`
