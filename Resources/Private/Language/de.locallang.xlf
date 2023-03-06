@@ -1,118 +1,118 @@
 <?xml version="1.0" encoding="utf-8" standalone="yes" ?>
 <xliff version="1.0">
-    <file source-language="en" datatype="plaintext" original="EXT:rmnd_extbase/Resources/Private/Language/locallang.xlf" product-name="rmnd_extbase">
+    <file source-language="en" datatype="plaintext" original="EXT:rmnd_extbase/Resources/Private/Language/de.locallang.xlf" product-name="rmnd_extbase">
         <header/>
         <body>
             <trans-unit id="data">
-                <source>Data</source>
+                <target>Daten</target>
             </trans-unit>
             <trans-unit id="data.source">
-                <source>Source</source>
+                <target>Quelle</target>
             </trans-unit>
             <trans-unit id="data.source.default">
-                <source>Default</source>
+                <target>Standard</target>
             </trans-unit>
             <trans-unit id="data.source.record">
-                <source>Record</source>
+                <target>Datensatz</target>
             </trans-unit>
             <trans-unit id="data.record">
-                <source>Record</source>
+                <target>Datensatz</target>
             </trans-unit>
             <trans-unit id="data.records">
-                <source>Records</source>
+                <target>Datensätze</target>
             </trans-unit>
             <trans-unit id="emptyValue">
-                <source>(Value not set)</source>
+                <target>(Wert nicht gesetzt)</target>
             </trans-unit>
             <trans-unit id="filter">
-                <source>Filter</source>
+                <target>Filter</target>
             </trans-unit>
             <trans-unit id="filters">
-                <source>Filters</source>
+                <target>Filter</target>
             </trans-unit>
             <trans-unit id="filters.appliedValues">
-                <source>Applied Values (empty = no filter)</source>
+                <target>Angewandte Werte (leer = keine Filter)</target>
             </trans-unit>
             <trans-unit id="filters.appliedValues.description">
-                <source>These filter values are always applied</source>
+                <target>Diese Filter Werte werden immer angewandt</target>
             </trans-unit>
             <trans-unit id="filters.availableValues">
-                <source>Available Values (empty = filter not available)</source>
+                <target>Verfügbare Werte (leer = Filter nicht verfügbar)</target>
             </trans-unit>
             <trans-unit id="filters.availableValues.description">
-                <source>Define filter values which should be available for filtering in frontend</source>
+                <target>Filter Werte festlegen, die im Frontend auswählbar sind</target>
             </trans-unit>
             <trans-unit id="filters.conjunction">
-                <source>Conjunction Mode</source>
+                <target>Verknüpfungs-Modus</target>
             </trans-unit>
             <trans-unit id="filters.conjunction.description">
-                <source>Determines whether filter values should be combined with 'AND' or 'OR'. Applies to 'Available Values' (unless exclusive is set) and 'Applied Values' </source>
+                <target>Legt fest, ob die Filter Werte mit 'UND' oder 'ODER' verknüpft werden. Bezieht sich auf 'Verfügbare Werte' (außer wenn exklusiv ausgewählt ist) und 'Angewandte Werte' </target>
             </trans-unit>
             <trans-unit id="filters.conjunction.items.and">
-                <source>And</source>
+                <target>Und</target>
             </trans-unit>
             <trans-unit id="filters.conjunction.items.or">
-                <source>Or</source>
+                <target>Oder</target>
             </trans-unit>
             <trans-unit id="filters.disabled">
-                <source>Disabled</source>
+                <target>Deaktiviert</target>
             </trans-unit>
             <trans-unit id="filters.exclusive">
-                <source>Exclusive</source>
+                <target>Exklusiv</target>
             </trans-unit>
             <trans-unit id="filters.exclusive.description">
-                <source>If checked only one value for this field can be selected in frontend</source>
+                <target>Wenn aktiv kann im Frontend nur ein Wert für dieses Feld gewählt werden</target>
             </trans-unit>
             <trans-unit id="filters.field">
-                <source>Field</source>
+                <target>Feld</target>
             </trans-unit>
             <trans-unit id="filters.fields">
-                <source>Fields</source>
+                <target>Felder</target>
             </trans-unit>
             <trans-unit id="filters.label">
-                <source>Label</source>
+                <target>Beschriftung</target>
             </trans-unit>
             <trans-unit id="filters.label.description">
-                <source>Visible in frontend filtering, defaults to label from field TCA</source>
+                <target>Sichtbar in der Frontend Filterung, standardmäßig der Feldname</target>
             </trans-unit>
             <trans-unit id="filters.multipleFields">
-                <source>Multiple Fields</source>
+                <target>Mehrere Felder</target>
             </trans-unit>
             <trans-unit id="label">
-                <source>Label</source>
+                <target>Beschriftung</target>
             </trans-unit>
             <trans-unit id="list">
-                <source>List</source>
+                <target>Liste</target>
             </trans-unit>
             <trans-unit id="list.detailPage">
-                <source>Detail Page</source>
+                <target>Detail Seite</target>
             </trans-unit>
             <trans-unit id="list.orderBy">
-                <source>Order By</source>
+                <target>Sortieren nach</target>
             </trans-unit>
             <trans-unit id="list.orderBy.none">
-                <source>None</source>
+                <target>Keine Sortierung</target>
             </trans-unit>
             <trans-unit id="list.orderDirection">
-                <source>Order Direction</source>
+                <target>Sortierrichtung</target>
             </trans-unit>
             <trans-unit id="list.orderDirection.asc">
-                <source>Ascending</source>
+                <target>Aufsteigend</target>
             </trans-unit>
             <trans-unit id="list.orderDirection.desc">
-                <source>Descending</source>
+                <target>Absteigend</target>
             </trans-unit>
             <trans-unit id="list.pagination.itemsPerPage">
-                <source>Items Per Page</source>
+                <target>Einträge pro Seite</target>
             </trans-unit>
             <trans-unit id="list.pagination.limit">
-                <source>Limit</source>
+                <target>Limit</target>
             </trans-unit>
             <trans-unit id="settings">
-                <source>Settings</source>
+                <target>Einstellungen</target>
             </trans-unit>
             <trans-unit id="value">
-                <source>Value</source>
+                <target>Wert</target>
             </trans-unit>
         </body>
     </file>
