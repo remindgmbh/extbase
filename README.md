@@ -3,12 +3,12 @@
 This extension provides basic functionality that can be used in other extbase extensions, mainly configurations and utilities/services for Plugins
 that allow consistent list, filter and detail views.
 
-## QueryExtbase Route Enhancer
+## ExtbaseQuery Route Enhancer
 
-QueryExtbase Route Enhancer replaces extbase plugin query parameters with custom names and omits action and controller parameters.
+ExtbaseQuery Route Enhancer replaces extbase plugin query parameters with custom names and omits action and controller parameters.
 
 ### limitToPages
-Required for QueryExtbase route enhancer to work, because without limit all routes would match.
+Required for ExtbaseQuery route enhancer to work, because without limit all routes would match.
 
 ### defaults
 Behave the same as described [here](https://docs.typo3.org/m/typo3/reference-coreapi/main/en-us/ApiOverview/Routing/AdvancedRoutingConfiguration.html#enhancers).
@@ -30,7 +30,7 @@ Limit the route enhancer to certain page types, for example to enhance solr sear
 ```yaml
   News:
     limitToPages: [20]
-    type: QueryExtbase
+    type: ExtbaseQuery
     extension: News
     plugin: Pi1
     _controller: 'News::list'
@@ -67,7 +67,7 @@ Limit the route enhancer to certain page types, for example to enhance solr sear
 
 ## FilterValueMapper
 
-Used to modify filter keys and check filter values. Filter query parameters use an array syntax like `?filter[name]=...&filter[title]=...` and the `FilterValueMapper` allows to change the array key by using aspects. In addition, only values that are present in the database are allowed for values.
+Used to modify filter keys and check filter values. Filter query parameters use an array syntax like `?filter[name]=...&filter[title]=...` and the `FilterValueMapper` allows to change the array key by using aspects. In addition, only values defined in `pi_flexform` field of `tt_content` with `CType` defined in config are allowed for values.
 
 Example for `?filter[name]=...&filter[title]=...`:
 
@@ -76,6 +76,7 @@ aspects:
   filter:
     type: FilterValueMapper
     tableName: tx_contacts_domain_model_contact
+    cType: contacts_filterablelist
     parameters:
       name: Name
       title:

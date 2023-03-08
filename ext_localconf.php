@@ -7,7 +7,7 @@ use Remind\Extbase\Backend\Form\Element\ValueLabelPairsElement;
 use Remind\Extbase\Backend\Form\FormDataProvider\ValueLabelPairsItems;
 use Remind\Extbase\Routing\Aspect\FilterValueMapper;
 use Remind\Extbase\Routing\Aspect\PersistedValueMapper;
-use Remind\Extbase\Routing\Enhancer\QueryExtbasePluginEnhancer;
+use Remind\Extbase\Routing\Enhancer\ExtbasePluginQueryEnhancer;
 use TYPO3\CMS\Backend\Form\Container\FlexFormContainerContainer as BaseFlexFormContainerContainer;
 use TYPO3\CMS\Backend\Form\FormDataProvider\SiteResolving;
 
@@ -67,5 +67,5 @@ defined('TYPO3_MODE') || die('Access denied.');
         ['SYS']
         ['routing']
         ['enhancers']
-        ['QueryExtbase'] = QueryExtbasePluginEnhancer::class;
+        ['ExtbaseQuery'] = ExtbasePluginQueryEnhancer::class;
 })();
