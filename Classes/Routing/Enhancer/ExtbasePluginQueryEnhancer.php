@@ -8,6 +8,7 @@ use InvalidArgumentException;
 use Remind\Extbase\Context\PageAspect;
 use TYPO3\CMS\Core\Context\ContextAwareInterface;
 use TYPO3\CMS\Core\Routing\Aspect\MappableAspectInterface;
+use TYPO3\CMS\Core\Routing\Aspect\ModifiableAspectInterface;
 use TYPO3\CMS\Core\Routing\Enhancer\AbstractEnhancer;
 use TYPO3\CMS\Core\Routing\Enhancer\ResultingInterface;
 use TYPO3\CMS\Core\Routing\Enhancer\RoutingEnhancerInterface;
@@ -18,6 +19,8 @@ use TYPO3\CMS\Core\Routing\RouteNotFoundException;
 
 class ExtbasePluginQueryEnhancer extends AbstractEnhancer implements RoutingEnhancerInterface, ResultingInterface
 {
+    private const LABEL_ASPECT_SUFFIX = '_label';
+
     protected string $namespace;
 
     protected string $controllerName;
@@ -28,10 +31,13 @@ class ExtbasePluginQueryEnhancer extends AbstractEnhancer implements RoutingEnha
 
     protected array $types;
 
+    protected array $parameters;
+
     public function __construct(array $configuration)
     {
         $this->defaults = $configuration['defaults'] ?? [];
         $this->types = $configuration['types'] ?? [0];
+        $this->parameters = $configuration['parameters'] ?? [];
 
         if (!isset($configuration['limitToPages']) || empty($configuration['limitToPages'])) {
             throw new InvalidArgumentException(
@@ -76,8 +82,17 @@ class ExtbasePluginQueryEnhancer extends AbstractEnhancer implements RoutingEnha
 
         $deflatedParameters = [];
 
+        $originalKeys = [];
+        foreach ($this->parameters['keys'] as $originalKey => $key) {
+            $keyAspect = $this->aspects[$key] ?? null;
+            $modifiedKey = $keyAspect instanceof ModifiableAspectInterface ? $keyAspect->modify() : $key;
+            $originalKeys[$modifiedKey] = $originalKey;
+        }
+
         foreach ($parameters as $key => $value) {
-            $aspect = $this->getAspect($key, $defaultPageRoute);
+            $key = $originalKeys[$key] ?? $key;
+            $valueAspectName = $this->parameters['values'][$key];
+            $aspect = $this->getAspect($valueAspectName, $defaultPageRoute);
             $resolvedValue = $aspect?->resolve(is_string($value) ? $value : json_encode($value));
             if (!$resolvedValue) {
                 throw new RouteNotFoundException(
@@ -114,7 +129,8 @@ class ExtbasePluginQueryEnhancer extends AbstractEnhancer implements RoutingEnha
         $deflatedParameters = [];
 
         foreach ($namespaceParameters as $key => $value) {
-            $aspect = $this->getAspect($key, $defaultPageRoute);
+            $valueAspectName = $this->parameters['values'][$key];
+            $aspect = $this->getAspect($valueAspectName, $defaultPageRoute);
             $generatedValue = $aspect?->generate(is_string($value) ? $value : json_encode($value));
             if (!$generatedValue) {
                 throw new InvalidArgumentException(
@@ -129,6 +145,9 @@ class ExtbasePluginQueryEnhancer extends AbstractEnhancer implements RoutingEnha
             $generatedValue = is_string($value) ? $generatedValue : json_decode($generatedValue, true);
             $defaultValue = $this->defaults[$key] ?? null;
             if ($defaultValue !== $generatedValue) {
+                $newKey = $this->parameters['keys'][$key] ?? null;
+                $keyAspect = $this->aspects[$newKey] ?? null;
+                $key = $keyAspect instanceof ModifiableAspectInterface ? $keyAspect->modify() : $newKey ?? $key;
                 $deflatedParameters[$key] = $generatedValue;
             }
         }

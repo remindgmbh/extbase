@@ -16,11 +16,11 @@ Behave the same as described [here](https://docs.typo3.org/m/typo3/reference-cor
 ### namespace, extension, plugin, \_controller
 Behave the same as described [here](https://docs.typo3.org/m/typo3/reference-coreapi/main/en-us/ApiOverview/Routing/AdvancedRoutingConfiguration.html#extbase-plugin-enhancer).
 
-### \_arguments
-Replace the default query parameter name with a custom one. Key is the name, value the old. For Example `tag: overwriteDemand/tags`.
+### parameters
+Parameters are divided into keys and values. In both, use the original parameter name as the key and the aspect name as the value. In keys it is possible to simply use a new parameter name as value instead of an aspect.
 
 ### aspects
-Aspects with the suffix `Label` should use `LocaleModifier` to replace the query parameter name with localized names. So if a query parameter with the argument `page: currentPage` and an Aspect with the key `pageLabel` exists, the localized names would be used.
+Aspects used for keys and values defined in parameters. Aspects for parameter keys must implement `ModifiableAspectInterface` while aspects for parameter values must implement `MappableAspectInterface`.
 
 ### types
 Limit the route enhancer to certain page types, for example to enhance solr search result routes but not autocomplete routes. Defaults to `[0]`.
@@ -36,26 +36,23 @@ Limit the route enhancer to certain page types, for example to enhance solr sear
     _controller: 'News::list'
     defaults:
       page: '1'
-    _arguments:
-      page: currentPage
-      category: overwriteDemand/categories
+    parameters:
+      values:
+        currentPage: pageValue
+        overwriteDemand/categories: categoryValue
+      keys:
+        currentPage: page
+        overwriteDemand/categories: categoryKey
     aspects:
-      page:
+      pageValue:
         type: StaticRangeMapper
         start: '1'
         end: '5'
-      pageLabel:
-        type: LocaleModifier
-        default: page
-        localeMap:
-          -
-            locale: 'de_DE.*'
-            value: seite
-      category:
+      categoryValue:
         type: PersistedAliasMapper
         tableName: sys_category
         routeFieldName: slug
-      categoryLabel:
+      categoryKey:
         type: LocaleModifier
         default: category
         localeMap:
@@ -67,7 +64,7 @@ Limit the route enhancer to certain page types, for example to enhance solr sear
 
 ## FilterValueMapper
 
-Used to modify filter keys and check filter values. Filter query parameters use an array syntax like `?filter[name]=...&filter[title]=...` and the `FilterValueMapper` allows to change the array key by using aspects. In addition, only values defined in `pi_flexform` field of `tt_content` with `CType` defined in config are allowed for values.
+Used to modify filter keys and check filter values. Filter query parameters use an array syntax like `?filter[name]=...&filter[title]=...` and the `FilterValueMapper` allows to change the array key by using aspects. In addition, only values defined in `pi_flexform` field of `tt_content` with `CType` defined in config are allowed for values. `parameters` and `aspects` act the same as in `ExtbaseQuery Route Enhancer` config.
 
 Example for `?filter[name]=...&filter[title]=...`:
 
@@ -78,8 +75,11 @@ aspects:
     tableName: tx_contacts_domain_model_contact
     cType: contacts_filterablelist
     parameters:
-      name: Name
-      title:
+      keys:
+        name: Name
+        title: titleKey
+    aspects:
+      titleKey:
         type: LocaleModifier
         default: Title
         localeMap:

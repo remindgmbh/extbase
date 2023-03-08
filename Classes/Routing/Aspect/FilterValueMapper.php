@@ -35,28 +35,23 @@ class FilterValueMapper implements
     use SiteAccessorTrait;
 
     private string $tableName;
+    private string $cType;
     private array $parameters;
+    private array $aspects;
     private AspectFactory $aspectFactory;
     private FlexFormService $flexFormService;
-    private string $cType;
 
     public function __construct(array $settings)
     {
         $tableName = $settings['tableName'] ?? null;
-        $parameters = $settings['parameters'] ?? [];
         $cType = $settings['cType'] ?? null;
+        $parameters = $settings['parameters'] ?? [];
+        $aspects = $settings['aspects'] ?? [];
 
         if (!is_string($tableName)) {
             throw new InvalidArgumentException(
                 'tableName must be string',
                 1674134308
-            );
-        }
-
-        if (!is_array($parameters)) {
-            throw new InvalidArgumentException(
-                'parameters must be array',
-                1674134532
             );
         }
 
@@ -67,16 +62,31 @@ class FilterValueMapper implements
             );
         }
 
+        if (!is_array($parameters)) {
+            throw new InvalidArgumentException(
+                'parameters must be array',
+                1674134532
+            );
+        }
+
+        if (!is_array($aspects)) {
+            throw new InvalidArgumentException(
+                'aspects must be array',
+                1678435905
+            );
+        }
+
         $this->tableName = $tableName;
-        $this->parameters = $parameters;
         $this->cType = $cType;
+        $this->parameters = $parameters;
+        $this->aspects = $aspects;
         $this->aspectFactory = GeneralUtility::makeInstance(AspectFactory::class);
         $this->flexFormService = GeneralUtility::makeInstance(FlexFormService::class);
     }
 
     public function generate(string $originalValue): ?string
     {
-        $parametersMap = $this->getParametersMap();
+        $parameterKeys = $this->getParameterKeys();
         $values = json_decode($originalValue, true);
         $result = [];
         $filters = $this->getFilters();
@@ -84,7 +94,8 @@ class FilterValueMapper implements
             if (!$this->isValid($value, $filters, $fieldName)) {
                 return null;
             }
-            $result[$parametersMap[$fieldName] ?? $fieldName] = $value;
+            $generatedValue = $this->processValue($fieldName, $value, 'generate');
+            $result[$parameterKeys[$fieldName] ?? $fieldName] = $generatedValue;
         }
 
         return json_encode($result);
@@ -92,16 +103,17 @@ class FilterValueMapper implements
 
     public function resolve(string $originalValue): ?string
     {
-        $parametersMap = array_flip($this->getParametersMap());
+        $parameterKeys = array_flip($this->getParameterKeys());
         $values = json_decode($originalValue, true);
         $result = [];
         $filters = $this->getFilters();
         foreach ($values as $mappedFieldName => $value) {
-            $fieldName = $parametersMap[$mappedFieldName] ?? $mappedFieldName;
-            if (!$this->isValid($value, $filters, $fieldName)) {
+            $fieldName = $parameterKeys[$mappedFieldName] ?? $mappedFieldName;
+            $resolvedValue = $this->processValue($fieldName, $value, 'resolve');
+            if (!$this->isValid($resolvedValue, $filters, $fieldName)) {
                 return null;
             }
-            $result[$fieldName] = $value;
+            $result[$fieldName] = $resolvedValue;
         }
 
         return json_encode($result);
@@ -124,23 +136,63 @@ class FilterValueMapper implements
         return empty(array_diff(is_array($value) ? $value : [$value], $availableValues));
     }
 
-    private function getParametersMap(): array
+    private function processValue(string $key, mixed $value, string $aspectFunction): mixed
+    {
+        $aspectName = $this->parameters['values'][$key] ?? null;
+        $aspect = $this->aspects[$aspectName] ?? null;
+        if (!$aspectName) {
+            return $value;
+        } elseif (!$aspect) {
+            throw new InvalidArgumentException(
+                sprintf(
+                    'Aspect with name \'%s\' not found for parameter \'%s\'!',
+                    $aspectName,
+                    $key,
+                ),
+                1678436589
+            );
+        }
+        [$aspect] = $this->aspectFactory->createAspects(
+            [$aspect],
+            $this->getSiteLanguage(),
+            $this->getSite()
+        );
+        if (!($aspect instanceof StaticMappableAspectInterface)) {
+            throw new InvalidArgumentException(
+                sprintf(
+                    'FilterValueMapper parameters/values aspects must be of type \'%s\'',
+                    StaticMappableAspectInterface::class
+                ),
+                1678349946
+            );
+        }
+
+        if (is_array($value)) {
+            return array_map(function (mixed $value) use ($aspect, $aspectFunction) {
+                return $aspect->{$aspectFunction}($value);
+            }, $value);
+        } else {
+            return $aspect->{$aspectFunction}($value);
+        }
+    }
+
+    private function getParameterKeys(): array
     {
         $result = [];
-        foreach ($this->parameters as $fieldName => $parameter) {
-            if (is_string($parameter)) {
+        foreach ($this->parameters['keys'] as $fieldName => $parameter) {
+            $aspect = $this->aspects[$parameter] ?? null;
+            if (!$aspect) {
                 $result[$fieldName] = $parameter;
             } else {
-                $aspects = $this->aspectFactory->createAspects(
-                    [$parameter],
+                [$modifier] = $this->aspectFactory->createAspects(
+                    [$aspect],
                     $this->getSiteLanguage(),
                     $this->getSite()
                 );
-                $modifier = current($aspects);
                 if (!($modifier instanceof ModifiableAspectInterface)) {
                     throw new InvalidArgumentException(
                         sprintf(
-                            'FilterValueMapper _arguments aspects must be of type \'%s\'',
+                            'FilterValueMapper parameters/keys aspects must be of type \'%s\'',
                             ModifiableAspectInterface::class
                         ),
                         1674134317
