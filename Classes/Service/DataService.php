@@ -457,7 +457,7 @@ class DataService
             foreach ($frontendFilter->getValues() as &$filterValue) {
                 if (!$filterValue->getLabel()) {
                     $filterValue->setLabel(implode(', ', array_map(function ($value) use ($labels, $fieldName) {
-                        return $labels[$fieldName][$value];
+                        return $labels[$fieldName][$value] ?? '';
                     }, $filterValue->getValue())));
                 }
             }
