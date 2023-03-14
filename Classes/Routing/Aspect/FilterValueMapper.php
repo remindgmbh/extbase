@@ -130,9 +130,14 @@ class FilterValueMapper implements
             );
             return in_array($fieldName, $fields);
         }));
-        $availableValues = array_map(function (string $base64value) use ($fieldName) {
-            return json_decode(base64_decode($base64value), true)['value'][$fieldName];
-        }, GeneralUtility::trimExplode(',', $filter[ListFiltersSheets::AVAILABLE_VALUES]));
+        if (!$filter) {
+            return false;
+        }
+        $availableValues = array_filter(array_map(function (string $base64value) use ($fieldName) {
+            $jsonValue = base64_decode($base64value);
+            $value = json_decode($jsonValue, true);
+            return $value['value'][$fieldName] ?? null;
+        }, GeneralUtility::trimExplode(',', $filter[ListFiltersSheets::AVAILABLE_VALUES])));
         return empty(array_diff(is_array($value) ? $value : [$value], $availableValues));
     }
 

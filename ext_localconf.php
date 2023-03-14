@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 use Remind\Extbase\Backend\Form\Container\FlexFormContainerContainer;
 use Remind\Extbase\Backend\Form\Element\ValueLabelPairsElement;
+use Remind\Extbase\Backend\Form\FormDataProvider\ValueLabelPairsFields;
 use Remind\Extbase\Backend\Form\FormDataProvider\ValueLabelPairsItems;
 use Remind\Extbase\Routing\Aspect\FilterValueMapper;
 use Remind\Extbase\Routing\Aspect\PersistedValueMapper;
@@ -33,6 +34,19 @@ defined('TYPO3_MODE') || die('Access denied.');
         ['formDataGroup']
         ['flexFormSegment']
         [ValueLabelPairsItems::class]
+        = [
+            'depends' => [
+                SiteResolving::class,
+            ],
+        ];
+
+    $GLOBALS
+        ['TYPO3_CONF_VARS']
+        ['SYS']
+        ['formEngine']
+        ['formDataGroup']
+        ['flexFormSegment']
+        [ValueLabelPairsFields::class]
         = [
             'depends' => [
                 SiteResolving::class,

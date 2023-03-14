@@ -57,6 +57,7 @@ class ValueLabelPairsElement extends AbstractFormElement
                 'label' => $this->appendValueToLabelInDebugMode($label, $value),
             ];
         }, $possibleItems);
+        $fields = $config['fields'] ?? [];
 
         $fieldInformationResult = $this->renderFieldInformation();
         $fieldInformationHtml = $fieldInformationResult['html'];
@@ -72,6 +73,7 @@ class ValueLabelPairsElement extends AbstractFormElement
                 GeneralUtility::implodeAttributes([
                     'dataId' => $attributes['id'],
                     'possibleItems' => json_encode($possibleItems ?? []),
+                    'fields' => json_encode($fields),
                 ], true),
             ),
             sprintf(
@@ -85,10 +87,12 @@ class ValueLabelPairsElement extends AbstractFormElement
         ];
 
         $resultArray['requireJsModules'][] = JavaScriptModuleInstruction::forRequireJS(
-            'TYPO3/CMS/RmndExtbase/Backend/Element/ValueLabelPairsElement'
+            'TYPO3/CMS/RmndExtbase/Backend/ValueLabelPairsElement'
         );
         $resultArray
             ['additionalInlineLanguageLabelFiles'][] = 'EXT:rmnd_extbase/Resources/Private/Language/locallang.xlf';
+        $resultArray
+            ['additionalInlineLanguageLabelFiles'][] = 'EXT:core/Resources/Private/Language/locallang_core.xlf';
 
         $resultArray['html'] = implode(LF, $html);
         return $resultArray;

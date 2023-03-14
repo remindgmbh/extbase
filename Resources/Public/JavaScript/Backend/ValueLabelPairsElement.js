@@ -1,13 +1,31 @@
 define(
-    ["lit", "lit/directives/repeat", "TYPO3/CMS/Core/lit-helper"],
-    (function ({ html, LitElement }, { repeat }, { lll }) {
+    ["lit", "lit/directives/repeat", "TYPO3/CMS/Core/lit-helper", "TYPO3/CMS/Backend/Modal"],
+    (function ({ html, LitElement }, { repeat }, { lll }, Modal) {
         class ValueLabelPairsElement extends LitElement {
             entries = []
             static get properties() {
                 return {
                     possibleItems: { type: Array },
-                    dataId: { type: String }
+                    dataId: { type: String },
+                    fields: { type: Array }
                 }
+            }
+            constructor() {
+                super()
+                window.addEventListener('message', (e) => {
+                    const data = e.data
+                    if (data.dataId === this.dataId) {
+                        if (!this.entries[data.index]) {
+                            this.entries[data.index] = {}
+                        }
+
+                        this.entries[data.index].value = btoa(JSON.stringify(data.value))
+                        this.updateEntries()
+                    }
+                });
+            }
+            isCustomValue(entry) {
+                return !this.possibleItems.some((item) => item.value === entry.value)
             }
             getUnusedItems(currentItem) {
                 return this.possibleItems.filter((item => {
@@ -60,7 +78,10 @@ define(
                                             <div>${this.renderEntryButtons(index)}</div>
                                         </div>
                                     `)}
-                                    <div>${this.renderAddButton()}</div>
+                                    <div style="display: flex; gap: 1rem;">
+                                        <div>${this.renderAddButton()}</div>
+                                        <div>${this.renderCustomAddButton()}</div>
+                                    </div>
                                 </div>
                             </div>
                         </div>
@@ -74,27 +95,49 @@ define(
                             <div style="width: 50%;">${lll('value')}</div>
                             <div style="width: 50%;">${lll('label')}</div>
                             <!-- Used to align labels above input fields -->
-                            <div style="height: 0; visibility: hidden;">${this.renderEntryButtons()}</div>
+                            <div style="flex-basis: 124px; flex-grow: 0; flex-shrink: 0;"></div>
                         </div>
                     `
                 }
             }
             renderValue(entry, index) {
-                const updateValue = (event) => {
-                    const value = event.target.value
-                    this.entries[index].value = value
-                    this.updateEntries()
+                const renderInput = () => {
+                    const editValue = () => {
+                        this.showModal(index, entry.value)
+                    }
+                    const jsonValue = atob(entry.value)
+                    const keys = Object.keys(JSON.parse(jsonValue))
+                    const difference = keys.filter(key => !this.fields.includes(key))
+                    const invalidValue = difference.length > 0
+                    const value = invalidValue ? lll('labels.noMatchingValue').replace('%s', jsonValue) : jsonValue
+                    
+                    return html`
+                        <div style="display: flex;">
+                            <input class="form-control" type="text" value="${value}" disabled>
+                            <button class="btn btn-default" type="button" @click="${editValue}" ?disabled="${invalidValue}">
+                                <typo3-backend-icon identifier="actions-open" size="small"></typo3-backend-icon>
+                            </button>
+                        </div>
+                    `
                 }
 
-                const possibleItems = this.getUnusedItems(entry)
+                const renderSelect = () => {
+                    const possibleItems = this.getUnusedItems(entry)
+                    const updateValue = (event) => {
+                        const value = event.target.value
+                        this.entries[index].value = value
+                        this.updateEntries()
+                    }
+                    return html`
+                        <select class="form-select" @change="${updateValue}">
+                            ${repeat(possibleItems, (item) => item.value, (item) => html`
+                                <option ?selected="${item.value == entry.value}" value="${item.value}">${item.label}</option>
+                            `)}
+                        </select>
+                    `
+                }
 
-                return html`
-                    <select class="form-select" @change="${updateValue}">
-                        ${repeat(possibleItems, (item) => item.value, (item) => html`
-                            <option ?selected="${item.value == entry.value}" value="${item.value}">${item.label}</option>
-                        `)}
-                    </select>
-                `
+                return this.isCustomValue(entry) ? renderInput() : renderSelect()
             }
             renderLabel(entry, index) {
                 const updateLabel = (event) => {
@@ -115,12 +158,30 @@ define(
                 }
                 const disabled = unusedItems.length === 0
                 return html`
-                    <button class="btn btn-default" type="button" ?disabled="${disabled}" @click="${addEntry}">
+                    <button class="btn btn-default" type="button" ?disabled="${disabled}" @click="${addEntry}" title="${lll('addEntry')}">
                         <typo3-backend-icon identifier="actions-add" size="small"></typo3-backend-icon>
                     </button>
                 `;
             }
+            renderCustomAddButton() {
+                return html`
+                    <button class="btn btn-default" type="button" @click="${() => this.showModal(this.entries.length)}" title="${lll('addCustomEntry')}">
+                        <typo3-backend-icon identifier="actions-variable-add" size="small"></typo3-backend-icon>
+                    </button>
+                `;
+            }
+            showModal(index, value) {
+                const fieldsParam = btoa(JSON.stringify(this.fields))
+                const valueParam = value ? JSON.stringify(value) : undefined
+                Modal.advanced({
+                    type: Modal.types.iframe,
+                    content: `/typo3/rmnd/field-values-editor?dataId=${this.dataId}&fields=${fieldsParam}&index=${index}&value=${valueParam}`,
+                    size: Modal.sizes.medium,
+                });
+            }
             renderEntryButtons(index) {
+                const entry = this.entries[index]
+
                 const removeValue = () => {
                     this.entries.splice(index, 1)
                     this.updateEntries()
@@ -128,18 +189,16 @@ define(
 
                 const moveUp = () => {
                     if (index > 0) {
-                        const element = this.entries[index]
                         this.entries.splice(index, 1)
-                        this.entries.splice(index - 1, 0, element)
+                        this.entries.splice(index - 1, 0, entry)
                         this.updateEntries()
                     }
                 }
 
                 const moveDown = () => {
                     if (index < this.entries.length - 1) {
-                        const element = this.entries[index]
                         this.entries.splice(index, 1)
-                        this.entries.splice(index + 1, 0, element)
+                        this.entries.splice(index + 1, 0, entry)
                         this.updateEntries()
                     }
                 }

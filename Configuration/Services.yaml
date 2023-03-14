@@ -8,3 +8,5 @@ services:
     exclude: '../Classes/Domain/Model/*'
   Remind\Extbase\Service\DataService:
     shared: false
+  Remind\Extbase\Controller\FieldValuesEditorController:
+    tags: ['backend.controller']

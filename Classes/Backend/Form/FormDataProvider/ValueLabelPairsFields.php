@@ -7,7 +7,7 @@ namespace Remind\Extbase\Backend\Form\FormDataProvider;
 use TYPO3\CMS\Backend\Form\FormDataProvider\AbstractItemProvider;
 use TYPO3\CMS\Backend\Form\FormDataProviderInterface;
 
-class ValueLabelPairsItems extends AbstractItemProvider implements FormDataProviderInterface
+class ValueLabelPairsFields extends AbstractItemProvider implements FormDataProviderInterface
 {
    /**
     * Add form data to result array
@@ -28,21 +28,23 @@ class ValueLabelPairsItems extends AbstractItemProvider implements FormDataProvi
                 continue;
             }
 
-            $fieldConfig['config']['items'] = $this->sanitizeItemArray(
-                $fieldConfig['config']['items'] ?? [],
+            $fieldConfig['config']['fields'] = $this->sanitizeItemArray(
+                $fieldConfig['config']['fields'] ?? [],
                 $table,
                 $fieldName
             );
 
-            // Resolve "itemsProcFunc"
-            if (!empty($fieldConfig['config']['itemsProcFunc'])) {
-                $fieldConfig['config']['items'] = $this->resolveItemProcessorFunction(
-                    $result,
+            // Resolve "fieldsProcFunc"
+            if (!empty($fieldConfig['config']['fieldsProcFunc'])) {
+                $resultCopy = $result;
+                $resultCopy['processedTca']['columns'][$fieldName]['config']['itemsProcFunc'] = $fieldConfig['config']['fieldsProcFunc'];
+                $fieldConfig['config']['fields'] = $this->resolveItemProcessorFunction(
+                    $resultCopy,
                     $fieldName,
-                    $fieldConfig['config']['items']
+                    $fieldConfig['config']['fields']
                 );
-                // itemsProcFunc must not be used anymore
-                unset($fieldConfig['config']['itemsProcFunc']);
+                // fieldsProcFunc must not be used anymore
+                unset($fieldConfig['config']['fieldsProcFunc']);
             }
 
             $result['processedTca']['columns'][$fieldName] = $fieldConfig;

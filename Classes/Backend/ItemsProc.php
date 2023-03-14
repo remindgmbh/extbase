@@ -89,6 +89,16 @@ class ItemsProc
         }
     }
 
+    public function getSelectedFilterFields(array &$params): void
+    {
+        $row = $params['row'];
+        $allowMultipleFields = (bool) $row[ListFiltersSheets::ALLOW_MULTIPLE_FIELDS];
+        $fields = $allowMultipleFields
+            ? GeneralUtility::trimExplode(',', $row[ListFiltersSheets::FIELDS], true)
+            : [$row[ListFiltersSheets::FIELD]];
+        $params['items'] = $fields;
+    }
+
     public function getFilterFields(array &$params): void
     {
         $flexParentDatabaseRow = $params['flexParentDatabaseRow'];
@@ -168,7 +178,8 @@ class ItemsProc
     {
         $this->initQueryBuilder($params);
         $currentValues = $this->getCurrentFilterValues($params);
-        $items = $this->getFilterValues($params, $currentValues);
+        $items = $this->getFilterValues($params);
+        $this->addInvalidValues($items, $currentValues);
         $params['items'] = array_merge($params['items'], $items);
     }
 
@@ -176,21 +187,14 @@ class ItemsProc
     {
         $this->initQueryBuilder($params);
 
-        $currentValues = $this->getCurrentFilterValues($params);
-        $currentValues = array_map(function (string $base64Value) {
-            $value = json_decode(base64_decode($base64Value), true);
-            return $this->getBase64Value($value['value']);
-        }, $currentValues);
-
         $constraints = $this->getAvailableFilterConstraints($params);
 
-        $items = $this->getFilterValues($params, $currentValues, $constraints);
+        $items = $this->getFilterValues($params, $constraints);
         $params['items'] = array_merge($params['items'], $items);
     }
 
     private function getFilterValues(
         array $params,
-        array $currentValues,
         ?CompositeExpression $constraints = null,
     ): array {
         $row = $params['row'];
@@ -259,7 +263,6 @@ class ItemsProc
             });
 
             $result = array_unique($result, SORT_REGULAR);
-            $this->addInvalidValues($result, $currentValues);
         }
 
         return $result;
@@ -427,7 +430,7 @@ class ItemsProc
             )
         );
 
-        // Add "INVALID VALUE" for every selected value not present in available values
+        // Add "INVALID VALUE" for every selected value not present in possible values
         array_unshift(
             $result,
             ...array_map(function (string $value) use ($noMatchingLabel) {

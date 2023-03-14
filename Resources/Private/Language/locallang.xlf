@@ -3,6 +3,12 @@
     <file source-language="en" datatype="plaintext" original="EXT:rmnd_extbase/Resources/Private/Language/locallang.xlf" product-name="rmnd_extbase">
         <header/>
         <body>
+            <trans-unit id="addCustomEntry">
+                <source>Add Custom Entry</source>
+            </trans-unit>
+            <trans-unit id="addEntry">
+                <source>Add Entry</source>
+            </trans-unit>
             <trans-unit id="data">
                 <source>Data</source>
             </trans-unit>
@@ -23,6 +29,9 @@
             </trans-unit>
             <trans-unit id="emptyValue">
                 <source>(Value not set)</source>
+            </trans-unit>
+            <trans-unit id="fieldValuesEditor">
+                <source>Field Values Editor</source>
             </trans-unit>
             <trans-unit id="filter">
                 <source>Filter</source>

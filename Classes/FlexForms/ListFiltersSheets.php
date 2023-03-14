@@ -146,6 +146,7 @@ class ListFiltersSheets
                                                 'type' => 'user',
                                                 'renderType' => 'valueLabelPairs',
                                                 'itemsProcFunc' => ItemsProc::class . '->getAvailableFilterValues',
+                                                'fieldsProcFunc' => ItemsProc::class . '->getSelectedFilterFields'
                                             ],
                                         ],
                                     ],
