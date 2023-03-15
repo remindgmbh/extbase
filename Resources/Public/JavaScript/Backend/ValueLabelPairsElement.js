@@ -7,7 +7,8 @@ define(
                 return {
                     possibleItems: { type: Array },
                     dataId: { type: String },
-                    fields: { type: Array }
+                    fields: { type: Array },
+                    fieldValuesEditorUrl: { type: String }
                 }
             }
             constructor() {
@@ -175,7 +176,7 @@ define(
                 const valueParam = value ? JSON.stringify(value) : undefined
                 Modal.advanced({
                     type: Modal.types.iframe,
-                    content: `/typo3/rmnd/field-values-editor?dataId=${this.dataId}&fields=${fieldsParam}&index=${index}&value=${valueParam}`,
+                    content: `${this.fieldValuesEditorUrl}&dataId=${this.dataId}&fields=${fieldsParam}&index=${index}&value=${valueParam}`,
                     size: Modal.sizes.medium,
                 });
             }

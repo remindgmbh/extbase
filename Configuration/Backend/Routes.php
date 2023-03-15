@@ -3,9 +3,8 @@
 use Remind\Extbase\Controller\FieldValuesEditorController;
 
 return [
-    'rmnd-field-values-editor' => [
+    'rmnd_field_values_editor' => [
         'path' => '/rmnd/field-values-editor',
-        'access' => 'public',
         'target' => FieldValuesEditorController::class . '::mainAction',
     ],
 ];

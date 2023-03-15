@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Remind\Extbase\Backend\Form\Element;
 
 use TYPO3\CMS\Backend\Form\Element\AbstractFormElement;
+use TYPO3\CMS\Backend\Routing\UriBuilder;
 use TYPO3\CMS\Core\Page\JavaScriptModuleInstruction;
 use TYPO3\CMS\Core\Utility\GeneralUtility;
 use TYPO3\CMS\Core\Utility\StringUtility;
@@ -24,6 +25,8 @@ class ValueLabelPairsElement extends AbstractFormElement
 
     public function render()
     {
+        $uriBuilder = GeneralUtility::makeInstance(UriBuilder::class);
+        $uri = $uriBuilder->buildUriFromRoute('rmnd_field_values_editor');
         $parameterArray = $this->data['parameterArray'];
         $resultArray = $this->initializeResultArray();
 
@@ -74,6 +77,7 @@ class ValueLabelPairsElement extends AbstractFormElement
                     'dataId' => $attributes['id'],
                     'possibleItems' => json_encode($possibleItems ?? []),
                     'fields' => json_encode($fields),
+                    'fieldValuesEditorUrl' => $uri,
                 ], true),
             ),
             sprintf(
