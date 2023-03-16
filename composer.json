@@ -41,6 +41,9 @@
         "slevomat/coding-standard": "^8.5",
         "squizlabs/php_codesniffer": "^3.7.1"
     },
+    "suggest": {
+        "remind/headless": "Using Remind\\Extbase\\Service\\JsonService requires remind/headless"
+    },
     "repositories": [
         {
             "type": "composer",
