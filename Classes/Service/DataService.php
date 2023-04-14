@@ -18,7 +18,6 @@ use Remind\Extbase\Service\Dto\ListResult;
 use Remind\Extbase\Utility\FilterUtility;
 use Remind\Extbase\Utility\PluginUtility;
 use TYPO3\CMS\Backend\Utility\BackendUtility;
-use TYPO3\CMS\Core\Configuration\FlexForm\FlexFormTools;
 use TYPO3\CMS\Core\Database\Connection;
 use TYPO3\CMS\Core\Database\ConnectionPool;
 use TYPO3\CMS\Core\Pagination\SimplePagination;
@@ -51,7 +50,6 @@ class DataService
     public function __construct(
         private readonly PersistenceManagerInterface $persistenceManager,
         private readonly UriBuilder $uriBuilder,
-        private readonly FlexFormTools $flexFormTools,
         private readonly ConnectionPool $connectionPool,
         ConfigurationManagerInterface $configurationManager,
         Request $request,
