@@ -12,7 +12,7 @@ use Remind\Extbase\Routing\Enhancer\ExtbasePluginQueryEnhancer;
 use TYPO3\CMS\Backend\Form\Container\FlexFormContainerContainer as BaseFlexFormContainerContainer;
 use TYPO3\CMS\Backend\Form\FormDataProvider\SiteResolving;
 
-defined('TYPO3_MODE') || die('Access denied.');
+defined('TYPO3') || die('Access denied.');
 
 (function () {
     $GLOBALS
