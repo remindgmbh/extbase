@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Remind\Extbase\Service;
 
+use Psr\Http\Message\ServerRequestInterface;
 use Remind\Extbase\Domain\Repository\Dto\Conjunction;
 use Remind\Extbase\Domain\Repository\Dto\RepositoryFilter;
 use Remind\Extbase\Domain\Repository\FilterableRepository;
@@ -52,7 +53,6 @@ class DataService
         private readonly UriBuilder $uriBuilder,
         private readonly ConnectionPool $connectionPool,
         ConfigurationManagerInterface $configurationManager,
-        Request $request,
         RequestBuilder $requestBuilder,
     ) {
         $configuration = $configurationManager->getConfiguration(
@@ -61,7 +61,7 @@ class DataService
         $this->settings = $configuration['settings'] ?? [];
         $this->extensionName = $configuration['extensionName'];
         $this->pluginName = $configuration['pluginName'];
-        $this->request = $requestBuilder->build($request);
+        $this->request = $requestBuilder->build($this->getRequest());
         $this->uriBuilder->setRequest($this->request);
         $this->contentObject = $configurationManager->getContentObject();
         $this->filterTable = PluginUtility::getTableName($this->extensionName . '_' . $this->pluginName);
@@ -568,5 +568,10 @@ class DataService
     private function getTypoScriptFrontendController(): ?TypoScriptFrontendController
     {
         return $GLOBALS['TSFE'] ?? null;
+    }
+
+    private function getRequest(): ServerRequestInterface
+    {
+        return $GLOBALS['TYPO3_REQUEST'];
     }
 }
