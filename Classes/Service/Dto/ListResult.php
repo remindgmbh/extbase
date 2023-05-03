@@ -5,11 +5,10 @@ declare(strict_types=1);
 namespace Remind\Extbase\Service\Dto;
 
 use TYPO3\CMS\Core\Pagination\PaginationInterface;
-use TYPO3\CMS\Extbase\Persistence\QueryResultInterface;
 
 class ListResult
 {
-    protected ?QueryResultInterface $queryResult = null;
+    protected ?iterable $paginatedItems = null;
 
     protected ?PaginationInterface $pagination = null;
 
@@ -19,14 +18,14 @@ class ListResult
 
     protected int $currentPage = 0;
 
-    public function getQueryResult(): ?QueryResultInterface
+    public function getPaginatedItems(): ?iterable
     {
-        return $this->queryResult;
+        return $this->paginatedItems;
     }
 
-    public function setQueryResult(?QueryResultInterface $queryResult): self
+    public function setPaginatedItems(?iterable $paginatedItems): self
     {
-        $this->queryResult = $queryResult;
+        $this->paginatedItems = $paginatedItems;
 
         return $this;
     }

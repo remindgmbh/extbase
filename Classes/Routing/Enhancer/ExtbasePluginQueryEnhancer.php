@@ -78,7 +78,7 @@ class ExtbasePluginQueryEnhancer extends AbstractEnhancer implements RoutingEnha
 
         $defaultPageRoute->setOption('_enhancer', $this);
 
-        $parameters = $GLOBALS['_REQUEST'];
+        $parameters = $GLOBALS['_GET'];
 
         $deflatedParameters = [];
 

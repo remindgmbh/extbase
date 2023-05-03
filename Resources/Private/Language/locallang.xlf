@@ -9,6 +9,9 @@
             <trans-unit id="addEntry">
                 <source>Add Entry</source>
             </trans-unit>
+            <trans-unit id="customValueEditor">
+                <source>Custom Value Editor</source>
+            </trans-unit>
             <trans-unit id="data">
                 <source>Data</source>
             </trans-unit>
@@ -29,9 +32,6 @@
             </trans-unit>
             <trans-unit id="emptyValue">
                 <source>(Value not set)</source>
-            </trans-unit>
-            <trans-unit id="fieldValuesEditor">
-                <source>Field Values Editor</source>
             </trans-unit>
             <trans-unit id="filter">
                 <source>Filter</source>

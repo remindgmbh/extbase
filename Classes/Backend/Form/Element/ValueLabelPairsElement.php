@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Remind\Extbase\Backend\Form\Element;
 
+use Remind\Extbase\Controller\CustomValueEditorController;
 use TYPO3\CMS\Backend\Form\Element\AbstractFormElement;
 use TYPO3\CMS\Backend\Routing\UriBuilder;
 use TYPO3\CMS\Core\Page\JavaScriptModuleInstruction;
@@ -26,7 +27,7 @@ class ValueLabelPairsElement extends AbstractFormElement
     public function render()
     {
         $uriBuilder = GeneralUtility::makeInstance(UriBuilder::class);
-        $uri = $uriBuilder->buildUriFromRoute('rmnd_field_values_editor');
+        $uri = $uriBuilder->buildUriFromRoute(CustomValueEditorController::ROUTE);
         $parameterArray = $this->data['parameterArray'];
         $resultArray = $this->initializeResultArray();
 
@@ -60,7 +61,14 @@ class ValueLabelPairsElement extends AbstractFormElement
                 'label' => $this->appendValueToLabelInDebugMode($label, $value),
             ];
         }, $possibleItems);
-        $fields = $config['fields'] ?? [];
+        $itemProps = $config['itemProps'] ?? [];
+        $itemProps = array_map(function ($item) {
+            [$label, $value] = $item;
+            return [
+                'value' => $value,
+                'label' => $this->appendValueToLabelInDebugMode($label, $value),
+            ];
+        }, $itemProps);
 
         $fieldInformationResult = $this->renderFieldInformation();
         $fieldInformationHtml = $fieldInformationResult['html'];
@@ -76,8 +84,8 @@ class ValueLabelPairsElement extends AbstractFormElement
                 GeneralUtility::implodeAttributes([
                     'dataId' => $attributes['id'],
                     'possibleItems' => json_encode($possibleItems ?? []),
-                    'fields' => json_encode($fields),
-                    'fieldValuesEditorUrl' => $uri,
+                    'itemProps' => json_encode($itemProps),
+                    'customValueEditorUrl' => $uri,
                 ], true),
             ),
             sprintf(
@@ -90,8 +98,8 @@ class ValueLabelPairsElement extends AbstractFormElement
             '</div>',
         ];
 
-        $resultArray['requireJsModules'][] = JavaScriptModuleInstruction::forRequireJS(
-            'TYPO3/CMS/RmndExtbase/Backend/ValueLabelPairsElement'
+        $resultArray['javaScriptModules'][] = JavaScriptModuleInstruction::create(
+            '@remind/extbase/backend/value-label-pairs-element.js'
         );
         $resultArray
             ['additionalInlineLanguageLabelFiles'][] = 'EXT:rmnd_extbase/Resources/Private/Language/locallang.xlf';
@@ -100,5 +108,14 @@ class ValueLabelPairsElement extends AbstractFormElement
 
         $resultArray['html'] = implode(LF, $html);
         return $resultArray;
+    }
+
+    protected function appendValueToLabelInDebugMode(string|int $label, string|int $value): string
+    {
+        if ($value !== '' && $this->getBackendUser()->shallDisplayDebugInformation() && $value !== $label) {
+            return trim($label . ' [' . $value . ']');
+        }
+
+        return trim((string)$label);
     }
 }

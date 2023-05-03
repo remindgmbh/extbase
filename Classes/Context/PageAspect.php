@@ -9,19 +9,22 @@ use TYPO3\CMS\Core\Context\Exception\AspectPropertyNotFoundException;
 
 class PageAspect implements AspectInterface
 {
-
     protected array $page;
-    
+
     public function __construct(array $page)
     {
         $this->page = $page;
     }
 
-    public function get(string $name) {
+    public function get(string $name)
+    {
         switch ($name) {
             case 'uid':
                 return $this->page['uid'];
         }
-        throw new AspectPropertyNotFoundException('Property "' . $name . '" not found in Aspect "' . __CLASS__ . '".', 1678257079);
+        throw new AspectPropertyNotFoundException(
+            'Property "' . $name . '" not found in Aspect "' . __CLASS__ . '".',
+            1678257079
+        );
     }
 }

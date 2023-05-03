@@ -9,6 +9,9 @@
             <trans-unit id="addEntry">
                 <target>Eintrag hinzufügen</target>
             </trans-unit>
+            <trans-unit id="customValueEditor">
+                <source>Individuelle Werte Editor</source>
+            </trans-unit>
             <trans-unit id="data">
                 <target>Daten</target>
             </trans-unit>
@@ -29,9 +32,6 @@
             </trans-unit>
             <trans-unit id="emptyValue">
                 <target>(Wert nicht gesetzt)</target>
-            </trans-unit>
-            <trans-unit id="fieldValuesEditor">
-                <source>Felder Werte Editor</source>
             </trans-unit>
             <trans-unit id="filter">
                 <target>Filter</target>

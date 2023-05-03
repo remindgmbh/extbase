@@ -15,7 +15,7 @@ class FilterableListResult extends ListResult
         $this->setCountWithoutLimit($listResult->getCountWithoutLimit());
         $this->setCurrentPage($listResult->getCurrentPage());
         $this->setPagination($listResult->getPagination());
-        $this->setQueryResult($listResult->getQueryResult());
+        $this->setPaginatedItems($listResult->getPaginatedItems());
     }
 
     /**

@@ -1,10 +1,10 @@
 <?php
 
-use Remind\Extbase\Controller\FieldValuesEditorController;
+use Remind\Extbase\Controller\CustomValueEditorController;
 
 return [
-    'rmnd_field_values_editor' => [
-        'path' => '/rmnd/field-values-editor',
-        'target' => FieldValuesEditorController::class . '::mainAction',
+    CustomValueEditorController::ROUTE => [
+        'path' => '/rmnd/custom-value-editor',
+        'target' => CustomValueEditorController::class . '::mainAction',
     ],
 ];

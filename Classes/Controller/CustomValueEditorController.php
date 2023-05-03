@@ -12,8 +12,10 @@ use TYPO3\CMS\Core\Page\PageRenderer;
 use TYPO3\CMS\Core\Utility\GeneralUtility;
 use TYPO3\CMS\Extbase\Utility\LocalizationUtility;
 
-class FieldValuesEditorController
+class CustomValueEditorController
 {
+    public const ROUTE = 'rmnd_custom_value_editor';
+
     public function __construct(
         private readonly PageRenderer $pageRenderer,
         private readonly ModuleTemplateFactory $moduleTemplateFactory,
@@ -24,23 +26,23 @@ class FieldValuesEditorController
     {
         $queryParams = $request->getQueryParams();
         $dataId = $queryParams['dataId'];
-        $fields = $queryParams['fields'];
+        $props = $queryParams['props'];
         $index = $queryParams['index'];
         $value = base64_decode($queryParams['value']);
-        $fields = base64_decode($fields);
+        $props = base64_decode($props);
         $this->pageRenderer->setTitle(
             LocalizationUtility::translate(
-                'LLL:EXT:rmnd_extbase/Resources/Private/Language/locallang.xlf:fieldValuesEditor'
+                'LLL:EXT:rmnd_extbase/Resources/Private/Language/locallang.xlf:customValueEditor'
             )
         );
         $this->pageRenderer->addCssFile('EXT:backend/Resources/Public/Css/backend.css');
-        $this->pageRenderer->loadRequireJsModule('TYPO3/CMS/RmndExtbase/Backend/FieldValuesEditor');
+        $this->pageRenderer->loadJavaScriptModule('@remind/extbase/backend/custom-value-editor.js');
         $this->pageRenderer->addBodyContent(
             sprintf(
-                '<typo3-backend-field-values-editor %s></typo3-backend-field-values-editor>',
+                '<typo3-backend-custom-value-editor %s></typo3-backend-custom-value-editor>',
                 GeneralUtility::implodeAttributes([
                     'dataId' => $dataId,
-                    'fields' => $fields,
+                    'props' => $props,
                     'index' => $index,
                     'value' => $value,
                 ], true),

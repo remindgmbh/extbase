@@ -5,7 +5,6 @@ declare(strict_types=1);
 namespace Remind\Extbase\Backend;
 
 use Remind\Extbase\Domain\Repository\Dto\Conjunction;
-use Remind\Extbase\Domain\Repository\PageRepository;
 use Remind\Extbase\FlexForms\ListFiltersSheets;
 use Remind\Extbase\Utility\PluginUtility;
 use TYPO3\CMS\Backend\Utility\BackendUtility;
@@ -16,6 +15,7 @@ use TYPO3\CMS\Core\Database\Query\Expression\CompositeExpression;
 use TYPO3\CMS\Core\Database\Query\QueryBuilder;
 use TYPO3\CMS\Core\Database\Query\Restriction\DeletedRestriction;
 use TYPO3\CMS\Core\Database\Query\Restriction\WorkspaceRestriction;
+use TYPO3\CMS\Core\Domain\Repository\PageRepository;
 use TYPO3\CMS\Core\Service\FlexFormService;
 use TYPO3\CMS\Core\Utility\GeneralUtility;
 use TYPO3\CMS\Extbase\Utility\LocalizationUtility;
@@ -53,7 +53,7 @@ class ItemsProc
         $extensionName = PluginUtility::getExtensionName($flexParentDatabaseRow['CType']);
         $sources = PluginUtility::getDetailSources($extensionName);
         foreach ($sources as $pluginSignature => $config) {
-            $params['items'][] = [$config['label'] ?? $pluginSignature, $pluginSignature];
+            $params['items'][] = ['label' => $config['label'] ?? $pluginSignature, 'value' => $pluginSignature];
         }
     }
 
@@ -84,7 +84,7 @@ class ItemsProc
 
             foreach ($rows as $row) {
                 $title = BackendUtility::getRecordTitle($this->tableName, $row);
-                $params['items'][] = [$title, $row['uid']];
+                $params['items'][] = ['label' => $title, 'value' => $row['uid']];
             }
         }
     }
@@ -96,7 +96,9 @@ class ItemsProc
         $fields = $allowMultipleFields
             ? GeneralUtility::trimExplode(',', $row[ListFiltersSheets::FIELDS], true)
             : [$row[ListFiltersSheets::FIELD]];
-        $params['items'] = $fields;
+        $params['items'] = array_map(function (string $field) {
+            return ['label' => $field, 'value' => $field];
+        }, $fields);
     }
 
     public function getFilterFields(array &$params): void
@@ -202,9 +204,8 @@ class ItemsProc
 
         $pages = $flexParentDatabaseRow['pages'];
         $recursive = $flexParentDatabaseRow['recursive'];
-        $pageRepository = GeneralUtility::makeInstance(PageRepository::class);
         $pageIds = GeneralUtility::trimExplode(',', $pages, true);
-        $pageIds = $pageRepository->getPageIdsRecursive($pageIds, $recursive);
+        $pageIds = $this->pageRepository->getPageIdsRecursive($pageIds, $recursive);
 
         $fieldNames = $this->getFilterDefinitionFieldNames($row);
 

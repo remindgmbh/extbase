@@ -34,7 +34,6 @@ use TYPO3\CMS\Extbase\Persistence\Generic\Query;
 use TYPO3\CMS\Extbase\Persistence\PersistenceManagerInterface;
 use TYPO3\CMS\Extbase\Persistence\RepositoryInterface;
 use TYPO3\CMS\Extbase\Utility\LocalizationUtility;
-use TYPO3\CMS\Frontend\ContentObject\ContentObjectRenderer;
 use TYPO3\CMS\Frontend\Controller\TypoScriptFrontendController;
 
 class DataService
@@ -45,7 +44,6 @@ class DataService
     private string $filterTable;
     private string $filtersArgumentName;
     private Request $request;
-    private ContentObjectRenderer $contentObject;
     private FilterableRepository $repository;
 
     public function __construct(
@@ -63,7 +61,6 @@ class DataService
         $this->pluginName = $configuration['pluginName'];
         $this->request = $requestBuilder->build($this->getRequest());
         $this->uriBuilder->setRequest($this->request);
-        $this->contentObject = $configurationManager->getContentObject();
         $this->filterTable = PluginUtility::getTableName($this->extensionName . '_' . $this->pluginName);
     }
 
@@ -181,7 +178,7 @@ class DataService
             $orderBy,
             $orderDirection
         );
-        $result->setQueryResult($queryResult);
+        $result->setPaginatedItems($queryResult);
         $result->setCount($queryResult->count());
 
         if ($limit) {
@@ -195,9 +192,8 @@ class DataService
         if ($itemsPerPage) {
             $paginator = new QueryResultPaginator($queryResult, $currentPage, $itemsPerPage);
             $pagination = new SimplePagination($paginator);
-            $paginatedQueryResult = $paginator->getPaginatedItems();
             $result->setPagination($pagination);
-            $result->setQueryResult($paginatedQueryResult);
+            $result->setPaginatedItems($paginator->getPaginatedItems());
         }
 
         return $result;
@@ -427,7 +423,7 @@ class DataService
             }
         }
         $foreignTableFields = array_filter($fields);
-        $labels = [];
+        $recordTitles = [];
         foreach ($foreignTableFields as $fieldName => $field) {
             $foreignTable = $field['tca']['foreign_table'];
             $selectFields = GeneralUtility::trimExplode(
@@ -448,15 +444,16 @@ class DataService
             $queryResult = $queryBuilder->executeQuery();
             $rows = $queryResult->fetchAllAssociative();
             foreach ($rows as $row) {
-                $labels[$fieldName][$row['uid']] = BackendUtility::getRecordTitle($foreignTable, $row);
+                $recordTitles[$fieldName][$row['uid']] = BackendUtility::getRecordTitle($foreignTable, $row);
             }
         }
         foreach ($frontendFilters as &$frontendFilter) {
             foreach ($frontendFilter->getValues() as &$filterValue) {
                 if (!$filterValue->getLabel()) {
-                    $filterValue->setLabel(implode(', ', array_map(function ($value) use ($labels, $fieldName) {
-                        return $labels[$fieldName][$value] ?? '';
-                    }, $filterValue->getValue())));
+                    $label = implode(', ', array_map(function ($key, $value) use ($recordTitles) {
+                        return $recordTitles[$key][$value] ?? $value;
+                    }, array_keys($filterValue->getValue()), $filterValue->getValue()));
+                    $filterValue->setLabel($label);
                 }
             }
         }

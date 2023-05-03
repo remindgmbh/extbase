@@ -50,7 +50,7 @@ class JsonService
             );
         }
 
-        $items = $listResult->getQueryResult()->toArray();
+        $items = iterator_to_array($listResult->getPaginatedItems());
         $itemsJson = $this->serializeListItems($items, $detailActionName, $detailUidArgument);
 
         return [

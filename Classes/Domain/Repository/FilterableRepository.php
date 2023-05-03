@@ -37,34 +37,34 @@ class FilterableRepository extends Repository
                         if (!$fieldValue) {
                             // if $value is empty (should be '' because query param cannot be null) either
                             // an empty string or null is allowed
-                            $fieldConstraints[] = $query->logicalOr([
+                            $fieldConstraints[] = $query->logicalOr(
                                 $query->equals($field, null),
                                 $query->equals($field, ''),
-                            ]);
+                            );
                         } else {
                             $fieldConstraints[] = $query->equals($field, $fieldValue);
                         }
                     }
                 }
                 if (!empty($fieldConstraints)) {
-                    $filterConstraints[] = $query->logicalAnd($fieldConstraints);
+                    $filterConstraints[] = $query->logicalAnd(...$fieldConstraints);
                 }
             }
 
             if (!empty($filterConstraints)) {
                 switch ($filter->getConjunction()) {
                     case Conjunction::AND:
-                        $constraints[] = $query->logicalAnd($filterConstraints);
+                        $constraints[] = $query->logicalAnd(...$filterConstraints);
                         break;
                     case Conjunction::OR:
-                        $constraints[] = $query->logicalOr($filterConstraints);
+                        $constraints[] = $query->logicalOr(...$filterConstraints);
                         break;
                 }
             }
         }
 
         if (!empty($constraints)) {
-            $query->matching($query->logicalAnd($constraints));
+            $query->matching($query->logicalAnd(...$constraints));
         }
 
         if ($orderBy) {
