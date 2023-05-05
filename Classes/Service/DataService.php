@@ -91,6 +91,13 @@ class DataService
         $this->repository = $repository;
         $recordUids = $this->settings[SelectionDataSheets::RECORDS];
         $recordUids = GeneralUtility::intExplode(',', $recordUids, true);
+
+        if (empty($recordUids)) {
+            $result = new ListResult();
+            $result->setPaginatedItems([]);
+            return $result;
+        }
+
         $filters = [
             new RepositoryFilter('uid', array_map(function (int $uid) {
                 return ['uid' => $uid];
