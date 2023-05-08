@@ -48,7 +48,10 @@ class ListFiltersSheets
                                             'config' => [
                                                 'type' => 'check',
                                                 'items' => [
-                                                    [''],
+                                                    [
+                                                        'label' => '',
+                                                        'value' => 0,
+                                                    ],
                                                 ],
                                             ],
                                         ],
@@ -58,7 +61,10 @@ class ListFiltersSheets
                                             'config' => [
                                                 'type' => 'check',
                                                 'items' => [
-                                                    [''],
+                                                    [
+                                                        'label' => '',
+                                                        'value' => 0,
+                                                    ],
                                                 ],
                                             ],
                                         ],
@@ -99,13 +105,13 @@ class ListFiltersSheets
                                                 'maxitems' => '1',
                                                 'multiple' => '0',
                                                 'items' => [
-                                                    0 => [
-                                                        0 => self::LOCALLANG . 'filters.conjunction.items.or',
-                                                        1 => Conjunction::OR->value,
+                                                    [
+                                                        'label' => self::LOCALLANG . 'filters.conjunction.items.or',
+                                                        'value' => Conjunction::OR->value,
                                                     ],
-                                                    1 => [
-                                                        0 => self::LOCALLANG . 'filters.conjunction.items.and',
-                                                        1 => Conjunction::AND->value,
+                                                    [
+                                                        'label' => self::LOCALLANG . 'filters.conjunction.items.and',
+                                                        'value' => Conjunction::AND->value,
                                                     ],
                                                 ],
                                             ],
@@ -135,7 +141,10 @@ class ListFiltersSheets
                                             'config' => [
                                                 'type' => 'check',
                                                 'items' => [
-                                                    [''],
+                                                    [
+                                                        'label' => '',
+                                                        'value' => 0,
+                                                    ],
                                                 ],
                                             ],
                                         ],

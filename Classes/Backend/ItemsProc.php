@@ -166,7 +166,7 @@ class ItemsProc
 
         $fields = array_map(function (string $field) use ($tableName) {
             $label = BackendUtility::getItemLabel($tableName, $field);
-            return [$label, $field];
+            return ['label' => $label, 'value' => $field];
         }, $fields);
 
         $params['items'] = array_merge(
@@ -258,9 +258,9 @@ class ItemsProc
 
             $result = $this->formatFilterValues($rows, $this->tableName, $foreignTables);
 
-            // Sort entries in $result by label (index 0)
+            // Sort entries in $result by label
             usort($result, function (array $a, array $b) {
-                return strnatcmp($a[0], $b[0]);
+                return strnatcmp($a['label'], $b['label']);
             });
 
             $result = array_unique($result, SORT_REGULAR);
@@ -406,7 +406,7 @@ class ItemsProc
             $label = implode(', ', $data['label']);
             $value = $this->getBase64Value($data['value']);
 
-            return [$label, $value];
+            return ['label' => $label, 'value' => $value];
         }, $rows);
     }
 
@@ -419,7 +419,7 @@ class ItemsProc
     private function addInvalidValues(array &$result, array $currentValues): void
     {
         $values = array_map(function (array $value) {
-            return $value[1];
+            return $value['value'];
         }, $result);
 
         $diff = array_diff($currentValues, $values);

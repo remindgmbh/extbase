@@ -34,13 +34,13 @@ class DetailDataSheets
                                 'maxitems' => '1',
                                 'multiple' => '0',
                                 'items' => [
-                                    0 => [
-                                        0 => self::LOCALLANG . 'data.source.default',
-                                        1 => self::SOURCE_DEFAULT,
+                                   [
+                                        'label' => self::LOCALLANG . 'data.source.default',
+                                        'value' => self::SOURCE_DEFAULT,
                                     ],
-                                    1 => [
-                                        0 => self::LOCALLANG . 'data.source.record',
-                                        1 => self::SOURCE_RECORD,
+                                    [
+                                        'label' => self::LOCALLANG . 'data.source.record',
+                                        'value' => self::SOURCE_RECORD,
                                     ],
                                 ],
                                 'itemsProcFunc' => ItemsProc::class . '->getDetailSources',

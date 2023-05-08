@@ -49,9 +49,9 @@ class ListSheets
                                 'maxitems' => '1',
                                 'multiple' => '0',
                                 'items' => [
-                                    0 => [
-                                        0 => self::LOCALLANG . 'list.orderBy.none',
-                                        1 => '',
+                                    [
+                                        'label' => self::LOCALLANG . 'list.orderBy.none',
+                                        'value' => '',
                                     ],
                                 ],
                             ],
@@ -67,13 +67,13 @@ class ListSheets
                                 'maxitems' => '1',
                                 'multiple' => '0',
                                 'items' => [
-                                    0 => [
-                                        0 => self::LOCALLANG . 'list.orderDirection.asc',
-                                        1 => 'ASC',
+                                    [
+                                        'label' => self::LOCALLANG . 'list.orderDirection.asc',
+                                        'value' => 'ASC',
                                     ],
-                                    1 => [
-                                        0 => self::LOCALLANG . 'list.orderDirection.desc',
-                                        1 => 'DESC',
+                                    [
+                                        'label' => self::LOCALLANG . 'list.orderDirection.desc',
+                                        'value' => 'DESC',
                                     ],
                                 ],
                             ],
