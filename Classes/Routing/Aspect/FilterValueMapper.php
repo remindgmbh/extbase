@@ -122,7 +122,7 @@ class FilterValueMapper implements
     private function isValid(mixed $value, array $filters, string $fieldName): bool
     {
         $filter = current(array_filter($filters, function (array $filter) use ($fieldName) {
-            $allowMultipleFields = (bool) $filter[ListFiltersSheets::ALLOW_MULTIPLE_FIELDS];
+            $allowMultipleFields = (bool) ($filter[ListFiltersSheets::ALLOW_MULTIPLE_FIELDS] ?? false);
             $fields = GeneralUtility::trimExplode(
                 ',',
                 $filter[$allowMultipleFields ? ListFiltersSheets::FIELDS : ListFiltersSheets::FIELD],
@@ -188,7 +188,7 @@ class FilterValueMapper implements
     private function getParameterKeys(): array
     {
         $result = [];
-        foreach ($this->parameters['keys'] as $fieldName => $parameter) {
+        foreach ($this->parameters['keys'] ?? [] as $fieldName => $parameter) {
             $aspect = $this->aspects[$parameter] ?? null;
             if (!$aspect) {
                 $result[$fieldName] = $parameter;
@@ -238,7 +238,7 @@ class FilterValueMapper implements
                 )
             );
 
-        $flexFormString = $queryBuilder->execute()->fetchOne();
+        $flexFormString = $queryBuilder->executeQuery()->fetchOne();
         $flexForm = $this->flexFormService->convertFlexFormContentToArray($flexFormString);
         return array_map(function (array $filter) {
             return $filter[ListFiltersSheets::FILTER];

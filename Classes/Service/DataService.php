@@ -216,10 +216,10 @@ class DataService
         $result = [];
         $filterSettings = $this->settings[ListFiltersSheets::FILTERS] ?? [];
         foreach ($filterSettings as $filterSetting) {
-            $filterSetting = $filterSetting[ListFiltersSheets::FILTER];
+            $filterSetting = $filterSetting[ListFiltersSheets::FILTER] ?? [];
             $filterName = $this->getFilterName($filterSetting);
 
-            $disabled = (bool) $filterSetting[ListFiltersSheets::DISABLED];
+            $disabled = (bool) ($filterSetting[ListFiltersSheets::DISABLED] ?? false);
             $filterValues = $this->parseBase64Values($filterSetting[ListFiltersSheets::AVAILABLE_VALUES] ?? '');
 
             if ($disabled || empty($filterValues)) {
@@ -493,10 +493,10 @@ class DataService
 
         $filterSettings = $this->settings[ListFiltersSheets::FILTERS] ?? [];
         foreach ($filterSettings as $filterSetting) {
-            $filterSetting = $filterSetting[ListFiltersSheets::FILTER];
+            $filterSetting = $filterSetting[ListFiltersSheets::FILTER] ?? [];
             $filterName = $this->getFilterName($filterSetting);
 
-            $disabled = (bool) $filterSetting[ListFiltersSheets::DISABLED];
+            $disabled = (bool) ($filterSetting[ListFiltersSheets::DISABLED] ?? false);
             $values = $this->parseBase64Values($filterSetting[ListFiltersSheets::APPLIED_VALUES] ?? '');
 
             if ($disabled || empty($values)) {

@@ -83,7 +83,7 @@ class ExtbasePluginQueryEnhancer extends AbstractEnhancer implements RoutingEnha
         $deflatedParameters = [];
 
         $originalKeys = [];
-        foreach ($this->parameters['keys'] as $originalKey => $key) {
+        foreach ($this->parameters['keys'] ?? [] as $originalKey => $key) {
             $keyAspect = $this->aspects[$key] ?? null;
             $modifiedKey = $keyAspect instanceof ModifiableAspectInterface ? $keyAspect->modify() : $key;
             $originalKeys[$modifiedKey] = $originalKey;
