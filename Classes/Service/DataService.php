@@ -191,9 +191,15 @@ class DataService
         if ($limit) {
             $queryWithoutLimit = $queryResult->getQuery();
             if ($queryWithoutLimit instanceof Query) {
+                // leads to Warning:
+                // Undefined property: TYPO3\CMS\Extbase\Persistence\Generic\Query::$limit
                 $queryWithoutLimit->unsetLimit();
                 $result->setCountWithoutLimit($queryWithoutLimit->count());
             }
+        }
+
+        if (!$result->getCountWithoutLimit()) {
+            $result->setCountWithoutLimit($result->getCount());
         }
 
         if ($itemsPerPage) {
