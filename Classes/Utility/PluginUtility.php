@@ -17,17 +17,14 @@ use TYPO3\CMS\Core\Utility\GeneralUtility;
 
 class PluginUtility
 {
-    public const DETAIL_SOURCE_REPOSITORY = 'repository';
-    public const DETAIL_SOURCE_ARGUMENT = 'argument';
-    public const DETAIL_SOURCE_LABEL = 'label';
     public const FILTER_FIELD_NAME = 'fieldName';
     public const FILTER_TABLE_NAME = 'tableName';
     private const TABLE_NAME = 'tableName';
-    private const EXTENSION_NAME = 'extensionName';
+    private const DETAIL_SOURCES = 'detailSources';
 
     /**
      *  Add content element plugin to TCA types and add corresponding flex form sheets
-     *  Has to be called in Configuration/TCA/*
+     *  Must be called in Configuration/TCA/*
      *
      *  @param string $type CType, e.g. for plugin registered with
      *                ExtensionUtility::registerPlugin('Contacts', 'FilterableList',...) the type
@@ -41,7 +38,6 @@ class PluginUtility
     public static function addTcaType(string $type, PluginType $pluginType, string $tableName)
     {
         $flexForm = self::getFlexFormByPluginType($pluginType);
-        [$extensionName, $pluginName] = GeneralUtility::trimExplode('_', $type, true);
 
         ExtensionManagementUtility::addPiFlexFormValue('*', $flexForm, $type);
 
@@ -50,7 +46,6 @@ class PluginUtility
             [
                 $type => [
                     self::TABLE_NAME => $tableName,
-                    self::EXTENSION_NAME => $extensionName,
                 ],
             ]
         );
@@ -103,39 +98,24 @@ class PluginUtility
         return self::getTcaExt()[strtolower($pluginSignature)][self::TABLE_NAME] ?? '';
     }
 
-    public static function getExtensionName(string $pluginSignature): string
-    {
-        return self::getTcaExt()[strtolower($pluginSignature)][self::EXTENSION_NAME] ?? '';
-    }
-
     /**
      *  Add sources to detail view plugin, e.g. allows to show a contact on a page with a product detail plugin
-     *  Must be called in ext_localconf.php
+     *  Must be called in Configuration/TCA/*
      *
-     *  @param string $extensionName Name of the extension the detail source is added to,
-     *                will be converted to lower case, e.g. 'contacts'
-     *  @param string $pluginSignature Signature of the source plugin with tx_ prefix like used in
-     *                extbase query parameters, e.g. 'tx_products_detail'
-     *  @param string $argument Name of the source argument like used in extbase query parameters, e.g. 'product'
+     *  @param string $type CType the detail source is added to
+     *  @param string $source Name of the detail source, can be used in Remind\Extbase\Event\DetailEntityModifierEvent
      *  @return void
      */
     public static function addDetailSource(
-        string $extensionName,
-        string $pluginSignature,
-        string $repository,
-        string $argument,
-        ?string $label = null
+        string $type,
+        string $source
     ): void {
-        $GLOBALS['TYPO3_CONF_VARS']['EXTENSIONS'][strtolower($extensionName)]['detailSources'][$pluginSignature] = [
-            self::DETAIL_SOURCE_REPOSITORY => $repository,
-            self::DETAIL_SOURCE_ARGUMENT => $argument,
-            self::DETAIL_SOURCE_LABEL => $label,
-        ];
+        $GLOBALS['TCA']['tt_content']['ctrl']['EXT']['rmnd_extbase'][$type][self::DETAIL_SOURCES][] = $source;
     }
 
-    public static function getDetailSources(string $extensionName): array
+    public static function getDetailSources(string $type): array
     {
-        return $GLOBALS['TYPO3_CONF_VARS']['EXTENSIONS'][strtolower($extensionName)]['detailSources'] ?? [];
+        return self::getTcaExt()[$type][self::DETAIL_SOURCES] ?? [];
     }
 
     /**

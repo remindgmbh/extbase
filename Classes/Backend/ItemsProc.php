@@ -50,10 +50,9 @@ class ItemsProc
     public function getDetailSources(array &$params): void
     {
         $flexParentDatabaseRow = $params['flexParentDatabaseRow'];
-        $extensionName = PluginUtility::getExtensionName($flexParentDatabaseRow['CType']);
-        $sources = PluginUtility::getDetailSources($extensionName);
-        foreach ($sources as $pluginSignature => $config) {
-            $params['items'][] = ['label' => $config['label'] ?? $pluginSignature, 'value' => $pluginSignature];
+        $sources = PluginUtility::getDetailSources($flexParentDatabaseRow['CType']);
+        foreach ($sources as $source) {
+            $params['items'][] = ['label' => $source, 'value' => $source];
         }
     }
 

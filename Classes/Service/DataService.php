@@ -4,10 +4,12 @@ declare(strict_types=1);
 
 namespace Remind\Extbase\Service;
 
+use Psr\EventDispatcher\EventDispatcherInterface;
 use Psr\Http\Message\ServerRequestInterface;
 use Remind\Extbase\Domain\Repository\Dto\Conjunction;
 use Remind\Extbase\Domain\Repository\Dto\RepositoryFilter;
 use Remind\Extbase\Domain\Repository\FilterableRepository;
+use Remind\Extbase\Event\ModifyDetailEntityEvent;
 use Remind\Extbase\FlexForms\DetailDataSheets;
 use Remind\Extbase\FlexForms\ListFiltersSheets;
 use Remind\Extbase\FlexForms\ListSheets;
@@ -50,6 +52,7 @@ class DataService
         private readonly PersistenceManagerInterface $persistenceManager,
         private readonly UriBuilder $uriBuilder,
         private readonly ConnectionPool $connectionPool,
+        private readonly EventDispatcherInterface $eventDispatcher,
         ConfigurationManagerInterface $configurationManager,
         RequestBuilder $requestBuilder,
     ) {
@@ -126,36 +129,18 @@ class DataService
                 /** @var \TYPO3\CMS\Core\Routing\PageArguments $routing */
                 $routing = $this->request->getAttribute('routing');
                 $arguments = $routing->getArguments();
-                $result = $this->getDetailEntityBySource($this->extensionName, $source, $arguments, $callback) ?? null;
+
+                /** @var ModifyDetailEntityEvent $event */
+                $event = $this->eventDispatcher->dispatch(
+                    new ModifyDetailEntityEvent($this->extensionName, $source, $arguments)
+                );
+                $result = $event->getResult();
                 break;
         }
         if ($result) {
             $this->addCacheTag($this->filterTable . '_' . $result->getUid());
         }
         return $result;
-    }
-
-    public function getDetailEntityBySource(
-        string $extensionName,
-        string $pluginSignature,
-        array $arguments,
-        callable $callback
-    ): ?AbstractEntity {
-        $sources = PluginUtility::getDetailSources($extensionName);
-        $source = $sources[$pluginSignature] ?? [];
-        $argument = $source[PluginUtility::DETAIL_SOURCE_ARGUMENT] ?? null;
-        $repositoryClassName = $source[PluginUtility::DETAIL_SOURCE_REPOSITORY] ?? null;
-
-        if ($argument && $repositoryClassName) {
-            $uid = (int) ($arguments[$pluginSignature][$argument] ?? null);
-
-            if ($uid) {
-                /** @var \TYPO3\CMS\Extbase\Persistence\Repository $repository */
-                $repository = GeneralUtility::makeInstance($repositoryClassName);
-                $object = $repository->findByUid($uid);
-                return $callback($object);
-            }
-        }
     }
 
     public function addCacheTag(string $cacheTag)
