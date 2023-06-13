@@ -42,7 +42,7 @@ class PluginUtility
         ExtensionManagementUtility::addPiFlexFormValue('*', $flexForm, $type);
 
         $GLOBALS['TCA']['tt_content']['ctrl']['EXT']['rmnd_extbase'] = array_merge(
-            self::getTcaExt(),
+            $GLOBALS['TCA']['tt_content']['ctrl']['EXT']['rmnd_extbase'] ?? [],
             [
                 $type => [
                     self::TABLE_NAME => $tableName,
@@ -93,9 +93,9 @@ class PluginUtility
         ];
     }
 
-    public static function getTableName(string $pluginSignature): string
+    public static function getTableName(string $type): string
     {
-        return self::getTcaExt()[strtolower($pluginSignature)][self::TABLE_NAME] ?? '';
+        return $GLOBALS['TCA']['tt_content']['ctrl']['EXT']['rmnd_extbase'][strtolower($type)][self::TABLE_NAME] ?? '';
     }
 
     /**
@@ -120,7 +120,7 @@ class PluginUtility
 
     public static function getDetailSources(string $type): array
     {
-        return self::getTcaExt()[$type][self::DETAIL_SOURCES] ?? [];
+        return $GLOBALS['TCA']['tt_content']['ctrl']['EXT']['rmnd_extbase'][$type][self::DETAIL_SOURCES] ?? [];
     }
 
     /**
@@ -199,10 +199,5 @@ class PluginUtility
     {
         $flexFormTools = new FlexFormTools();
         return $flexFormTools->flexArray2Xml($flexForm, addPrologue: true);
-    }
-
-    private static function getTcaExt(): array
-    {
-        return $GLOBALS['TCA']['tt_content']['ctrl']['EXT']['rmnd_extbase'] ?? [];
     }
 }
