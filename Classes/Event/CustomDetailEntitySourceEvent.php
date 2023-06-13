@@ -4,7 +4,7 @@ namespace Remind\Extbase\Event;
 
 use TYPO3\CMS\Extbase\DomainObject\AbstractEntity;
 
-final class ModifyDetailEntityEvent
+final class CustomDetailEntitySourceEvent
 {
     private string $extensionName;
     private string $source;

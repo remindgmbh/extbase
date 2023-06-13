@@ -9,7 +9,7 @@ use Psr\Http\Message\ServerRequestInterface;
 use Remind\Extbase\Domain\Repository\Dto\Conjunction;
 use Remind\Extbase\Domain\Repository\Dto\RepositoryFilter;
 use Remind\Extbase\Domain\Repository\FilterableRepository;
-use Remind\Extbase\Event\ModifyDetailEntityEvent;
+use Remind\Extbase\Event\CustomDetailEntitySourceEvent;
 use Remind\Extbase\Event\ModifyFilterableListResultEvent;
 use Remind\Extbase\FlexForms\DetailDataSheets;
 use Remind\Extbase\FlexForms\ListFiltersSheets;
@@ -133,9 +133,9 @@ class DataService
                 $routing = $this->request->getAttribute('routing');
                 $arguments = $routing->getArguments();
 
-                /** @var ModifyDetailEntityEvent $event */
+                /** @var CustomDetailEntitySourceEvent $event */
                 $event = $this->eventDispatcher->dispatch(
-                    new ModifyDetailEntityEvent($this->extensionName, $source, $arguments)
+                    new CustomDetailEntitySourceEvent($this->extensionName, $source, $arguments)
                 );
                 $result = $event->getResult();
                 break;
