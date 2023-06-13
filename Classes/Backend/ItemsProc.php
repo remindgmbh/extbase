@@ -52,7 +52,7 @@ class ItemsProc
         $flexParentDatabaseRow = $params['flexParentDatabaseRow'];
         $sources = PluginUtility::getDetailSources($flexParentDatabaseRow['CType']);
         foreach ($sources as $source) {
-            $params['items'][] = ['label' => $source, 'value' => $source];
+            $params['items'][] = ['label' => $source['label'], 'value' => $source['value']];
         }
     }
 

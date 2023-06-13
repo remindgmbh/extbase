@@ -112,8 +112,7 @@ class DataService
 
     public function getDetailEntity(
         RepositoryInterface $repository,
-        ?AbstractEntity $entity,
-        callable $callback
+        ?AbstractEntity $entity
     ): ?AbstractEntity {
         $source = $this->settings[DetailDataSheets::SOURCE];
         $result = null;

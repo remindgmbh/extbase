@@ -103,14 +103,19 @@ class PluginUtility
      *  Must be called in Configuration/TCA/*
      *
      *  @param string $type CType the detail source is added to
-     *  @param string $source Name of the detail source, can be used in Remind\Extbase\Event\DetailEntityModifierEvent
+     *  @param string $value Value of the detail source, can be used in Remind\Extbase\Event\DetailEntityModifierEvent
+     *  @param string $label Label of the detail source, visible in Backend
      *  @return void
      */
     public static function addDetailSource(
         string $type,
-        string $source
+        string $value,
+        ?string $label = null,
     ): void {
-        $GLOBALS['TCA']['tt_content']['ctrl']['EXT']['rmnd_extbase'][$type][self::DETAIL_SOURCES][] = $source;
+        $GLOBALS['TCA']['tt_content']['ctrl']['EXT']['rmnd_extbase'][$type][self::DETAIL_SOURCES][] = [
+            'label' => $label ?? $value,
+            'value' => $value,
+        ];
     }
 
     public static function getDetailSources(string $type): array
