@@ -10,11 +10,13 @@ use Remind\Extbase\Domain\Repository\Dto\Conjunction;
 use Remind\Extbase\Domain\Repository\Dto\RepositoryFilter;
 use Remind\Extbase\Domain\Repository\FilterableRepository;
 use Remind\Extbase\Event\CustomDetailEntitySourceEvent;
+use Remind\Extbase\Event\EnrichDetailResultEvent;
 use Remind\Extbase\Event\ModifyFilterableListResultEvent;
 use Remind\Extbase\FlexForms\DetailDataSheets;
 use Remind\Extbase\FlexForms\ListFiltersSheets;
 use Remind\Extbase\FlexForms\ListSheets;
 use Remind\Extbase\FlexForms\SelectionDataSheets;
+use Remind\Extbase\Service\Dto\DetailResult;
 use Remind\Extbase\Service\Dto\FilterableListResult;
 use Remind\Extbase\Service\Dto\FilterValue;
 use Remind\Extbase\Service\Dto\FrontendFilter;
@@ -114,19 +116,20 @@ class DataService
         return $this->getListResult($currentPage, $filters);
     }
 
-    public function getDetailEntity(
+    public function getDetailResult(
         RepositoryInterface $repository,
         ?AbstractEntity $entity
-    ): ?AbstractEntity {
+    ): ?DetailResult {
         $source = $this->settings[DetailDataSheets::SOURCE];
-        $result = null;
+        $result = new DetailResult();
+        $item = null;
         switch ($source) {
             case DetailDataSheets::SOURCE_DEFAULT:
-                $result = $entity;
+                $item = $entity;
                 break;
             case DetailDataSheets::SOURCE_RECORD:
                 $uid = (int) ($this->settings[DetailDataSheets::RECORD] ?? null);
-                $result = $repository->findByUid($uid);
+                $item = $repository->findByUid($uid);
                 break;
             default:
                 /** @var \TYPO3\CMS\Core\Routing\PageArguments $routing */
@@ -137,11 +140,20 @@ class DataService
                 $event = $this->eventDispatcher->dispatch(
                     new CustomDetailEntitySourceEvent($this->extensionName, $source, $arguments)
                 );
-                $result = $event->getResult();
+                $item = $event->getResult();
                 break;
         }
-        if ($result) {
-            $this->addCacheTag($this->filterTable . '_' . $result->getUid());
+        $result->setItem($item);
+        
+        /** @var EnrichDetailResultEvent $event */
+        $event = $this->eventDispatcher->dispatch(
+            new EnrichDetailResultEvent($result)
+        );
+
+        $result = $event->getDetailResult();
+
+        if ($item) {
+            $this->addCacheTag($this->filterTable . '_' . $item->getUid());
         }
         return $result;
     }
