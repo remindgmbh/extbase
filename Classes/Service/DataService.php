@@ -10,6 +10,7 @@ use Remind\Extbase\Domain\Repository\Dto\Conjunction;
 use Remind\Extbase\Domain\Repository\Dto\RepositoryFilter;
 use Remind\Extbase\Domain\Repository\FilterableRepository;
 use Remind\Extbase\Event\ModifyDetailEntityEvent;
+use Remind\Extbase\Event\ModifyFilterableListResultEvent;
 use Remind\Extbase\FlexForms\DetailDataSheets;
 use Remind\Extbase\FlexForms\ListFiltersSheets;
 use Remind\Extbase\FlexForms\ListSheets;
@@ -85,6 +86,9 @@ class DataService
         $filterableListResult = new FilterableListResult($listResult);
         $frontendFilters = $this->getFrontendFilters($appliedRepositoryFilters, $queryRepositoryFilters);
         $filterableListResult->setFrontendFilters($frontendFilters);
+        /** @var ModifyFilterableListResultEvent $event */
+        $event = $this->eventDispatcher->dispatch(new ModifyFilterableListResultEvent($filterableListResult));
+        $filterableListResult = $event->getFilterableListResult();
         $this->addCacheTag($this->filterTable);
         return $filterableListResult;
     }
