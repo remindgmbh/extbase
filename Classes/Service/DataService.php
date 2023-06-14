@@ -144,7 +144,7 @@ class DataService
                 break;
         }
         $result->setItem($item);
-        
+
         /** @var EnrichDetailResultEvent $event */
         $event = $this->eventDispatcher->dispatch(
             new EnrichDetailResultEvent($result)
