@@ -73,25 +73,36 @@ class ExtbasePluginQueryEnhancer extends AbstractEnhancer implements RoutingEnha
 
     public function enhanceForMatching(RouteCollection $collection): void
     {
-        /** @var Route $defaultPageRoute */
-        $defaultPageRoute = $collection->get('default');
-
-        $defaultPageRoute->setOption('_enhancer', $this);
-
         $parameters = $GLOBALS['_GET'];
 
-        $deflatedParameters = [];
-
         $originalKeys = [];
+
         foreach ($this->parameters['keys'] ?? [] as $originalKey => $key) {
             $keyAspect = $this->aspects[$key] ?? null;
             $modifiedKey = $keyAspect instanceof ModifiableAspectInterface ? $keyAspect->modify() : $key;
             $originalKeys[$modifiedKey] = $originalKey;
         }
 
+        $availableKeys = array_map(function (string $key) use ($originalKeys) {
+            return array_search($key, $originalKeys) ?? $key;
+        }, array_keys($this->parameters['values']));
+
+        $usedKeys = array_keys($parameters);
+
+        if (count(array_diff($availableKeys, $usedKeys)) === count($availableKeys)) {
+            return;
+        }
+
+        /** @var Route $defaultPageRoute */
+        $defaultPageRoute = $collection->get('default');
+
+        $defaultPageRoute->setOption('_enhancer', $this);
+
+        $deflatedParameters = [];
+
         foreach ($parameters as $key => $value) {
             $key = $originalKeys[$key] ?? $key;
-            $valueAspectName = $this->parameters['values'][$key];
+            $valueAspectName = $this->parameters['values'][$key] ?? null;
             $aspect = $this->getAspect($valueAspectName, $defaultPageRoute);
             $resolvedValue = $aspect?->resolve(is_string($value) ? $value : json_encode($value));
             if (!$resolvedValue) {
@@ -181,7 +192,7 @@ class ExtbasePluginQueryEnhancer extends AbstractEnhancer implements RoutingEnha
         return new PageArguments($pageId, $type, $arguments, $arguments);
     }
 
-    private function getAspect(string $name, Route $route): ?MappableAspectInterface
+    private function getAspect(?string $name, Route $route): ?MappableAspectInterface
     {
         $aspect = $this->aspects[$name] ?? null;
         $aspect = $aspect instanceof MappableAspectInterface ? $aspect : null;
