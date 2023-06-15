@@ -84,7 +84,8 @@ class ExtbasePluginQueryEnhancer extends AbstractEnhancer implements RoutingEnha
         }
 
         $availableKeys = array_map(function (string $key) use ($originalKeys) {
-            return array_search($key, $originalKeys) ?? $key;
+            $originalKey = array_search($key, $originalKeys);
+            return $originalKey ? $originalKey : $key;
         }, array_keys($this->parameters['values']));
 
         $usedKeys = array_keys($parameters);
