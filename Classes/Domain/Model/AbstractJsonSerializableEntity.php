@@ -40,6 +40,9 @@ abstract class AbstractJsonSerializableEntity extends AbstractEntity implements 
                         $property = $this->{'get' . ucfirst($field)}();
                     }
                     if ($property) {
+                        if ($property instanceof FileReference) {
+                            $property = $fileUtility->processFile($property->getOriginalResource());
+                        }
                         if ($property instanceof ObjectStorage) {
                             $property = array_map(function (mixed $object) use ($fileUtility) {
                                 if ($object instanceof FileReference) {
