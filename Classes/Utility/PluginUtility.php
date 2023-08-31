@@ -141,7 +141,7 @@ class PluginUtility
                 }
                 $dataStructure = (string) file_get_contents($file);
             }
-            $dataStructure = GeneralUtility::xml2array($dataStructure);
+            $dataStructure = GeneralUtility::xml2arrayProcess($dataStructure);
         }
 
         self::mergeWithCurrentFlexForm($type, $dataStructure);
@@ -151,7 +151,7 @@ class PluginUtility
     {
         $type = '*,' . $type;
         $flexFormString = $GLOBALS['TCA']['tt_content']['columns']['pi_flexform']['config']['ds'][$type];
-        return GeneralUtility::xml2array($flexFormString);
+        return GeneralUtility::xml2arrayProcess($flexFormString);
     }
 
     private static function mergeWithCurrentFlexForm(string $type, array $newFlexFormArray): void
