@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace Remind\Extbase\FlexForms;
 
+use Remind\Extbase\Backend\ItemsProc;
+
 class ListSheets
 {
     public const SHEET_ID = 1669192689;
@@ -54,6 +56,7 @@ class ListSheets
                                         'value' => 'sorting',
                                     ],
                                 ],
+                                'itemsProcFunc' => ItemsProc::class . '->getListOrderBy',
                             ],
                         ],
                         'settings.' . self::ORDER_DIRECTION => [

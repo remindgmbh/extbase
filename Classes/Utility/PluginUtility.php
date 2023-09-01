@@ -21,6 +21,7 @@ class PluginUtility
     public const FILTER_TABLE_NAME = 'tableName';
     private const TABLE_NAME = 'tableName';
     private const DETAIL_SOURCES = 'detailSources';
+    private const LIST_ORDER_BY = 'listOrderBy';
 
     /**
      *  Add content element plugin to TCA types and add corresponding flex form sheets
@@ -199,5 +200,31 @@ class PluginUtility
     {
         $flexFormTools = new FlexFormTools();
         return $flexFormTools->flexArray2Xml($flexForm, addPrologue: true);
+    }
+    
+    /**
+     * @param string $type
+     * @param string $value
+     * @param string|null $label
+     * @return void
+     */
+    public static function addListOrderBy(
+        string $type,
+        string $value,
+        ?string $label = null,
+    ): void {
+        $GLOBALS['TCA']['tt_content']['ctrl']['EXT']['rmnd_extbase'][$type][self::LIST_ORDER_BY][] = [
+            'label' => $label ?? $value,
+            'value' => $value,
+        ];
+    }
+    
+    /**
+     * @param string $type
+     * @return array
+     */
+    public static function getListOrderBy(string $type): array
+    {
+        return $GLOBALS['TCA']['tt_content']['ctrl']['EXT']['rmnd_extbase'][$type][self::LIST_ORDER_BY] ?? [];
     }
 }

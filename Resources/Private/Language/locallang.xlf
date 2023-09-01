@@ -99,9 +99,6 @@
             <trans-unit id="list.orderBy">
                 <source>Order By</source>
             </trans-unit>
-            <trans-unit id="list.orderBy.none">
-                <source>None</source>
-            </trans-unit>
             <trans-unit id="list.orderBy.sorting">
                 <source>Order in Backend</source>
             </trans-unit>
