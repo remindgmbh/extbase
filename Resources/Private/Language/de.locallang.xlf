@@ -99,8 +99,8 @@
             <trans-unit id="list.orderBy">
                 <target>Sortieren nach</target>
             </trans-unit>
-            <trans-unit id="list.orderBy.none">
-                <target>Keine Sortierung</target>
+            <trans-unit id="list.orderBy.sorting">
+                <target>Reihenfolge im Backend</target>
             </trans-unit>
             <trans-unit id="list.orderDirection">
                 <target>Sortierrichtung</target>

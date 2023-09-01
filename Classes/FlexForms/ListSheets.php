@@ -50,8 +50,8 @@ class ListSheets
                                 'multiple' => '0',
                                 'items' => [
                                     [
-                                        'label' => self::LOCALLANG . 'list.orderBy.none',
-                                        'value' => '',
+                                        'label' => self::LOCALLANG . 'list.orderBy.sorting',
+                                        'value' => 'sorting',
                                     ],
                                 ],
                             ],
