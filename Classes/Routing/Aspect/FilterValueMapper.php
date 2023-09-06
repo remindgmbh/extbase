@@ -133,9 +133,8 @@ class FilterValueMapper implements
         if (!$filter) {
             return false;
         }
-        $base64Values = GeneralUtility::trimExplode(',', $filter[ListFiltersSheets::AVAILABLE_VALUES]);
-        $availableValues = array_reduce($base64Values, function (array $result, string $base64value) use ($fieldName) {
-            $jsonValue = base64_decode($base64value);
+        $jsonValues = GeneralUtility::trimExplode(',', $filter[ListFiltersSheets::AVAILABLE_VALUES]);
+        $availableValues = array_reduce($jsonValues, function (array $result, string $jsonValue) use ($fieldName) {
             $value = json_decode($jsonValue, true);
             if (array_key_exists($fieldName, $value['value'])) {
                 $result[] = $value['value'][$fieldName];

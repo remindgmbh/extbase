@@ -3,17 +3,33 @@
 declare(strict_types=1);
 
 use Remind\Extbase\Backend\Form\Container\FlexFormContainerContainer;
+use Remind\Extbase\Backend\Form\Element\SelectMultipleSideBySideJsonElement;
 use Remind\Extbase\Backend\Form\Element\ValueLabelPairsElement;
-use Remind\Extbase\Backend\Form\FormDataProvider\ValueLabelPairsItems;
 use Remind\Extbase\Routing\Aspect\FilterValueMapper;
 use Remind\Extbase\Routing\Aspect\PersistedValueMapper;
 use Remind\Extbase\Routing\Enhancer\ExtbasePluginQueryEnhancer;
 use TYPO3\CMS\Backend\Form\Container\FlexFormContainerContainer as BaseFlexFormContainerContainer;
 use TYPO3\CMS\Backend\Form\FormDataProvider\SiteResolving;
+use Remind\Extbase\Backend\Form\FormDataProvider\SelectMultipleSideBySideJsonItems;
+use Remind\Extbase\Backend\Form\FormDataProvider\UserItemProvider;
 
 defined('TYPO3') || die('Access denied.');
 
 (function () {
+    $GLOBALS
+        ['TYPO3_CONF_VARS']
+        ['SYS']
+        ['formEngine']
+        ['formDataGroup']
+        ['flexFormSegment']
+        [UserItemProvider::class]
+        = [
+            'depends' => [
+                SiteResolving::class,
+            ],
+        ];
+
+
     $GLOBALS
         ['TYPO3_CONF_VARS']
         ['SYS']
@@ -30,13 +46,12 @@ defined('TYPO3') || die('Access denied.');
         ['TYPO3_CONF_VARS']
         ['SYS']
         ['formEngine']
-        ['formDataGroup']
-        ['flexFormSegment']
-        [ValueLabelPairsItems::class]
+        ['nodeRegistry']
+        [1694008464]
         = [
-            'depends' => [
-                SiteResolving::class,
-            ],
+            'nodeName' => 'selectMultipleSideBySideJson',
+            'priority' => 40,
+            'class' => SelectMultipleSideBySideJsonElement::class,
         ];
 
     $GLOBALS

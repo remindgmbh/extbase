@@ -11,7 +11,7 @@ use TYPO3\CMS\Core\Page\JavaScriptModuleInstruction;
 use TYPO3\CMS\Core\Utility\GeneralUtility;
 use TYPO3\CMS\Core\Utility\StringUtility;
 
-class ValueLabelPairsElement extends AbstractFormElement
+class SelectMultipleSideBySideJsonElement extends AbstractFormElement
 {
     /**
      * Default field information enabled for this element.
@@ -26,8 +26,6 @@ class ValueLabelPairsElement extends AbstractFormElement
 
     public function render()
     {
-        $uriBuilder = GeneralUtility::makeInstance(UriBuilder::class);
-        $uri = $uriBuilder->buildUriFromRoute(CustomValueEditorController::ROUTE);
         $parameterArray = $this->data['parameterArray'];
         $resultArray = $this->initializeResultArray();
 
@@ -35,6 +33,7 @@ class ValueLabelPairsElement extends AbstractFormElement
         $config = $parameterArray['fieldConf']['config'];
 
         $fieldId = StringUtility::getUniqueId('formengine-textarea-');
+        $availableOptionsFieldId = StringUtility::getUniqueId('select-multiple-side-by-side-json-');
 
         $attributes = array_merge(
             [
@@ -61,14 +60,6 @@ class ValueLabelPairsElement extends AbstractFormElement
                 'label' => $this->appendValueToLabelInDebugMode($label, $value),
             ];
         }, $possibleItems);
-        $itemProps = $config['itemProps'] ?? [];
-        $itemProps = array_map(function ($item) {
-            [$label, $value] = $item;
-            return [
-                'value' => $value,
-                'label' => $this->appendValueToLabelInDebugMode($label, $value),
-            ];
-        }, $itemProps);
 
         $fieldInformationResult = $this->renderFieldInformation();
         $fieldInformationHtml = $fieldInformationResult['html'];
@@ -80,12 +71,11 @@ class ValueLabelPairsElement extends AbstractFormElement
             '<div class="form-control-wrap">',
             '<div class="form-wizards-wrap">',
             sprintf(
-                '<typo3-backend-value-label-pairs-element %s></typo3-backend-value-label-pairs-element>',
+                '<typo3-backend-select-multiple-side-by-side-json-element %s></typo3-backend-select-multiple-side-by-side-json-element>',
                 GeneralUtility::implodeAttributes([
                     'dataId' => $attributes['id'],
+                    'availableOptionsId' => $availableOptionsFieldId,
                     'possibleItems' => json_encode($possibleItems ?? []),
-                    'itemProps' => json_encode($itemProps),
-                    'customValueEditorUrl' => $uri,
                 ], true),
             ),
             sprintf(
@@ -99,10 +89,8 @@ class ValueLabelPairsElement extends AbstractFormElement
         ];
 
         $resultArray['javaScriptModules'][] = JavaScriptModuleInstruction::create(
-            '@remind/extbase/backend/element/value-label-pairs-element.js'
+            '@remind/extbase/backend/element/select-multiple-side-by-side-json-element.js'
         );
-        $resultArray
-            ['additionalInlineLanguageLabelFiles'][] = 'EXT:rmnd_extbase/Resources/Private/Language/locallang.xlf';
         $resultArray
             ['additionalInlineLanguageLabelFiles'][] = 'EXT:core/Resources/Private/Language/locallang_core.xlf';
 

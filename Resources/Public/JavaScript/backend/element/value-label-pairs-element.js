@@ -22,7 +22,7 @@ class ValueLabelPairsElement extends LitElement {
                     this.entries[data.index] = {}
                 }
 
-                this.entries[data.index].value = btoa(JSON.stringify(data.value))
+                this.entries[data.index].value = JSON.stringify(data.value)
                 this.updateEntries()
             }
         });
@@ -41,26 +41,15 @@ class ValueLabelPairsElement extends LitElement {
     updateEntries() {
         const data = document.getElementById(this.dataId)
 
-        const base64Entries = this.entries.map((entry) => {
-            return btoa(JSON.stringify({
-                label: entry['label'],
-                value: JSON.parse(atob(entry['value']))
-            }))
-        }).join(',')
-
-        data.value = base64Entries
+        data.value = JSON.stringify(this.entries)
         data.dispatchEvent(new CustomEvent("change", { bubbles: false }))
         this.requestUpdate()
     }
     render() {
         const data = document.getElementById(this.dataId)
-        const base64Entries = data.value
-        if (base64Entries) {
-            this.entries = base64Entries.split(',').map((entry) => {
-                const result = JSON.parse(atob(entry))
-                result['value'] = btoa(JSON.stringify(result['value']))
-                return result
-            })
+        const jsonEntries = data.value
+        if (jsonEntries) {
+            this.entries = JSON.parse(jsonEntries)
         } else {
             this.entries = []
         }
@@ -108,7 +97,7 @@ class ValueLabelPairsElement extends LitElement {
             const editValue = () => {
                 this.showModal(index, entry.value)
             }
-            const jsonValue = atob(entry.value)
+            const jsonValue = entry.value
             const keys = Object.keys(JSON.parse(jsonValue))
             const difference = keys.filter(key => !this.itemProps.includes(key))
             const invalidValue = difference.length > 0
@@ -155,8 +144,8 @@ class ValueLabelPairsElement extends LitElement {
     renderAddButton() {
         const unusedItems = this.getUnusedItems()
         const addEntry = () => {
-            const newValue = unusedItems[0].value
-            this.entries.push({ label: "", value: newValue })
+            const unusedItem = unusedItems[0]
+            this.entries.push({ label: unusedItem.defaultLabel, value: unusedItem.value })
             this.updateEntries()
         }
         const disabled = unusedItems.length === 0
@@ -174,7 +163,7 @@ class ValueLabelPairsElement extends LitElement {
         `;
     }
     showModal(index, value) {
-        const itemPropsParam = btoa(JSON.stringify(this.itemProps))
+        const itemPropsParam = JSON.stringify(this.itemProps)
         const valueParam = value ? JSON.stringify(value) : undefined
         Modal.advanced({
             type: Modal.types.iframe,

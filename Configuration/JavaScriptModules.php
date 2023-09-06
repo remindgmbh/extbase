@@ -3,6 +3,8 @@
 return [
     'dependencies' => ['core', 'backend'],
     'imports' => [
-        '@remind/extbase/' => 'EXT:rmnd_extbase/Resources/Public/JavaScript/',
+        '@remind/extbase/' => [
+            'path' => 'EXT:rmnd_extbase/Resources/Public/JavaScript/',
+        ],
     ],
 ];

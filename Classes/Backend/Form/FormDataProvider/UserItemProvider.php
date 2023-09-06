@@ -7,7 +7,7 @@ namespace Remind\Extbase\Backend\Form\FormDataProvider;
 use TYPO3\CMS\Backend\Form\FormDataProvider\AbstractItemProvider;
 use TYPO3\CMS\Backend\Form\FormDataProviderInterface;
 
-class ValueLabelPairsItems extends AbstractItemProvider implements FormDataProviderInterface
+class UserItemProvider extends AbstractItemProvider implements FormDataProviderInterface
 {
     /**
      * Add form data to result array
@@ -23,7 +23,7 @@ class ValueLabelPairsItems extends AbstractItemProvider implements FormDataProvi
             if (
                 empty($fieldConfig['config']['type']) ||
                 $fieldConfig['config']['type'] !== 'user' ||
-                $fieldConfig['config']['renderType'] !== 'valueLabelPairs'
+                !in_array($fieldConfig['config']['renderType'], ['valueLabelPairs', 'selectMultipleSideBySideJson'])
             ) {
                 continue;
             }

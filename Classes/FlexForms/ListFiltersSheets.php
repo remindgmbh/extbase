@@ -121,10 +121,8 @@ class ListFiltersSheets
                                             'description' => self::LOCALLANG . 'filters.appliedValues.description',
                                             'onChange' => 'reload',
                                             'config' => [
-                                                'type' => 'select',
-                                                'renderType' => 'selectMultipleSideBySide',
-                                                'minitems' => '0',
-                                                'multiple' => '0',
+                                                'type' => 'user',
+                                                'renderType' => 'selectMultipleSideBySideJson',
                                                 'itemsProcFunc' => ItemsProc::class . '->getAppliedFilterValues',
                                             ],
                                         ],

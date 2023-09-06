@@ -226,7 +226,7 @@ class DataService
             $filterName = $this->getFilterName($filterSetting);
 
             $disabled = (bool) ($filterSetting[ListFiltersSheets::DISABLED] ?? false);
-            $filterValues = $this->parseBase64Values($filterSetting[ListFiltersSheets::AVAILABLE_VALUES] ?? '');
+            $filterValues = json_decode($filterSetting[ListFiltersSheets::AVAILABLE_VALUES] ?? '', true);
 
             if ($disabled || empty($filterValues)) {
                 continue;
@@ -243,7 +243,7 @@ class DataService
 
             foreach ($filterValues as $filterValue) {
                 $label = $filterValue['label'];
-                $value = $filterValue['value'];
+                $value = json_decode($filterValue['value'], true);
                 $frontendFilter->addValue(new FilterValue($value, $label));
             }
 
@@ -503,7 +503,13 @@ class DataService
             $filterName = $this->getFilterName($filterSetting);
 
             $disabled = (bool) ($filterSetting[ListFiltersSheets::DISABLED] ?? false);
-            $values = $this->parseBase64Values($filterSetting[ListFiltersSheets::APPLIED_VALUES] ?? '');
+
+            $values = array_map(
+                function (string $value) {
+                    return json_decode($value, true);
+                },
+                json_decode($filterSetting[ListFiltersSheets::APPLIED_VALUES] ?? '', true)
+            );
 
             if ($disabled || empty($values)) {
                 continue;
@@ -565,14 +571,6 @@ class DataService
     {
         $allowMultipleFields = (bool) $filterSetting[ListFiltersSheets::ALLOW_MULTIPLE_FIELDS];
         return $filterSetting[$allowMultipleFields ? ListFiltersSheets::FIELDS : ListFiltersSheets::FIELD];
-    }
-
-    private function parseBase64Values(string $base64ValuesString): array
-    {
-        $base64ValuesArray = GeneralUtility::trimExplode(',', $base64ValuesString, true);
-        return array_map(function (string $value) {
-            return json_decode(base64_decode($value), true);
-        }, $base64ValuesArray);
     }
 
     private function getTypoScriptFrontendController(): ?TypoScriptFrontendController

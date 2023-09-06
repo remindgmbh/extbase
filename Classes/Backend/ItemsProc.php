@@ -311,7 +311,7 @@ class ItemsProc
 
     private function getCurrentFilterValues(array $params): array
     {
-        return GeneralUtility::trimExplode(',', $params['row'][$params['field']], true);
+        return json_decode($params['row'][$params['field']], true) ?? [];
     }
 
     private function getAvailableFilterConstraints(
@@ -328,12 +328,9 @@ class ItemsProc
             }
 
             $appliedValues = $filter[ListFiltersSheets::APPLIED_VALUES];
-            $appliedValues = is_array($appliedValues)
-                ? $appliedValues
-                : GeneralUtility::trimExplode(',', $appliedValues, true);
-            $appliedValues = array_map(function (string $base64Value) {
-                return json_decode(base64_decode($base64Value), true);
-            }, $appliedValues);
+            $appliedValues = array_map(function (string $value) {
+                return json_decode($value, true);
+            }, json_decode($appliedValues, true) ?? []);
 
             $filterConstraints = [];
             foreach ($appliedValues as $key => $appliedValue) {
@@ -403,16 +400,10 @@ class ItemsProc
             }
 
             $label = implode(', ', $data['label']);
-            $value = $this->getBase64Value($data['value']);
+            $value = json_encode($data['value'], JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES);
 
             return ['label' => $label, 'value' => $value];
         }, $rows);
-    }
-
-    private function getBase64Value(array $value): string
-    {
-        $jsonValue = json_encode($value, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES);
-        return base64_encode($jsonValue);
     }
 
     private function addInvalidValues(array &$result, array $currentValues): void
