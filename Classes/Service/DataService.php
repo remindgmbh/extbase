@@ -236,9 +236,12 @@ class DataService
 
             $label = $this->getFrontendFilterLabel($filterName, $filterSetting);
 
+            $allValuesLink = $this->getFrontendFilterLink($filterName, $queryRepositoryFilters, [], $exclusive);
+
             $frontendFilter = new FrontendFilter(
                 $filterName,
-                $label
+                $label,
+                $allValuesLink,
             );
 
             foreach ($filterValues as $filterValue) {

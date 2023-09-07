@@ -10,15 +10,18 @@ class FrontendFilter
 
     private string $label = '';
 
+    private string $allValuesLink = '';
+
     /**
      * @var FilterValue[] $values
      */
     private array $values = [];
 
-    public function __construct(string $filterName, string $label)
+    public function __construct(string $filterName, string $label, string $allValuesLink)
     {
         $this->label = $label;
         $this->filterName = $filterName;
+        $this->allValuesLink = $allValuesLink;
     }
 
     public function getFilterName(): string
@@ -41,6 +44,18 @@ class FrontendFilter
     public function setLabel(string $label): self
     {
         $this->label = $label;
+
+        return $this;
+    }
+
+    public function getAllValuesLink(): string
+    {
+        return $this->allValuesLink;
+    }
+
+    public function setAllValuesLink(string $allValuesLink): self
+    {
+        $this->allValuesLink = $allValuesLink;
 
         return $this;
     }

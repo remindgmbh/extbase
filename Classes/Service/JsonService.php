@@ -85,6 +85,7 @@ class JsonService
             $filterJson = [
                 'name' => $filter->getFilterName(),
                 'label' => $filter->getLabel(),
+                'allValuesLink' => $filter->getAllValuesLink(),
                 'values' => [],
             ];
 
