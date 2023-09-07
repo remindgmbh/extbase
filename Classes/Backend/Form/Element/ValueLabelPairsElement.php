@@ -59,6 +59,7 @@ class ValueLabelPairsElement extends AbstractFormElement
             return [
                 'value' => $value,
                 'label' => $this->appendValueToLabelInDebugMode($label, $value),
+                'defaultLabel' => $label,
             ];
         }, $possibleItems);
         $itemProps = $config['itemProps'] ?? [];

@@ -277,7 +277,6 @@ class DataService
 
             $result[] = $frontendFilter;
         }
-        $this->setFrontendFilterValueLabels($result);
         return $result;
     }
 
@@ -407,69 +406,6 @@ class DataService
 
         $queryResult = $this->repository->findByFilters($repositoryFilters);
         return $queryResult->count();
-    }
-
-    /**
-     * @param FrontendFilter[] $frontendFilters
-     */
-    private function setFrontendFilterValueLabels(array &$frontendFilters): void
-    {
-        $fields = [];
-        foreach ($frontendFilters as $frontendFilter) {
-            foreach ($frontendFilter->getValues() as $filterValue) {
-                if ($filterValue->getLabel()) {
-                    continue;
-                }
-                foreach ($filterValue->getValue() as $field => $value) {
-                    if (!isset($fields[$field])) {
-                        $fieldTca = BackendUtility::getTcaFieldConfiguration($this->filterTable, $field);
-                        if (isset($fieldTca['foreign_table'])) {
-                            $fields[$field]['tca'] = $fieldTca;
-                        } else {
-                            $fields[$field] = false;
-                        }
-                    }
-                    if ($fields[$field]) {
-                        $fields[$field]['values'][] = $value;
-                    }
-                }
-            }
-        }
-        $foreignTableFields = array_filter($fields);
-        $recordTitles = [];
-        foreach ($foreignTableFields as $fieldName => $field) {
-            $foreignTable = $field['tca']['foreign_table'];
-            $selectFields = GeneralUtility::trimExplode(
-                ',',
-                BackendUtility::getCommonSelectFields($foreignTable),
-                true
-            );
-            $queryBuilder = $this->connectionPool->getQueryBuilderForTable($foreignTable);
-            $queryBuilder
-                ->select(...$selectFields)
-                ->from($foreignTable)
-                ->where(
-                    $queryBuilder->expr()->in(
-                        'uid',
-                        $queryBuilder->createNamedParameter($field['values'], Connection::PARAM_INT_ARRAY)
-                    )
-                );
-            $queryResult = $queryBuilder->executeQuery();
-            $rows = $queryResult->fetchAllAssociative();
-            foreach ($rows as $row) {
-                $recordTitles[$fieldName][$row['uid']] = BackendUtility::getRecordTitle($foreignTable, $row);
-            }
-        }
-        foreach ($frontendFilters as &$frontendFilter) {
-            foreach ($frontendFilter->getValues() as &$filterValue) {
-                if (!$filterValue->getLabel()) {
-                    $label = implode(', ', array_map(function ($key, $value) use ($recordTitles) {
-                        return $recordTitles[$key][$value] ?? $value;
-                    }, array_keys($filterValue->getValue()), $filterValue->getValue()));
-                    $filterValue->setLabel($label);
-                }
-            }
-        }
     }
 
     private function getRepositoryFilter(string $filterName, array $values): RepositoryFilter
