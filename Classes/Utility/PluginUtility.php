@@ -124,6 +124,22 @@ class PluginUtility
         return $GLOBALS['TCA']['tt_content']['ctrl']['EXT']['rmnd_extbase'][$type][self::DETAIL_SOURCES] ?? [];
     }
 
+    public static function addListOrderBy(
+        string $type,
+        string $value,
+        ?string $label = null,
+    ): void {
+        $GLOBALS['TCA']['tt_content']['ctrl']['EXT']['rmnd_extbase'][$type][self::LIST_ORDER_BY][] = [
+            'label' => $label ?? $value,
+            'value' => $value,
+        ];
+    }
+
+    public static function getListOrderBy(string $type): array
+    {
+        return $GLOBALS['TCA']['tt_content']['ctrl']['EXT']['rmnd_extbase'][$type][self::LIST_ORDER_BY] ?? [];
+    }
+
     /**
      * @param string $type plugin CType
      * @param array|string $dataStructure either a xml flexform file path, a xml flexform string or a flexform array
@@ -200,31 +216,5 @@ class PluginUtility
     {
         $flexFormTools = new FlexFormTools();
         return $flexFormTools->flexArray2Xml($flexForm, addPrologue: true);
-    }
-    
-    /**
-     * @param string $type
-     * @param string $value
-     * @param string|null $label
-     * @return void
-     */
-    public static function addListOrderBy(
-        string $type,
-        string $value,
-        ?string $label = null,
-    ): void {
-        $GLOBALS['TCA']['tt_content']['ctrl']['EXT']['rmnd_extbase'][$type][self::LIST_ORDER_BY][] = [
-            'label' => $label ?? $value,
-            'value' => $value,
-        ];
-    }
-    
-    /**
-     * @param string $type
-     * @return array
-     */
-    public static function getListOrderBy(string $type): array
-    {
-        return $GLOBALS['TCA']['tt_content']['ctrl']['EXT']['rmnd_extbase'][$type][self::LIST_ORDER_BY] ?? [];
     }
 }

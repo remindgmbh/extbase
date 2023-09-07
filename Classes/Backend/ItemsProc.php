@@ -56,6 +56,15 @@ class ItemsProc
         }
     }
 
+    public function getListOrderBy(array &$params): void
+    {
+        $flexParentDatabaseRow = $params['flexParentDatabaseRow'];
+        $orderByItems = PluginUtility::getListOrderBy($flexParentDatabaseRow['CType']);
+        foreach ($orderByItems as $item) {
+            $params['items'][] = ['label' => $item['label'], 'value' => $item['value']];
+        }
+    }
+
     public function getRecordsInPages(array &$params): void
     {
         $flexParentDatabaseRow = $params['flexParentDatabaseRow'];
@@ -475,14 +484,5 @@ class ItemsProc
     private function getBackendUser(): BackendUserAuthentication
     {
         return $GLOBALS['BE_USER'];
-    }
-    
-    public function getListOrderBy(array &$params): void
-    {
-        $flexParentDatabaseRow = $params['flexParentDatabaseRow'];
-        $orderByItems = PluginUtility::getListOrderBy($flexParentDatabaseRow['CType']);
-        foreach ($orderByItems as $item) {
-            $params['items'][] = ['label' => $item['label'], 'value' => $item['value']];
-        }
     }
 }
