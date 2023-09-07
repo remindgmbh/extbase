@@ -508,7 +508,7 @@ class DataService
                 function (string $value) {
                     return json_decode($value, true);
                 },
-                json_decode($filterSetting[ListFiltersSheets::APPLIED_VALUES] ?? '', true)
+                json_decode($filterSetting[ListFiltersSheets::APPLIED_VALUES] ?? '', true) ?? []
             );
 
             if ($disabled || empty($values)) {
