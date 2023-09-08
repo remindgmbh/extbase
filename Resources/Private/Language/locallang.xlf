@@ -39,6 +39,12 @@
             <trans-unit id="filters">
                 <source>Filters</source>
             </trans-unit>
+            <trans-unit id="filters.allValuesLabel">
+                <source>All Values Label</source>
+            </trans-unit>
+            <trans-unit id="filters.allValuesLabel.description">
+                <source>Label to include all values for this filter in frontend</source>
+            </trans-unit>
             <trans-unit id="filters.appliedValues">
                 <source>Applied Values (empty = no filter)</source>
             </trans-unit>

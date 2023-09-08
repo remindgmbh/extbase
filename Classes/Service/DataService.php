@@ -24,7 +24,6 @@ use Remind\Extbase\Service\Dto\ListResult;
 use Remind\Extbase\Utility\FilterUtility;
 use Remind\Extbase\Utility\PluginUtility;
 use TYPO3\CMS\Backend\Utility\BackendUtility;
-use TYPO3\CMS\Core\Database\Connection;
 use TYPO3\CMS\Core\Database\ConnectionPool;
 use TYPO3\CMS\Core\Pagination\SimplePagination;
 use TYPO3\CMS\Core\Utility\ArrayUtility;
@@ -236,12 +235,15 @@ class DataService
 
             $label = $this->getFrontendFilterLabel($filterName, $filterSetting);
 
-            $allValuesLink = $this->getFrontendFilterLink($filterName, $queryRepositoryFilters, [], $exclusive);
+            $allValuesLabel = $filterSetting[ListFiltersSheets::ALL_VALUES_LABEL] ?? '';
+
+            $allValues = new FilterValue([], $allValuesLabel);
+            $allValues->setLink($this->getFrontendFilterLink($filterName, $queryRepositoryFilters, [], $exclusive));
 
             $frontendFilter = new FrontendFilter(
                 $filterName,
                 $label,
-                $allValuesLink,
+                $allValues,
             );
 
             foreach ($filterValues as $filterValue) {

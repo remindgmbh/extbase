@@ -20,6 +20,7 @@ class ListFiltersSheets
     public const FILTER = 'filter';
     public const FILTERS = 'filters';
     public const LABEL = 'label';
+    public const ALL_VALUES_LABEL = 'allValuesLabel';
     public const SHEET_ID = 1669190816;
     private const LOCALLANG = 'LLL:EXT:rmnd_extbase/Resources/Private/Language/locallang.xlf:';
 
@@ -154,6 +155,13 @@ class ListFiltersSheets
                                                 'renderType' => 'valueLabelPairs',
                                                 'itemsProcFunc' => ItemsProc::class . '->getAvailableFilterValues',
                                                 'itemPropsProcFunc' => ItemsProc::class . '->getSelectedFilterFields',
+                                            ],
+                                        ],
+                                        self::ALL_VALUES_LABEL => [
+                                            'label' => self::LOCALLANG . 'filters.allValuesLabel',
+                                            'description' => self::LOCALLANG . 'filters.allValuesLabel.description',
+                                            'config' => [
+                                                'type' => 'input',
                                             ],
                                         ],
                                     ],

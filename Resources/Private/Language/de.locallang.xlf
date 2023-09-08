@@ -39,6 +39,12 @@
             <trans-unit id="filters">
                 <target>Filter</target>
             </trans-unit>
+            <trans-unit id="filters.allValuesLabel">
+                <target>Alle Werte Beschriftung</target>
+            </trans-unit>
+            <trans-unit id="filters.allValuesLabel.description">
+                <target>Beschriftung zur Berücksichtigung von allen Werten für diesen Filter im Frontend</target>
+            </trans-unit>
             <trans-unit id="filters.appliedValues">
                 <target>Angewandte Werte (leer = keine Filter)</target>
             </trans-unit>
