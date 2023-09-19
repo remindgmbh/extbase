@@ -116,7 +116,7 @@ class ItemsProc
         $cType = $flexParentDatabaseRow['CType'];
         $row = $params['row'];
 
-        $currentProperties = json_decode($row['settings.' . DetailDataSheets::PROPERTIES], true);
+        $currentProperties = json_decode($row['settings.' . DetailDataSheets::PROPERTIES], true) ?? [];
         $currentValues = array_map(function (array $property) {
             return $property['value'];
         }, $currentProperties);
