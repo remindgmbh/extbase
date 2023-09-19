@@ -55,7 +55,8 @@ class ValueLabelPairsElement extends AbstractFormElement
 
         $possibleItems = $config['items'] ?? [];
         $possibleItems = array_map(function ($item) {
-            [$label, $value] = $item;
+            $label = $item['label'];
+            $value = $item['value'];
             return [
                 'value' => $value,
                 'label' => $this->appendValueToLabelInDebugMode($label, $value),
@@ -64,7 +65,8 @@ class ValueLabelPairsElement extends AbstractFormElement
         }, $possibleItems);
         $itemProps = $config['itemProps'] ?? [];
         $itemProps = array_map(function ($item) {
-            [$label, $value] = $item;
+            $label = $item['label'];
+            $value = $item['value'];
             return [
                 'value' => $value,
                 'label' => $this->appendValueToLabelInDebugMode($label, $value),

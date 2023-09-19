@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Remind\Extbase\Backend;
 
 use Remind\Extbase\Domain\Repository\Dto\Conjunction;
+use Remind\Extbase\FlexForms\DetailDataSheets;
 use Remind\Extbase\FlexForms\ListFiltersSheets;
 use Remind\Extbase\Utility\PluginUtility;
 use TYPO3\CMS\Backend\Utility\BackendUtility;
@@ -22,7 +23,7 @@ use TYPO3\CMS\Extbase\Utility\LocalizationUtility;
 
 class ItemsProc
 {
-    private const EXCLUDED_FILTER_FIELDS = [
+    private const DEFAULT_PROPERTIES = [
         'uid',
         'pid',
         'sys_language_uid',
@@ -109,12 +110,30 @@ class ItemsProc
         }, $fields);
     }
 
+    public function getDetailProperties(array &$params): void
+    {
+        $flexParentDatabaseRow = $params['flexParentDatabaseRow'];
+        $cType = $flexParentDatabaseRow['CType'];
+        $row = $params['row'];
+
+        $currentProperties = json_decode($row['settings.' . DetailDataSheets::PROPERTIES], true);
+        $currentValues = array_map(function (array $property) {
+            return $property['value'];
+        }, $currentProperties);
+
+
+        $properties = $this->getModelProperties($cType, $currentValues);
+
+        $params['items'] = array_merge(
+            $params['items'],
+            $properties
+        );
+    }
+
     public function getFilterFields(array &$params): void
     {
         $flexParentDatabaseRow = $params['flexParentDatabaseRow'];
-        $tableName = PluginUtility::getTableName($flexParentDatabaseRow['CType']);
-        $fields = BackendUtility::getAllowedFieldsForTable($tableName);
-        $fields = array_diff($fields, self::EXCLUDED_FILTER_FIELDS);
+        $cType = $flexParentDatabaseRow['CType'];
         $row = $params['row'];
         $allowMultipleFields = (bool) $row[ListFiltersSheets::ALLOW_MULTIPLE_FIELDS];
 
@@ -158,28 +177,10 @@ class ItemsProc
             return $result;
         }, []);
 
-        $fields = array_diff($fields, $usedFields);
-
-        $noMatchingLabel = sprintf(
-            '[ %s ]',
-            LocalizationUtility::translate(
-                'LLL:EXT:core/Resources/Private/Language/locallang_core.xlf:labels.noMatchingValue'
-            )
-        );
-
-        $notMatchingFields = array_diff($currentFields, $fields);
-        $notMatchingFields = array_map(function (string $field) use ($noMatchingLabel) {
-            return [sprintf($noMatchingLabel, $field), $field];
-        }, $notMatchingFields);
-
-        $fields = array_map(function (string $field) use ($tableName) {
-            $label = BackendUtility::getItemLabel($tableName, $field);
-            return ['label' => $label, 'value' => $field];
-        }, $fields);
+        $fields = $this->getModelProperties($cType, $currentFields, $usedFields);
 
         $params['items'] = array_merge(
             $params['items'],
-            $notMatchingFields,
             $fields
         );
     }
@@ -201,6 +202,33 @@ class ItemsProc
 
         $items = $this->getFilterValues($params, $constraints);
         $params['items'] = array_merge($params['items'], $items);
+    }
+
+    private function getModelProperties(string $cType, array $currentValues, ?array $excludedValues = []): array
+    {
+        $tableName = PluginUtility::getTableName($cType);
+        $values = BackendUtility::getAllowedFieldsForTable($tableName);
+        $values = array_diff($values, self::DEFAULT_PROPERTIES);
+        $values = array_diff($values, $excludedValues);
+
+        $noMatchingLabel = sprintf(
+            '[ %s ]',
+            LocalizationUtility::translate(
+                'LLL:EXT:core/Resources/Private/Language/locallang_core.xlf:labels.noMatchingValue'
+            )
+        );
+
+        $notMatchingValues = array_diff($currentValues, $values);
+        $notMatchingValues = array_map(function (string $field) use ($noMatchingLabel) {
+            return [sprintf($noMatchingLabel, $field), $field];
+        }, $notMatchingValues);
+
+        $properties = array_map(function (string $value) use ($tableName) {
+            $label = BackendUtility::getItemLabel($tableName, $value);
+            return ['label' => $label, 'value' => $value];
+        }, $values);
+
+        return array_merge($notMatchingValues, $properties);
     }
 
     private function getFilterValues(

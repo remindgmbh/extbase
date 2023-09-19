@@ -24,6 +24,12 @@
             <trans-unit id="data.source.record">
                 <source>Record</source>
             </trans-unit>
+            <trans-unit id="data.properties">
+                <source>Model Properties</source>
+            </trans-unit>
+            <trans-unit id="data.properties.description">
+                <source>Model Properties used for display in frontend</source>
+            </trans-unit>
             <trans-unit id="data.record">
                 <source>Record</source>
             </trans-unit>

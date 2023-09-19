@@ -13,6 +13,7 @@ class DetailDataSheets
     public const SOURCE = 'source';
     public const SOURCE_DEFAULT = '';
     public const SOURCE_RECORD = 'record';
+    public const PROPERTIES = 'properties';
     private const LOCALLANG = 'LLL:EXT:rmnd_extbase/Resources/Private/Language/locallang.xlf:';
 
     public static function getSheets(): array
@@ -57,6 +58,15 @@ class DetailDataSheets
                                 'maxitems' => '1',
                                 'multiple' => '0',
                                 'itemsProcFunc' => ItemsProc::class . '->getRecordsInPages',
+                            ],
+                        ],
+                        'settings.' . self::PROPERTIES => [
+                            'label' => self::LOCALLANG . 'data.properties',
+                            'description' => self::LOCALLANG . 'data.properties.description',
+                            'config' => [
+                                'type' => 'user',
+                                'renderType' => 'valueLabelPairs',
+                                'itemsProcFunc' => ItemsProc::class . '->getDetailProperties',
                             ],
                         ],
                     ],

@@ -36,7 +36,7 @@ class CustomValueEditorController
             )
         );
         $this->pageRenderer->addCssFile('EXT:backend/Resources/Public/Css/backend.css');
-        $this->pageRenderer->loadJavaScriptModule('@remind/extbase/backend/modal/custom-value-editor.js');
+        $this->pageRenderer->loadJavaScriptModule('@remind/extbase/backend/element/helper/custom-value-editor.js');
         $this->pageRenderer->addBodyContent(
             sprintf(
                 '<typo3-backend-custom-value-editor %s></typo3-backend-custom-value-editor>',

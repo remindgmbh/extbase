@@ -24,6 +24,12 @@
             <trans-unit id="data.source.record">
                 <target>Datensatz</target>
             </trans-unit>
+            <trans-unit id="data.properties">
+                <target>Model Eigenschaften</target>
+            </trans-unit>
+            <trans-unit id="data.properties.description">
+                <target>Model Eigenschaften, die im Frontend angezeigt werden</target>
+            </trans-unit>
             <trans-unit id="data.record">
                 <target>Datensatz</target>
             </trans-unit>

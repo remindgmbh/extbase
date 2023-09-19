@@ -144,6 +144,9 @@ class DataService
         }
         $result->setItem($item);
 
+        $properties = json_decode($this->settings[DetailDataSheets::PROPERTIES], true);
+        $result->setProperties($properties);
+
         /** @var EnrichDetailResultEvent $event */
         $event = $this->eventDispatcher->dispatch(
             new EnrichDetailResultEvent($result)

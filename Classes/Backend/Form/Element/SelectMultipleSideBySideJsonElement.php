@@ -4,9 +4,7 @@ declare(strict_types=1);
 
 namespace Remind\Extbase\Backend\Form\Element;
 
-use Remind\Extbase\Controller\CustomValueEditorController;
 use TYPO3\CMS\Backend\Form\Element\AbstractFormElement;
-use TYPO3\CMS\Backend\Routing\UriBuilder;
 use TYPO3\CMS\Core\Page\JavaScriptModuleInstruction;
 use TYPO3\CMS\Core\Utility\GeneralUtility;
 use TYPO3\CMS\Core\Utility\StringUtility;
@@ -54,7 +52,8 @@ class SelectMultipleSideBySideJsonElement extends AbstractFormElement
 
         $possibleItems = $config['items'] ?? [];
         $possibleItems = array_map(function ($item) {
-            [$label, $value] = $item;
+            $label = $item['label'];
+            $value = $item['value'];
             return [
                 'value' => $value,
                 'label' => $this->appendValueToLabelInDebugMode($label, $value),

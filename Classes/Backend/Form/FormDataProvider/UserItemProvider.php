@@ -45,6 +45,13 @@ class UserItemProvider extends AbstractItemProvider implements FormDataProviderI
                 unset($fieldConfig['config']['itemsProcFunc']);
             }
 
+            $fieldConfig['config']['items'] = $this->translateLabels(
+                $result,
+                $fieldConfig['config']['items'],
+                $table,
+                $fieldName,
+            );
+
             // itemProps are used to check if selected values are available and to create custom values
             $fieldConfig['config']['itemProps'] = $this->sanitizeItemArray(
                 $fieldConfig['config']['itemProps'] ?? [],
@@ -68,6 +75,13 @@ class UserItemProvider extends AbstractItemProvider implements FormDataProviderI
                 );
                 // itemPropsProcFunc must not be used anymore
                 unset($fieldConfig['config']['itemPropsProcFunc']);
+
+                $fieldConfig['config']['itemProps'] = $this->translateLabels(
+                    $result,
+                    $fieldConfig['config']['itemProps'],
+                    $table,
+                    $fieldName,
+                );
             }
 
             $result['processedTca']['columns'][$fieldName] = $fieldConfig;
