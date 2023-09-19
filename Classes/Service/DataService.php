@@ -145,6 +145,12 @@ class DataService
         $result->setItem($item);
 
         $properties = json_decode($this->settings[DetailDataSheets::PROPERTIES], true);
+        $properties = array_map(function (array $property) {
+            return [
+                ...$property,
+                'value' => GeneralUtility::underscoredToLowerCamelCase($property['value']),
+            ];
+        }, $properties);
         $result->setProperties($properties);
 
         /** @var EnrichDetailResultEvent $event */
