@@ -67,6 +67,7 @@ class DetailDataSheets
                                 'type' => 'user',
                                 'renderType' => 'valueLabelPairs',
                                 'itemsProcFunc' => ItemsProc::class . '->getDetailProperties',
+                                'skipTranslation' => true,
                             ],
                         ],
                     ],

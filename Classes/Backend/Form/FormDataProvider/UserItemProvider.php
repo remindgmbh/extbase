@@ -45,12 +45,14 @@ class UserItemProvider extends AbstractItemProvider implements FormDataProviderI
                 unset($fieldConfig['config']['itemsProcFunc']);
             }
 
-            $fieldConfig['config']['items'] = $this->translateLabels(
-                $result,
-                $fieldConfig['config']['items'],
-                $table,
-                $fieldName,
-            );
+            if (!($fieldConfig['config']['skipTranslation'] ?? false)) {
+                $fieldConfig['config']['items'] = $this->translateLabels(
+                    $result,
+                    $fieldConfig['config']['items'],
+                    $table,
+                    $fieldName,
+                );
+            }
 
             // itemProps are used to check if selected values are available and to create custom values
             $fieldConfig['config']['itemProps'] = $this->sanitizeItemArray(

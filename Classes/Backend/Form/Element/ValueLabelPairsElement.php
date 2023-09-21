@@ -10,6 +10,7 @@ use TYPO3\CMS\Backend\Routing\UriBuilder;
 use TYPO3\CMS\Core\Page\JavaScriptModuleInstruction;
 use TYPO3\CMS\Core\Utility\GeneralUtility;
 use TYPO3\CMS\Core\Utility\StringUtility;
+use TYPO3\CMS\Extbase\Utility\LocalizationUtility;
 
 class ValueLabelPairsElement extends AbstractFormElement
 {
@@ -53,14 +54,27 @@ class ValueLabelPairsElement extends AbstractFormElement
             $this->getOnFieldChangeAttrs('change', $parameterArray['fieldChangeFunc'] ?? [])
         );
 
+        $languageId = intval($this->data['databaseRow']['sys_language_uid']);
+        /** @var \TYPO3\CMS\Core\Site\Entity\Site $site */
+        $site = $this->data['site'];
+        $language = $site->getLanguageById($languageId);
+        $languageCode = $language->getLocale()->getLanguageCode();
+
         $possibleItems = $config['items'] ?? [];
-        $possibleItems = array_map(function ($item) {
-            $label = $item['label'];
+        $possibleItems = array_map(function ($item) use ($languageCode) {
+            $labelKey = $item['label'];
             $value = $item['value'];
             return [
                 'value' => $value,
-                'label' => $this->appendValueToLabelInDebugMode($label, $value),
-                'defaultLabel' => $label,
+                'label' => $this->appendValueToLabelInDebugMode(
+                    str_starts_with($labelKey, 'LLL:')
+                        ? LocalizationUtility::translate($labelKey) ?? $labelKey
+                        : $labelKey,
+                    $value,
+                ),
+                'defaultLabel' => str_starts_with($labelKey, 'LLL:')
+                    ? LocalizationUtility::translate($labelKey, null, null, $languageCode) ?? $labelKey
+                    : $labelKey,
             ];
         }, $possibleItems);
         $itemProps = $config['itemProps'] ?? [];
