@@ -78,6 +78,12 @@
             <trans-unit id="filters.disabled">
                 <source>Disabled</source>
             </trans-unit>
+            <trans-unit id="filters.dynamicAvailableValues">
+                <source>Dynamic Available Values</source>
+            </trans-unit>
+            <trans-unit id="filters.dynamicAvailableValues.description">
+                <source>Display all available filter values automatically in frontend</source>
+            </trans-unit>
             <trans-unit id="filters.exclusive">
                 <source>Exclusive</source>
             </trans-unit>

@@ -2,7 +2,7 @@
 
 namespace Remind\Extbase\Domain\Repository;
 
-use Remind\Extbase\Domain\Repository\Dto\Conjunction;
+use Remind\Extbase\Utility\Dto\Conjunction;
 use TYPO3\CMS\Core\Utility\GeneralUtility;
 use TYPO3\CMS\Extbase\Persistence\QueryInterface;
 use TYPO3\CMS\Extbase\Persistence\QueryResultInterface;
@@ -11,7 +11,7 @@ use TYPO3\CMS\Extbase\Persistence\Repository;
 class FilterableRepository extends Repository
 {
     /**
-     * @param \Remind\Extbase\Domain\Repository\Dto\RepositoryFilter[] $filters
+     * @param \Remind\Extbase\Utility\Dto\DatabaseFilter[] $filters
      */
     public function findByFilters(
         array $filters,

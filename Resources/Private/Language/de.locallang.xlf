@@ -78,6 +78,12 @@
             <trans-unit id="filters.disabled">
                 <target>Deaktiviert</target>
             </trans-unit>
+            <trans-unit id="filters.dynamicAvailableValues">
+                <target>Dynamische verfügbare Werte</target>
+            </trans-unit>
+            <trans-unit id="filters.dynamicAvailableValues.description">
+                <target>Zeige alle verfügbaren Filterwerte automatisch im Frontend an</target>
+            </trans-unit>
             <trans-unit id="filters.exclusive">
                 <target>Exklusiv</target>
             </trans-unit>

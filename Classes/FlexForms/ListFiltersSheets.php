@@ -5,22 +5,23 @@ declare(strict_types=1);
 namespace Remind\Extbase\FlexForms;
 
 use Remind\Extbase\Backend\ItemsProc;
-use Remind\Extbase\Domain\Repository\Dto\Conjunction;
+use Remind\Extbase\Utility\Dto\Conjunction;
 
 class ListFiltersSheets
 {
+    public const ALL_VALUES_LABEL = 'allValuesLabel';
     public const ALLOW_MULTIPLE_FIELDS = 'allowMultipleFields';
     public const APPLIED_VALUES = 'appliedValues';
     public const AVAILABLE_VALUES = 'availableValues';
     public const CONJUNCTION = 'conjunction';
     public const DISABLED = 'disabled';
+    public const DYNAMIC_AVAILABLE_VALUES = 'dynamicAvailableValues';
     public const EXCLUSIVE = 'exclusive';
     public const FIELD = 'field';
     public const FIELDS = 'fields';
     public const FILTER = 'filter';
     public const FILTERS = 'filters';
     public const LABEL = 'label';
-    public const ALL_VALUES_LABEL = 'allValuesLabel';
     public const SHEET_ID = 1669190816;
     private const LOCALLANG = 'LLL:EXT:rmnd_extbase/Resources/Private/Language/locallang.xlf:';
 
@@ -137,6 +138,19 @@ class ListFiltersSheets
                                         self::EXCLUSIVE => [
                                             'label' => self::LOCALLANG . 'filters.exclusive',
                                             'description' => self::LOCALLANG . 'filters.exclusive.description',
+                                            'config' => [
+                                                'type' => 'check',
+                                                'items' => [
+                                                    [
+                                                        'label' => '',
+                                                        'value' => 0,
+                                                    ],
+                                                ],
+                                            ],
+                                        ],
+                                        self::DYNAMIC_AVAILABLE_VALUES => [
+                                            'label' => self::LOCALLANG . 'filters.dynamicAvailableValues',
+                                            'description' => self::LOCALLANG . 'filters.dynamicAvailableValues.description',
                                             'config' => [
                                                 'type' => 'check',
                                                 'items' => [

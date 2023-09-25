@@ -1,6 +1,6 @@
 <?php
 
-namespace Remind\Extbase\Domain\Repository\Dto;
+namespace Remind\Extbase\Utility\Dto;
 
 enum Conjunction: string
 {
