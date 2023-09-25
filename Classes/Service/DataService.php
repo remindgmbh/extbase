@@ -6,7 +6,6 @@ namespace Remind\Extbase\Service;
 
 use Psr\EventDispatcher\EventDispatcherInterface;
 use Psr\Http\Message\ServerRequestInterface;
-use Remind\Extbase\Domain\Repository\Dto\RepositoryFilter;
 use Remind\Extbase\Domain\Repository\FilterableRepository;
 use Remind\Extbase\Event\CustomDetailEntitySourceEvent;
 use Remind\Extbase\Event\EnrichDetailResultEvent;
@@ -21,6 +20,7 @@ use Remind\Extbase\Service\Dto\FilterValue;
 use Remind\Extbase\Service\Dto\FrontendFilter;
 use Remind\Extbase\Service\Dto\ListResult;
 use Remind\Extbase\Utility\Dto\Conjunction;
+use Remind\Extbase\Utility\Dto\DatabaseFilter;
 use Remind\Extbase\Utility\FilterUtility;
 use Remind\Extbase\Utility\PluginUtility;
 use TYPO3\CMS\Backend\Utility\BackendUtility;
@@ -115,7 +115,7 @@ class DataService
         }
 
         $filters = [
-            new RepositoryFilter('uid', array_map(function (int $uid) {
+            new DatabaseFilter('uid', array_map(function (int $uid) {
                 return ['uid' => $uid];
             }, $recordUids), false, Conjunction::OR),
         ];
@@ -185,7 +185,7 @@ class DataService
 
     /**
      * @param int $currentPage
-     * @param RepositoryFilter[] $filters
+     * @param DatabaseFilter[] $filters
      */
     private function getListResult(int $currentPage, ?array $filters = []): ListResult
     {
@@ -229,8 +229,8 @@ class DataService
     }
 
     /**
-     * @param RepositoryFilter[] $appliedRepositoryFilters
-     * @param RepositoryFilter[] $queryRepositoryFilters
+     * @param DatabaseFilter[] $appliedRepositoryFilters
+     * @param DatabaseFilter[] $queryRepositoryFilters
      * @return FrontendFilter[]
      */
     private function getFrontendFilters(array $appliedRepositoryFilters, array $queryRepositoryFilters): array
@@ -336,7 +336,7 @@ class DataService
 
     /**
      * @param string $filterName
-     * @param RepositoryFilter[] $queryRepositoryFilters
+     * @param DatabaseFilter[] $queryRepositoryFilters
      * @param array $value
      * @return bool
      */
@@ -378,7 +378,7 @@ class DataService
 
     /**
      * @param string $filterName
-     * @param RepositoryFilter[] $queryRepositoryFilters
+     * @param DatabaseFilter[] $queryRepositoryFilters
      * @param array $values
      * @param bool $exclusive
      * @return string
@@ -391,7 +391,7 @@ class DataService
     ): string {
         $filterArguments = [];
 
-        $filters = array_map(function (RepositoryFilter $repositoryFilter) {
+        $filters = array_map(function (DatabaseFilter $repositoryFilter) {
             return $repositoryFilter->getValues();
         }, $queryRepositoryFilters);
 
@@ -420,8 +420,8 @@ class DataService
     }
 
     /**
-     * @param RepositoryFilter[] $appliedRepositoryFilters
-     * @param RepositoryFilter[] $queryRepositoryFilters
+     * @param DatabaseFilter[] $appliedRepositoryFilters
+     * @param DatabaseFilter[] $queryRepositoryFilters
      */
     private function getFrontendFilterCount(
         array $filterSetting,
@@ -461,7 +461,7 @@ class DataService
     }
 
     /**
-     * @return RepositoryFilter[]
+     * @return DatabaseFilter[]
      */
     private function getQueryRepositoryFilters(array $filters): array
     {

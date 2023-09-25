@@ -19,7 +19,6 @@ use TYPO3\CMS\Extbase\Utility\LocalizationUtility;
 
 class DatabaseService
 {
-
     private PageRepository $pageRepository;
 
     public function __construct()
