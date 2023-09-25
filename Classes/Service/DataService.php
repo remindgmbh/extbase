@@ -290,6 +290,8 @@ class DataService
                 $filterName,
                 $label,
                 $allValues,
+                $filterSetting[ListFiltersSheets::VALUE_PREFIX] ?? '',
+                $filterSetting[ListFiltersSheets::VALUE_SUFFIX] ?? '',
             );
 
             foreach ($filterValues as $filterValue) {

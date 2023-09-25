@@ -105,6 +105,18 @@
             <trans-unit id="filters.multipleFields">
                 <source>Multiple Fields</source>
             </trans-unit>
+            <trans-unit id="filters.valuePrefix">
+                <source>Value Prefix</source>
+            </trans-unit>
+            <trans-unit id="filters.valuePrefix.description">
+                <source>Characters appended to every filter value label</source>
+            </trans-unit>
+            <trans-unit id="filters.valueSuffix">
+                <source>Value Suffix</source>
+            </trans-unit>
+            <trans-unit id="filters.valueSuffix.description">
+                <source>Characters prepended to every filter value label</source>
+            </trans-unit>
             <trans-unit id="label">
                 <source>Label</source>
             </trans-unit>

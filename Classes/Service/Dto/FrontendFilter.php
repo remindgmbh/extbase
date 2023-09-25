@@ -9,6 +9,8 @@ class FrontendFilter
     private string $filterName = '';
 
     private string $label = '';
+    private string $prefix = '';
+    private string $suffix = '';
 
     private FilterValue $allValues;
 
@@ -17,11 +19,18 @@ class FrontendFilter
      */
     private array $values = [];
 
-    public function __construct(string $filterName, string $label, FilterValue $allValues)
-    {
+    public function __construct(
+        string $filterName,
+        string $label,
+        FilterValue $allValues,
+        string $prefix,
+        string $suffix,
+    ) {
         $this->label = $label;
         $this->filterName = $filterName;
         $this->allValues = $allValues;
+        $this->prefix = $prefix;
+        $this->suffix = $suffix;
     }
 
     public function getFilterName(): string
@@ -44,6 +53,30 @@ class FrontendFilter
     public function setLabel(string $label): self
     {
         $this->label = $label;
+
+        return $this;
+    }
+
+    public function getPrefix(): string
+    {
+        return $this->prefix;
+    }
+
+    public function setPrefix(string $prefix): self
+    {
+        $this->prefix = $prefix;
+
+        return $this;
+    }
+
+    public function getSuffix(): string
+    {
+        return $this->suffix;
+    }
+
+    public function setSuffix(string $suffix): self
+    {
+        $this->suffix = $suffix;
 
         return $this;
     }

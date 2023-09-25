@@ -22,6 +22,8 @@ class ListFiltersSheets
     public const FILTER = 'filter';
     public const FILTERS = 'filters';
     public const LABEL = 'label';
+    public const VALUE_PREFIX = 'valuePrefix';
+    public const VALUE_SUFFIX = 'valueSuffix';
     public const SHEET_ID = 1669190816;
     private const LOCALLANG = 'LLL:EXT:rmnd_extbase/Resources/Private/Language/locallang.xlf:';
 
@@ -146,6 +148,20 @@ class ListFiltersSheets
                                                         'value' => 0,
                                                     ],
                                                 ],
+                                            ],
+                                        ],
+                                        self::VALUE_PREFIX => [
+                                            'label' => self::LOCALLANG . 'filters.valuePrefix',
+                                            'description' => self::LOCALLANG . 'filters.valuePrefix.description',
+                                            'config' => [
+                                                'type' => 'input',
+                                            ],
+                                        ],
+                                        self::VALUE_SUFFIX => [
+                                            'label' => self::LOCALLANG . 'filters.valueSuffix',
+                                            'description' => self::LOCALLANG . 'filters.valueSuffix.description',
+                                            'config' => [
+                                                'type' => 'input',
                                             ],
                                         ],
                                         self::DYNAMIC_AVAILABLE_VALUES => [

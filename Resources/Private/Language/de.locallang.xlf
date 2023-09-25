@@ -105,6 +105,18 @@
             <trans-unit id="filters.multipleFields">
                 <target>Mehrere Felder</target>
             </trans-unit>
+            <trans-unit id="filters.valuePrefix">
+                <target>Wert Präfix</target>
+            </trans-unit>
+            <trans-unit id="filters.valuePrefix.description">
+                <target>Zeichenkette, die vor allen Filterwert Beschriftungen hinzugefügt wird</target>
+            </trans-unit>
+            <trans-unit id="filters.valueSuffix">
+                <target>Wert Suffix</target>
+            </trans-unit>
+            <trans-unit id="filters.valueSuffix.description">
+                <target>Zeichenkette, die nach allen Filterwert Beschriftungen hinzugefügt wird</target>
+            </trans-unit>
             <trans-unit id="label">
                 <target>Beschriftung</target>
             </trans-unit>
