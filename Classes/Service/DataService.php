@@ -491,7 +491,7 @@ class DataService
                     }
                 }
             }
-            if ($filters[$filterName]) {
+            if (isset($filters[$filterName])) {
                 $result[$filterName] = FilterUtility::getDatabaseFilter(
                     $filterSetting,
                     $filterName,
