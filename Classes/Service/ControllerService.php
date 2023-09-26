@@ -82,18 +82,18 @@ class ControllerService
     ): FilterableListResult {
         $this->repository = $repository;
         $this->filtersArgumentName = $filtersArgumentName;
-        $queryRepositoryFilters = $this->getQueryRepositoryFilters($filters);
-        $appliedRepositoryFilters = FilterUtility::getAppliedValuesDatabaseFilters(
+        $queryDatabaseFilters = $this->getQueryDatabaseFilters($filters);
+        $appliedDatabaseFilters = FilterUtility::getAppliedValuesDatabaseFilters(
             $this->settings,
             $this->filterTable
         );
-        $repositoryFilters = array_merge(
-            array_values($appliedRepositoryFilters),
-            array_values($queryRepositoryFilters)
+        $databaseFilters = array_merge(
+            array_values($appliedDatabaseFilters),
+            array_values($queryDatabaseFilters)
         );
-        $listResult = $this->getListResult($currentPage, $repositoryFilters);
+        $listResult = $this->getListResult($currentPage, $databaseFilters);
         $filterableListResult = new FilterableListResult($listResult);
-        $frontendFilters = $this->getFrontendFilters($appliedRepositoryFilters, $queryRepositoryFilters);
+        $frontendFilters = $this->getFrontendFilters($appliedDatabaseFilters, $queryDatabaseFilters);
         $filterableListResult->setFrontendFilters($frontendFilters);
         /** @var ModifyFilterableListResultEvent $event */
         $event = $this->eventDispatcher->dispatch(new ModifyFilterableListResultEvent($filterableListResult));
@@ -229,11 +229,11 @@ class ControllerService
     }
 
     /**
-     * @param DatabaseFilter[] $appliedRepositoryFilters
-     * @param DatabaseFilter[] $queryRepositoryFilters
+     * @param DatabaseFilter[] $appliedDatabaseFilters
+     * @param DatabaseFilter[] $queryDatabaseFilters
      * @return FrontendFilter[]
      */
-    private function getFrontendFilters(array $appliedRepositoryFilters, array $queryRepositoryFilters): array
+    private function getFrontendFilters(array $appliedDatabaseFilters, array $queryDatabaseFilters): array
     {
         $result = [];
         $filterSettings = $this->settings[ListFiltersSheets::FILTERS] ?? [];
@@ -258,7 +258,7 @@ class ControllerService
                     $fieldNames,
                     $this->cObj->data['pages'],
                     $this->cObj->data['recursive'],
-                    $appliedRepositoryFilters,
+                    $appliedDatabaseFilters,
                 );
 
                 foreach ($filterValues as $filterValue) {
@@ -284,7 +284,7 @@ class ControllerService
             $allValuesLabel = $filterSetting[ListFiltersSheets::ALL_VALUES_LABEL] ?? '';
 
             $allValues = new FilterValue([], $allValuesLabel);
-            $allValues->setLink($this->getFrontendFilterLink($filterName, $queryRepositoryFilters, [], $exclusive));
+            $allValues->setLink($this->getFrontendFilterLink($filterName, $queryDatabaseFilters, [], $exclusive));
 
             $frontendFilter = new FrontendFilter(
                 $filterName,
@@ -305,14 +305,14 @@ class ControllerService
 
                 $active = $this->getFrontendFilterActive(
                     $filterName,
-                    $queryRepositoryFilters,
+                    $queryDatabaseFilters,
                     $value
                 );
                 $filterValue->setActive($active);
 
                 $link = $this->getFrontendFilterLink(
                     $filterName,
-                    $queryRepositoryFilters,
+                    $queryDatabaseFilters,
                     $value,
                     $exclusive
                 );
@@ -321,8 +321,8 @@ class ControllerService
                 $count = $this->getFrontendFilterCount(
                     $filterSetting,
                     $filterName,
-                    $appliedRepositoryFilters,
-                    $queryRepositoryFilters,
+                    $appliedDatabaseFilters,
+                    $queryDatabaseFilters,
                     $value,
                     $exclusive
                 );
@@ -336,22 +336,22 @@ class ControllerService
 
     /**
      * @param string $filterName
-     * @param DatabaseFilter[] $queryRepositoryFilters
+     * @param DatabaseFilter[] $queryDatabaseFilters
      * @param array $value
      * @return bool
      */
     private function getFrontendFilterActive(
         string $filterName,
-        array $queryRepositoryFilters,
+        array $queryDatabaseFilters,
         array $value,
     ): bool {
-        $repositoryFilter = $queryRepositoryFilters[$filterName] ?? null;
+        $databaseFilter = $queryDatabaseFilters[$filterName] ?? null;
 
-        if ($repositoryFilter) {
-            $repositoryFilterValues = $repositoryFilter->getValues();
+        if ($databaseFilter) {
+            $databaseFilterValues = $databaseFilter->getValues();
             return count(
-                array_filter($repositoryFilterValues, function (array $repositoryFilterValue) use ($value) {
-                    return $repositoryFilterValue == $value;
+                array_filter($databaseFilterValues, function (array $databaseFilterValue) use ($value) {
+                    return $databaseFilterValue == $value;
                 })
             ) > 0;
         }
@@ -378,22 +378,22 @@ class ControllerService
 
     /**
      * @param string $filterName
-     * @param DatabaseFilter[] $queryRepositoryFilters
+     * @param DatabaseFilter[] $queryDatabaseFilters
      * @param array $values
      * @param bool $exclusive
      * @return string
      */
     private function getFrontendFilterLink(
         string $filterName,
-        array $queryRepositoryFilters,
+        array $queryDatabaseFilters,
         array $values,
         bool $exclusive,
     ): string {
         $filterArguments = [];
 
-        $filters = array_map(function (DatabaseFilter $repositoryFilter) {
-            return $repositoryFilter->getValues();
-        }, $queryRepositoryFilters);
+        $filters = array_map(function (DatabaseFilter $databaseFilter) {
+            return $databaseFilter->getValues();
+        }, $queryDatabaseFilters);
 
         $index = array_search($values, $filters[$filterName] ?? []);
         if ($index !== false) {
@@ -420,50 +420,50 @@ class ControllerService
     }
 
     /**
-     * @param DatabaseFilter[] $appliedRepositoryFilters
-     * @param DatabaseFilter[] $queryRepositoryFilters
+     * @param DatabaseFilter[] $appliedDatabaseFilters
+     * @param DatabaseFilter[] $queryDatabaseFilters
      */
     private function getFrontendFilterCount(
         array $filterSetting,
         string $filterName,
-        array $appliedRepositoryFilters,
-        array $queryRepositoryFilters,
+        array $appliedDatabaseFilters,
+        array $queryDatabaseFilters,
         array $value,
         bool $exclusive
     ): int {
-        $tmpFilters = $queryRepositoryFilters;
+        $tmpFilters = $queryDatabaseFilters;
 
-        $repositoryFilter = isset($tmpFilters[$filterName])
+        $databaseFilter = isset($tmpFilters[$filterName])
             ? clone ($tmpFilters[$filterName])
             : FilterUtility::getDatabaseFilter($filterSetting, $filterName, [], $this->filterTable);
 
-        $tmpFilters[$filterName] = $repositoryFilter;
+        $tmpFilters[$filterName] = $databaseFilter;
 
-        $index = array_search($value, $repositoryFilter->getValues());
+        $index = array_search($value, $databaseFilter->getValues());
         if ($index === false) {
             if ($exclusive) {
-                $repositoryFilter->setValues([]);
+                $databaseFilter->setValues([]);
             }
-            $repositoryFilter->addValue($value);
+            $databaseFilter->addValue($value);
         } else {
-            $repositoryFilterValues = $repositoryFilter->getValues();
-            array_splice($repositoryFilterValues, $index, 1);
-            $repositoryFilter->setValues($repositoryFilterValues);
+            $databaseFilterValues = $databaseFilter->getValues();
+            array_splice($databaseFilterValues, $index, 1);
+            $databaseFilter->setValues($databaseFilterValues);
         }
 
-        $repositoryFilters = array_merge(
-            array_values($appliedRepositoryFilters),
+        $databaseFilters = array_merge(
+            array_values($appliedDatabaseFilters),
             array_values($tmpFilters)
         );
 
-        $queryResult = $this->repository->findByFilters($repositoryFilters);
+        $queryResult = $this->repository->findByFilters($databaseFilters);
         return $queryResult->count();
     }
 
     /**
      * @return DatabaseFilter[]
      */
-    private function getQueryRepositoryFilters(array $filters): array
+    private function getQueryDatabaseFilters(array $filters): array
     {
         $result = [];
         $filters = FilterUtility::normalizeQueryParameters($filters);
