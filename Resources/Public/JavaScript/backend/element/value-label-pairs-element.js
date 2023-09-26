@@ -99,7 +99,7 @@ class ValueLabelPairsElement extends LitElement {
             }
             const jsonValue = entry.value
             const keys = Object.keys(JSON.parse(jsonValue))
-            const difference = keys.filter(key => !this.itemProps.includes(key))
+            const difference = keys.filter(key => !this.itemProps.map(prop => prop.value).includes(key))
             const invalidValue = difference.length > 0
             const value = invalidValue ? lll('labels.noMatchingValue').replace('%s', jsonValue) : jsonValue
             

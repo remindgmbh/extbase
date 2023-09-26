@@ -13,7 +13,7 @@ class CustomValueEditor extends LitElement {
         }
     }
     firstUpdated() {
-        this.updatedValue = this.value ? this.value : this.props.reduce((result, prop) => {
+        this.updatedValue = this.value ? JSON.parse(this.value) : this.props.reduce((result, prop) => {
             result[prop.value] = ''
             return result
         }, {})

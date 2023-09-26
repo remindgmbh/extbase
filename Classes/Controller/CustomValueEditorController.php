@@ -29,14 +29,13 @@ class CustomValueEditorController
         $props = $queryParams['props'];
         $index = $queryParams['index'];
         $value = $queryParams['value'];
-        $props = $props;
         $this->pageRenderer->setTitle(
             LocalizationUtility::translate(
                 'LLL:EXT:rmnd_extbase/Resources/Private/Language/locallang.xlf:customValueEditor'
             )
         );
         $this->pageRenderer->addCssFile('EXT:backend/Resources/Public/Css/backend.css');
-        $this->pageRenderer->loadJavaScriptModule('@remind/extbase/backend/element/helper/custom-value-editor.js');
+        $this->pageRenderer->loadJavaScriptModule('@remind/extbase/backend/helper/custom-value-editor.js');
         $this->pageRenderer->addBodyContent(
             sprintf(
                 '<typo3-backend-custom-value-editor %s></typo3-backend-custom-value-editor>',
