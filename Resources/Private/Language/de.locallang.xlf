@@ -93,6 +93,9 @@
             <trans-unit id="filters.field">
                 <target>Feld</target>
             </trans-unit>
+            <trans-unit id="filters.field.empty">
+                <source>Bitte ein Feld auswählen</source>
+            </trans-unit>
             <trans-unit id="filters.fields">
                 <target>Felder</target>
             </trans-unit>

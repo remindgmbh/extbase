@@ -56,7 +56,7 @@ class ListSheets
                                         'value' => 'sorting',
                                     ],
                                 ],
-                                'itemsProcFunc' => ItemsProc::class . '->getListOrderBy',
+                                'itemsProcFunc' => ItemsProc::class . '->getListOrderByItems',
                             ],
                         ],
                         'settings.' . self::ORDER_DIRECTION => [

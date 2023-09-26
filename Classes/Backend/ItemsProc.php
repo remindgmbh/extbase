@@ -39,16 +39,7 @@ class ItemsProc
         $this->databaseService = GeneralUtility::makeInstance(DatabaseService::class);
     }
 
-    public function getDetailSources(array &$params): void
-    {
-        $flexParentDatabaseRow = $params['flexParentDatabaseRow'];
-        $sources = PluginUtility::getDetailSources($flexParentDatabaseRow['CType']);
-        foreach ($sources as $source) {
-            $params['items'][] = ['label' => $source['label'], 'value' => $source['value']];
-        }
-    }
-
-    public function getListOrderBy(array &$params): void
+    public function getListOrderByItems(array &$params): void
     {
         $flexParentDatabaseRow = $params['flexParentDatabaseRow'];
         $orderByItems = PluginUtility::getListOrderBy($flexParentDatabaseRow['CType']);
@@ -57,30 +48,22 @@ class ItemsProc
         }
     }
 
-    public function getRecordsInPages(array &$params): void
+    public function getDetailDataSourceItems(array &$params): void
     {
-        $pages = $this->getPages($params);
-        $recursive = $this->getRecursive($params);
-        $tableName = $this->getTableName($params);
-
-        $items = $this->databaseService->getRecords($tableName, $pages, $recursive);
-
-        array_push($params['items'], ...$items);
+        $flexParentDatabaseRow = $params['flexParentDatabaseRow'];
+        $sources = PluginUtility::getDetailSources($flexParentDatabaseRow['CType']);
+        foreach ($sources as $source) {
+            $params['items'][] = ['label' => $source['label'], 'value' => $source['value']];
+        }
     }
 
-    public function getSelectedFilterFields(array &$params): void
+    public function getDetailDataRecordItems(array &$params): void
     {
-        $row = $params['row'];
-        $allowMultipleFields = (bool) $row[ListFiltersSheets::ALLOW_MULTIPLE_FIELDS];
-        $fields = $allowMultipleFields
-            ? GeneralUtility::trimExplode(',', $row[ListFiltersSheets::FIELDS], true)
-            : [$row[ListFiltersSheets::FIELD]];
-        $params['items'] = array_map(function (string $field) {
-            return ['label' => $field, 'value' => $field];
-        }, $fields);
+        array_push($params['items'], ...$this->getRecordsInPages($params));
     }
 
-    public function getDetailProperties(array &$params): void
+
+    public function getDetailDataPropertiesItems(array &$params): void
     {
         $flexParentDatabaseRow = $params['flexParentDatabaseRow'];
         $cType = $flexParentDatabaseRow['CType'];
@@ -100,7 +83,76 @@ class ItemsProc
         );
     }
 
-    public function getFilterFields(array &$params): void
+    public function getSelectionDataRecordsItems(array &$params): void
+    {
+        array_push($params['items'], ...$this->getRecordsInPages($params));
+    }
+
+    public function getListFiltersFieldItems(array $params): void
+    {
+        array_push($params['items'], ...$this->getFilterFields($params));
+    }
+
+    public function getListFiltersFieldsItems(array $params): void
+    {
+        array_push($params['items'], ...$this->getFilterFields($params));
+    }
+
+    public function getListFiltersAppliedValuesItems(array &$params): void
+    {
+        $currentValues = $this->getCurrentFilterValues($params);
+        $items = $this->databaseService->getAvailableFieldValues(
+            $this->getTableName($params),
+            $this->getFieldNames($params),
+            $this->getPages($params),
+            $this->getRecursive($params),
+        );
+        $this->addInvalidValues($items, $currentValues);
+        array_push($params['items'], ...$items);
+    }
+
+    public function getListFiltersAvailableValuesItems(array &$params): void
+    {
+        $tableName = $this->getTableName($params);
+
+        $filters = FilterUtility::getAppliedValuesDatabaseFilters(
+            $this->getSettings($params),
+            $tableName,
+        );
+
+        $items = $this->databaseService->getAvailableFieldValues(
+            $tableName,
+            $this->getFieldNames($params),
+            $this->getPages($params),
+            $this->getRecursive($params),
+            $filters,
+        );
+
+        array_push($params['items'], ...$items);
+    }
+
+    public function getListFiltersAvailableValuesItemProps(array &$params): void
+    {
+        $row = $params['row'];
+        $allowMultipleFields = (bool) $row[ListFiltersSheets::ALLOW_MULTIPLE_FIELDS];
+        $fields = $allowMultipleFields
+            ? GeneralUtility::trimExplode(',', $row[ListFiltersSheets::FIELDS], true)
+            : [$row[ListFiltersSheets::FIELD]];
+        $params['items'] = array_map(function (string $field) {
+            return ['label' => $field, 'value' => $field];
+        }, $fields);
+    }
+
+    private function getRecordsInPages(array &$params): array
+    {
+        $pages = $this->getPages($params);
+        $recursive = $this->getRecursive($params);
+        $tableName = $this->getTableName($params);
+
+        return $this->databaseService->getRecords($tableName, $pages, $recursive);
+    }
+
+    private function getFilterFields(array &$params): array
     {
         $flexParentDatabaseRow = $params['flexParentDatabaseRow'];
         $cType = $flexParentDatabaseRow['CType'];
@@ -111,7 +163,7 @@ class ItemsProc
             !$allowMultipleFields && $params['field'] === ListFiltersSheets::FIELDS ||
             $allowMultipleFields && $params['field'] === ListFiltersSheets::FIELD
         ) {
-            return;
+            return [];
         }
 
         $filters = $this->getFilterDefinitions($params);
@@ -147,47 +199,7 @@ class ItemsProc
             return $result;
         }, []);
 
-        $fields = $this->getModelProperties($cType, $currentFields, $usedFields);
-
-        $params['items'] = array_merge(
-            $params['items'],
-            $fields
-        );
-    }
-
-    public function getAppliedFilterValues(array &$params): void
-    {
-        $currentValues = $this->getCurrentFilterValues($params);
-        $items = $this->databaseService->getAvailableFieldValues(
-            $this->getTableName($params),
-            $this->getFieldNames($params),
-            $this->getPages($params),
-            $this->getRecursive($params),
-        );
-        $this->addInvalidValues($items, $currentValues);
-        array_push($params['items'], ...$items);
-    }
-
-    public function getAvailableFilterValues(array $params): void
-    {
-
-        $tableName = $this->getTableName($params);
-        $settings = $this->getSettings($params);
-
-        $filters = FilterUtility::getAppliedValuesDatabaseFilters(
-            $this->getSettings($params),
-            $tableName,
-        );
-
-        $items = $this->databaseService->getAvailableFieldValues(
-            $tableName,
-            $this->getFieldNames($params),
-            $this->getPages($params),
-            $this->getRecursive($params),
-            $filters,
-        );
-
-        array_push($params['items'], ...$items);
+        return $this->getModelProperties($cType, $currentFields, $usedFields);
     }
 
     private function getModelProperties(string $cType, array $currentValues, ?array $excludedValues = []): array
@@ -259,17 +271,6 @@ class ItemsProc
         }, $filters);
     }
 
-    private function getFilterDefinitionFieldNames(array $filter): array
-    {
-        $allowMultipleFields = (bool) $filter[ListFiltersSheets::ALLOW_MULTIPLE_FIELDS] ?? false;
-        $fieldsElement = $allowMultipleFields ? ListFiltersSheets::FIELDS : ListFiltersSheets::FIELD;
-        $fieldNames = $filter[$fieldsElement];
-        if (!is_array($fieldNames)) {
-            $fieldNames = GeneralUtility::trimExplode(',', $fieldNames, true);
-        }
-        return $fieldNames;
-    }
-
     private function getSettings(array $params): array
     {
         $flexForm = $this->flexFormService->walkFlexFormNode($params['flexParentDatabaseRow']['pi_flexform']);
@@ -293,7 +294,12 @@ class ItemsProc
 
     private function getFieldNames(array $params): array
     {
-        $fieldNames = $this->getFilterDefinitionFieldNames($params['row']);
+        $allowMultipleFields = (bool) $params['row'][ListFiltersSheets::ALLOW_MULTIPLE_FIELDS] ?? false;
+        $fieldsElement = $allowMultipleFields ? ListFiltersSheets::FIELDS : ListFiltersSheets::FIELD;
+        $fieldNames = $params['row'][$fieldsElement];
+        if (!is_array($fieldNames)) {
+            $fieldNames = GeneralUtility::trimExplode(',', $fieldNames, true);
+        }
         return array_map(function (string $fieldName) {
             return GeneralUtility::camelCaseToLowerCaseUnderscored($fieldName);
         }, $fieldNames);

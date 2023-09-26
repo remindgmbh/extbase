@@ -18,7 +18,6 @@ class FilterUtility
         $filterSettings = $settings[ListFiltersSheets::FILTERS] ?? [];
         foreach ($filterSettings as $filterSetting) {
             $filterSetting = $filterSetting[ListFiltersSheets::FILTER] ?? [];
-            $filterName = self::getFilterName($filterSetting);
 
             $disabled = (bool) ($filterSetting[ListFiltersSheets::DISABLED] ?? false);
 
@@ -32,6 +31,8 @@ class FilterUtility
             if ($disabled || empty($values)) {
                 continue;
             }
+
+            $filterName = self::getFilterName($filterSetting);
 
             $result[$filterName] = self::getDatabaseFilter($filterSetting, $filterName, $values, $table);
         }

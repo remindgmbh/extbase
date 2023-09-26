@@ -28,7 +28,7 @@ class SelectionDataSheets
                                 'size' => '7',
                                 'minitems' => '0',
                                 'multiple' => '0',
-                                'itemsProcFunc' => ItemsProc::class . '->getRecordsInPages',
+                                'itemsProcFunc' => ItemsProc::class . '->getSelectionDataRecordsItems',
                             ],
                         ],
                     ],

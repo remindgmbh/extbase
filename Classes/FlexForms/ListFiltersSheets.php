@@ -79,11 +79,18 @@ class ListFiltersSheets
                                             'config' => [
                                                 'type' => 'select',
                                                 'renderType' => 'selectSingle',
+                                                'default' => null,
                                                 'size' => '1',
                                                 'minitems' => '1',
                                                 'maxitems' => '1',
                                                 'multiple' => '0',
-                                                'itemsProcFunc' => ItemsProc::class . '->getFilterFields',
+                                                'itemsProcFunc' => ItemsProc::class . '->getListFiltersFieldItems',
+                                                'items' => [
+                                                    [
+                                                        'value' => null,
+                                                        'label' => self::LOCALLANG . 'filters.field.empty',
+                                                    ],
+                                                ],
                                             ],
                                         ],
                                         self::FIELDS => [
@@ -95,7 +102,7 @@ class ListFiltersSheets
                                                 'renderType' => 'selectMultipleSideBySide',
                                                 'minitems' => '2',
                                                 'multiple' => '0',
-                                                'itemsProcFunc' => ItemsProc::class . '->getFilterFields',
+                                                'itemsProcFunc' => ItemsProc::class . '->getListFiltersFieldsItems',
                                             ],
                                         ],
                                         self::CONJUNCTION => [
@@ -127,7 +134,7 @@ class ListFiltersSheets
                                             'config' => [
                                                 'type' => 'user',
                                                 'renderType' => 'selectMultipleSideBySideJson',
-                                                'itemsProcFunc' => ItemsProc::class . '->getAppliedFilterValues',
+                                                'itemsProcFunc' => ItemsProc::class . '->getListFiltersAppliedValuesItems',
                                             ],
                                         ],
                                         self::LABEL => [
@@ -183,8 +190,8 @@ class ListFiltersSheets
                                             'config' => [
                                                 'type' => 'user',
                                                 'renderType' => 'valueLabelPairs',
-                                                'itemsProcFunc' => ItemsProc::class . '->getAvailableFilterValues',
-                                                'itemPropsProcFunc' => ItemsProc::class . '->getSelectedFilterFields',
+                                                'itemsProcFunc' => ItemsProc::class . '->getListFiltersAvailableValuesItems',
+                                                'itemPropsProcFunc' => ItemsProc::class . '->getListFiltersAvailableValuesItemProps',
                                             ],
                                         ],
                                         self::ALL_VALUES_LABEL => [

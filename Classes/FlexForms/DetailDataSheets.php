@@ -44,7 +44,7 @@ class DetailDataSheets
                                         'value' => self::SOURCE_RECORD,
                                     ],
                                 ],
-                                'itemsProcFunc' => ItemsProc::class . '->getDetailSources',
+                                'itemsProcFunc' => ItemsProc::class . '->getDetailDataSourceItems',
                             ],
                         ],
                         'settings.' . self::RECORD => [
@@ -57,7 +57,7 @@ class DetailDataSheets
                                 'minitems' => '0',
                                 'maxitems' => '1',
                                 'multiple' => '0',
-                                'itemsProcFunc' => ItemsProc::class . '->getRecordsInPages',
+                                'itemsProcFunc' => ItemsProc::class . '->getDetailDataRecordItems',
                             ],
                         ],
                         'settings.' . self::PROPERTIES => [
@@ -66,7 +66,7 @@ class DetailDataSheets
                             'config' => [
                                 'type' => 'user',
                                 'renderType' => 'valueLabelPairs',
-                                'itemsProcFunc' => ItemsProc::class . '->getDetailProperties',
+                                'itemsProcFunc' => ItemsProc::class . '->getDetailDataPropertiesItems',
                                 'skipTranslation' => true,
                             ],
                         ],
