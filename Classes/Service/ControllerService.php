@@ -153,18 +153,24 @@ class ControllerService
         }
         $result->setItem($item);
 
-        $properties = array_values(array_map(function ($property) {
-            $property = $property[DetailDataSheets::PROPERTY];
-            $field = $property[DetailDataSheets::FIELD];
-            $label = $property[DetailDataSheets::LABEL];
-            $label = $label ? $label : $this->getItemLabel($field);
-            return new Property(
-                GeneralUtility::underscoredToLowerCamelCase($field),
-                $label,
-                $property[DetailDataSheets::VALUE_PREFIX],
-                $property[DetailDataSheets::VALUE_SUFFIX],
-            );
-        }, $this->settings[DetailDataSheets::PROPERTIES]));
+        $properties = $this->settings[DetailDataSheets::PROPERTIES];
+
+        if (is_array($properties)) {
+            $properties = array_values(array_map(function ($property) {
+                $property = $property[DetailDataSheets::PROPERTY];
+                $field = $property[DetailDataSheets::FIELD];
+                $label = $property[DetailDataSheets::LABEL];
+                $label = $label ? $label : $this->getItemLabel($field);
+                return new Property(
+                    GeneralUtility::underscoredToLowerCamelCase($field),
+                    $label,
+                    $property[DetailDataSheets::VALUE_PREFIX],
+                    $property[DetailDataSheets::VALUE_SUFFIX],
+                );
+            }, $properties));
+        } else {
+            $properties = [];
+        }
 
         $result->setProperties($properties);
 
