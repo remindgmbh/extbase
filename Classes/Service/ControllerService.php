@@ -19,6 +19,7 @@ use Remind\Extbase\Service\Dto\FilterableListResult;
 use Remind\Extbase\Service\Dto\FilterValue;
 use Remind\Extbase\Service\Dto\FrontendFilter;
 use Remind\Extbase\Service\Dto\ListResult;
+use Remind\Extbase\Service\Dto\Property;
 use Remind\Extbase\Utility\Dto\Conjunction;
 use Remind\Extbase\Utility\Dto\DatabaseFilter;
 use Remind\Extbase\Utility\FilterUtility;
@@ -46,7 +47,7 @@ class ControllerService
     private array $settings;
     private string $extensionName;
     private string $pluginName;
-    private string $filterTable;
+    private string $tableName;
     private string $filtersArgumentName;
     private Request $request;
     private FilterableRepository $repository;
@@ -71,7 +72,7 @@ class ControllerService
         $this->pluginName = $configuration['pluginName'];
         $this->request = $requestBuilder->build($this->getRequest());
         $this->uriBuilder->setRequest($this->request);
-        $this->filterTable = PluginUtility::getTableName($this->extensionName . '_' . $this->pluginName);
+        $this->tableName = PluginUtility::getTableName($this->extensionName . '_' . $this->pluginName);
     }
 
     public function getFilterableList(
@@ -85,7 +86,7 @@ class ControllerService
         $queryDatabaseFilters = $this->getQueryDatabaseFilters($filters);
         $appliedDatabaseFilters = FilterUtility::getAppliedValuesDatabaseFilters(
             $this->settings,
-            $this->filterTable
+            $this->tableName
         );
         $databaseFilters = array_merge(
             array_values($appliedDatabaseFilters),
@@ -98,7 +99,7 @@ class ControllerService
         /** @var ModifyFilterableListResultEvent $event */
         $event = $this->eventDispatcher->dispatch(new ModifyFilterableListResultEvent($filterableListResult));
         $filterableListResult = $event->getFilterableListResult();
-        $this->addCacheTag($this->filterTable);
+        $this->addCacheTag($this->tableName);
         return $filterableListResult;
     }
 
@@ -119,7 +120,7 @@ class ControllerService
                 return ['uid' => $uid];
             }, $recordUids), false, Conjunction::OR),
         ];
-        $this->addCacheTag($this->filterTable);
+        $this->addCacheTag($this->tableName);
         return $this->getListResult($currentPage, $filters);
     }
 
@@ -152,13 +153,19 @@ class ControllerService
         }
         $result->setItem($item);
 
-        $properties = json_decode($this->settings[DetailDataSheets::PROPERTIES], true);
-        $properties = array_map(function (array $property) {
-            return [
-                ...$property,
-                'value' => GeneralUtility::underscoredToLowerCamelCase($property['value']),
-            ];
-        }, $properties);
+        $properties = array_values(array_map(function ($property) {
+            $property = $property[DetailDataSheets::PROPERTY];
+            $field = $property[DetailDataSheets::FIELD];
+            $label = $property[DetailDataSheets::LABEL];
+            $label = $label ? $label : $this->getItemLabel($field);
+            return new Property(
+                GeneralUtility::underscoredToLowerCamelCase($field),
+                $label,
+                $property[DetailDataSheets::VALUE_PREFIX],
+                $property[DetailDataSheets::VALUE_SUFFIX],
+            );
+        }, $this->settings[DetailDataSheets::PROPERTIES]));
+
         $result->setProperties($properties);
 
         /** @var EnrichDetailResultEvent $event */
@@ -169,7 +176,7 @@ class ControllerService
         $result = $event->getDetailResult();
 
         if ($item) {
-            $this->addCacheTag($this->filterTable . '_' . $item->getUid());
+            $this->addCacheTag($this->tableName . '_' . $item->getUid());
         }
         return $result;
     }
@@ -254,7 +261,7 @@ class ControllerService
             if ($dynamicValues) {
                 $fieldNames = GeneralUtility::trimExplode(',', $filterName, true);
                 $dynamicFilterValues = $this->databaseService->getAvailableFieldValues(
-                    $this->filterTable,
+                    $this->tableName,
                     $fieldNames,
                     $this->cObj->data['pages'],
                     $this->cObj->data['recursive'],
@@ -365,11 +372,7 @@ class ControllerService
         if (!$label) {
             $fields = GeneralUtility::trimExplode(',', $filterName, true);
             $labels = array_map(function (string $field) {
-                $label = BackendUtility::getItemLabel($this->filterTable, $field);
-                if (str_starts_with($label, 'LLL:')) {
-                    $label = LocalizationUtility::translate($label);
-                }
-                return $label;
+                return $this->getItemLabel($field);
             }, $fields);
             $label = implode(', ', $labels);
         }
@@ -435,7 +438,7 @@ class ControllerService
 
         $databaseFilter = isset($tmpFilters[$filterName])
             ? clone ($tmpFilters[$filterName])
-            : FilterUtility::getDatabaseFilter($filterSetting, $filterName, [], $this->filterTable);
+            : FilterUtility::getDatabaseFilter($filterSetting, $filterName, [], $this->tableName);
 
         $tmpFilters[$filterName] = $databaseFilter;
 
@@ -496,12 +499,18 @@ class ControllerService
                     $filterSetting,
                     $filterName,
                     $filters[$filterName],
-                    $this->filterTable
+                    $this->tableName
                 );
             }
         }
 
         return $result;
+    }
+
+    private function getItemLabel(string $field)
+    {
+        $label = BackendUtility::getItemLabel($this->tableName, $field);
+        return str_starts_with($label, 'LLL:') ? LocalizationUtility::translate($label) : $label;
     }
 
     private function getTypoScriptFrontendController(): ?TypoScriptFrontendController

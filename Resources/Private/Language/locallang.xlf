@@ -150,6 +150,36 @@
             <trans-unit id="list.pagination.limit">
                 <source>Limit</source>
             </trans-unit>
+            <trans-unit id="properties">
+                <source>Properties</source>
+            </trans-unit>
+            <trans-unit id="properties.field">
+                <source>Field</source>
+            </trans-unit>
+            <trans-unit id="properties.field.empty">
+                <source>Please select a field</source>
+            </trans-unit>
+            <trans-unit id="properties.label">
+                <source>Label</source>
+            </trans-unit>
+            <trans-unit id="properties.label.description">
+                <source>Visible in frontend</source>
+            </trans-unit>
+            <trans-unit id="properties.valuePrefix">
+                <source>Value Prefix</source>
+            </trans-unit>
+            <trans-unit id="properties.valuePrefix.description">
+                <source>Characters appended to every property value</source>
+            </trans-unit>
+            <trans-unit id="properties.valueSuffix">
+                <source>Value Suffix</source>
+            </trans-unit>
+            <trans-unit id="properties.valueSuffix.description">
+                <source>Characters prepended to every property value label</source>
+            </trans-unit>
+            <trans-unit id="property">
+                <source>Property</source>
+            </trans-unit>
             <trans-unit id="settings">
                 <source>Settings</source>
             </trans-unit>

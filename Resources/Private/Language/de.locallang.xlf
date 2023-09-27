@@ -150,6 +150,36 @@
             <trans-unit id="list.pagination.limit">
                 <target>Limit</target>
             </trans-unit>
+            <trans-unit id="properties">
+                <target>Eigenschaften</target>
+            </trans-unit>
+            <trans-unit id="properties.field">
+                <target>Feld</target>
+            </trans-unit>
+            <trans-unit id="properties.field.empty">
+                <target>Bitte ein Feld auswählen</target>
+            </trans-unit>
+            <trans-unit id="properties.label">
+                <target>Beschriftung</target>
+            </trans-unit>
+            <trans-unit id="properties.label.description">
+                <target>Sichtbar im Frontend</target>
+            </trans-unit>
+            <trans-unit id="properties.valuePrefix">
+                <target>Wert Präfix</target>
+            </trans-unit>
+            <trans-unit id="properties.valuePrefix.description">
+                <target>Zeichenkette, die vor allen Eigenschaften Werten hinzugefügt wird</target>
+            </trans-unit>
+            <trans-unit id="properties.valueSuffix">
+                <target>Wert Suffix</target>
+            </trans-unit>
+            <trans-unit id="properties.valueSuffix.description">
+                <target>Zeichenkette, die nach allen Eigenschaften Werten hinzugefügt wird</target>
+            </trans-unit>
+            <trans-unit id="property">
+                <target>Eigenschaft</target>
+            </trans-unit>
             <trans-unit id="settings">
                 <target>Einstellungen</target>
             </trans-unit>

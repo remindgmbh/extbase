@@ -83,7 +83,7 @@ class JsonService
         $result = [];
         foreach ($filters as $filter) {
             $filterJson = [
-                'name' => $filter->getFilterName(),
+                'name' => $filter->getName(),
                 'label' => $filter->getLabel(),
                 'prefix' => $filter->getPrefix(),
                 'suffix' => $filter->getSuffix(),

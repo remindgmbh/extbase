@@ -62,25 +62,32 @@ class ItemsProc
         array_push($params['items'], ...$this->getRecordsInPages($params));
     }
 
-
-    public function getDetailDataPropertiesItems(array &$params): void
+    public function getDetailDataPropertyFieldItems(array $params): void
     {
         $flexParentDatabaseRow = $params['flexParentDatabaseRow'];
         $cType = $flexParentDatabaseRow['CType'];
         $row = $params['row'];
+        $settings = $this->getSettings($params, DetailDataSheets::SHEET_ID);
 
-        $currentProperties = json_decode($row['settings.' . DetailDataSheets::PROPERTIES], true) ?? [];
-        $currentValues = array_map(function (array $property) {
-            return $property['value'];
-        }, $currentProperties);
+        $currentFields = array_filter([$row[DetailDataSheets::FIELD]]);
 
+        $properties = $settings[DetailDataSheets::PROPERTIES];
+        $properties = array_map(function (array $property) {
+            return $property[DetailDataSheets::PROPERTY];
+        }, $properties);
 
-        $properties = $this->getModelProperties($cType, $currentValues);
+        $usedFields = array_reduce($properties, function (array $result, array $property) use ($currentFields) {
+            $field = $property[DetailDataSheets::FIELD];
+            $field = is_array($field) ? current($field) : $field;
+            if (!in_array($field, $currentFields)) {
+                $result[] = $field;
+            }
+            return $result;
+        }, []);
 
-        $params['items'] = array_merge(
-            $params['items'],
-            $properties
-        );
+        $properties = $this->getModelProperties($cType, $currentFields, $usedFields);
+
+        array_push($params['items'], ...$properties);
     }
 
     public function getSelectionDataRecordsItems(array &$params): void
@@ -116,7 +123,7 @@ class ItemsProc
         $tableName = $this->getTableName($params);
 
         $filters = FilterUtility::getAppliedValuesDatabaseFilters(
-            $this->getSettings($params),
+            $this->getSettings($params, ListFiltersSheets::SHEET_ID),
             $tableName,
         );
 
@@ -171,11 +178,7 @@ class ItemsProc
         if ($allowMultipleFields) {
             $currentFields = GeneralUtility::trimExplode(',', $row[ListFiltersSheets::FIELDS], true);
         } else {
-            $currentFields = [];
-            $field = $row[ListFiltersSheets::FIELD];
-            if ($field) {
-                $currentFields[] = $field;
-            }
+            $currentFields = array_filter([$row[ListFiltersSheets::FIELD]]);
         }
 
         $usedFields = array_reduce($filters, function (array $result, array $filter) use ($currentFields) {
@@ -202,7 +205,7 @@ class ItemsProc
         return $this->getModelProperties($cType, $currentFields, $usedFields);
     }
 
-    private function getModelProperties(string $cType, array $currentValues, ?array $excludedValues = []): array
+    private function getModelProperties(string $cType, ?array $currentValues = [], ?array $excludedValues = []): array
     {
         $tableName = PluginUtility::getTableName($cType);
         $values = BackendUtility::getAllowedFieldsForTable($tableName);
@@ -264,17 +267,17 @@ class ItemsProc
 
     private function getFilterDefinitions(array $params): array
     {
-        $settings = $this->getSettings($params);
+        $settings = $this->getSettings($params, ListFiltersSheets::SHEET_ID);
         $filters = $settings[ListFiltersSheets::FILTERS];
         return array_map(function (array $filter) {
             return $filter[ListFiltersSheets::FILTER];
         }, $filters);
     }
 
-    private function getSettings(array $params): array
+    private function getSettings(array $params, int $sheetId): array
     {
         $flexForm = $this->flexFormService->walkFlexFormNode($params['flexParentDatabaseRow']['pi_flexform']);
-        return $flexForm['data'][ListFiltersSheets::SHEET_ID]['lDEF']['settings'];
+        return $flexForm['data'][$sheetId]['lDEF']['settings'];
     }
 
     private function getPages(array $params): string
@@ -284,7 +287,7 @@ class ItemsProc
 
     private function getRecursive(array $params): int
     {
-        return $params['flexParentDatabaseRow']['recursive'];
+        return intval($params['flexParentDatabaseRow']['recursive'] ?? 0);
     }
 
     private function getTableName(array $params): string

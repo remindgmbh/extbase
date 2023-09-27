@@ -10,8 +10,10 @@ use TYPO3\CMS\Extbase\DomainObject\AbstractEntity;
 class DetailResult implements JsonSerializable
 {
     protected ?AbstractEntity $item = null;
-    protected ?array $properties = [];
     protected mixed $additionalData = null;
+
+    /** @var Property[] $properties */
+    protected ?array $properties = [];
 
     public function jsonSerialize(): array
     {
@@ -34,11 +36,17 @@ class DetailResult implements JsonSerializable
         return $this;
     }
 
+    /**
+     * @return Property[]
+     */
     public function getProperties(): ?array
     {
         return $this->properties;
     }
 
+    /**
+     * @param Property[] $properties
+     */
     public function setProperties(?array $properties): self
     {
         $this->properties = $properties;

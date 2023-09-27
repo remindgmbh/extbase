@@ -14,6 +14,11 @@ class DetailDataSheets
     public const SOURCE_DEFAULT = '';
     public const SOURCE_RECORD = 'record';
     public const PROPERTIES = 'properties';
+    public const PROPERTY = 'property';
+    public const FIELD = 'field';
+    public const LABEL = 'label';
+    public const VALUE_PREFIX = 'valuePrefix';
+    public const VALUE_SUFFIX = 'valueSuffix';
     private const LOCALLANG = 'LLL:EXT:rmnd_extbase/Resources/Private/Language/locallang.xlf:';
 
     public static function getSheets(): array
@@ -61,13 +66,57 @@ class DetailDataSheets
                             ],
                         ],
                         'settings.' . self::PROPERTIES => [
-                            'label' => self::LOCALLANG . 'data.properties',
-                            'description' => self::LOCALLANG . 'data.properties.description',
-                            'config' => [
-                                'type' => 'user',
-                                'renderType' => 'valueLabelPairs',
-                                'itemsProcFunc' => ItemsProc::class . '->getDetailDataPropertiesItems',
-                                'skipTranslation' => true,
+                            'type' => 'array',
+                            'section' => 1,
+                            'el' => [
+                                self::PROPERTY => [
+                                    'type' => 'array',
+                                    'title' => self::LOCALLANG . 'property',
+                                    'titleField' => self::FIELD,
+                                    'el' => [
+                                        self::FIELD => [
+                                            'label' => self::LOCALLANG . 'properties.field',
+                                            'onChange' => 'reload',
+                                            'config' => [
+                                                'type' => 'select',
+                                                'renderType' => 'selectSingle',
+                                                'default' => null,
+                                                'size' => '1',
+                                                'minitems' => '1',
+                                                'maxitems' => '1',
+                                                'multiple' => '0',
+                                                'itemsProcFunc' => ItemsProc::class . '->getDetailDataPropertyFieldItems',
+                                                'items' => [
+                                                    [
+                                                        'value' => null,
+                                                        'label' => self::LOCALLANG . 'properties.field.empty',
+                                                    ],
+                                                ],
+                                            ],
+                                        ],
+                                        self::LABEL => [
+                                            'label' => self::LOCALLANG . 'properties.label',
+                                            'description' => self::LOCALLANG . 'properties.label.description',
+                                            'config' => [
+                                                'type' => 'input',
+                                            ],
+                                        ],
+                                        self::VALUE_PREFIX => [
+                                            'label' => self::LOCALLANG . 'properties.valuePrefix',
+                                            'description' => self::LOCALLANG . 'properties.valuePrefix.description',
+                                            'config' => [
+                                                'type' => 'input',
+                                            ],
+                                        ],
+                                        self::VALUE_SUFFIX => [
+                                            'label' => self::LOCALLANG . 'properties.valueSuffix',
+                                            'description' => self::LOCALLANG . 'properties.valueSuffix.description',
+                                            'config' => [
+                                                'type' => 'input',
+                                            ],
+                                        ],
+                                    ],
+                                ],
                             ],
                         ],
                     ],
