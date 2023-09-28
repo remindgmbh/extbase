@@ -57,7 +57,7 @@ class DatabaseService
             $result[] = ['label' => $title, 'value' => $row['uid']];
         }
 
-        return $resault;
+        return $result;
     }
 
     /**
