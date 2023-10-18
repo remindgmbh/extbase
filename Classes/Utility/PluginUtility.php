@@ -22,6 +22,7 @@ class PluginUtility
     private const TABLE_NAME = 'tableName';
     private const DETAIL_SOURCES = 'detailSources';
     private const LIST_ORDER_BY = 'listOrderBy';
+    private const DISABLE_FILTER_COUNT = 'disableFilterCount';
 
     /**
      *  Add content element plugin to TCA types and add corresponding flex form sheets
@@ -96,7 +97,7 @@ class PluginUtility
 
     public static function getTableName(string $type): string
     {
-        return $GLOBALS['TCA']['tt_content']['ctrl']['EXT']['rmnd_extbase'][strtolower($type)][self::TABLE_NAME] ?? '';
+        return $GLOBALS['TCA']['tt_content']['ctrl']['EXT']['rmnd_extbase'][$type][self::TABLE_NAME] ?? '';
     }
 
     /**
@@ -138,6 +139,16 @@ class PluginUtility
     public static function getListOrderBy(string $type): array
     {
         return $GLOBALS['TCA']['tt_content']['ctrl']['EXT']['rmnd_extbase'][$type][self::LIST_ORDER_BY] ?? [];
+    }
+
+    public static function getDisableFilterCount(string $type): bool
+    {
+        return $GLOBALS['TCA']['tt_content']['ctrl']['EXT']['rmnd_extbase'][$type][self::DISABLE_FILTER_COUNT] ?? false;
+    }
+
+    public static function setDisableFilterCount(string $type, bool $value): void
+    {
+        $GLOBALS['TCA']['tt_content']['ctrl']['EXT']['rmnd_extbase'][$type][self::DISABLE_FILTER_COUNT] = $value;
     }
 
     /**

@@ -49,6 +49,7 @@ class ControllerService
     private string $pluginName;
     private string $tableName;
     private string $filtersArgumentName;
+    private bool $disableFilterCount;
     private Request $request;
     private FilterableRepository $repository;
     private ContentObjectRenderer $cObj;
@@ -72,7 +73,9 @@ class ControllerService
         $this->pluginName = $configuration['pluginName'];
         $this->request = $requestBuilder->build($this->getRequest());
         $this->uriBuilder->setRequest($this->request);
-        $this->tableName = PluginUtility::getTableName($this->extensionName . '_' . $this->pluginName);
+        $cType = strtolower($this->extensionName . '_' . $this->pluginName);
+        $this->tableName = PluginUtility::getTableName($cType);
+        $this->disableFilterCount = PluginUtility::getDisableFilterCount($cType);
     }
 
     public function getFilterableList(
@@ -331,15 +334,17 @@ class ControllerService
                 );
                 $filterValue->setLink($link);
 
-                $count = $this->getFrontendFilterCount(
-                    $filterSetting,
-                    $filterName,
-                    $appliedDatabaseFilters,
-                    $queryDatabaseFilters,
-                    $value,
-                    $exclusive
-                );
-                $filterValue->setCount($count);
+                if (!$this->disableFilterCount) {
+                    $count = $this->getFrontendFilterCount(
+                        $filterSetting,
+                        $filterName,
+                        $appliedDatabaseFilters,
+                        $queryDatabaseFilters,
+                        $value,
+                        $exclusive
+                    );
+                    $filterValue->setCount($count);
+                }
             }
 
             $result[] = $frontendFilter;
