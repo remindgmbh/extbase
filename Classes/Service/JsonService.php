@@ -58,6 +58,7 @@ class JsonService
             'countWithoutLimit' => $listResult->getCountWithoutLimit(),
             'items' => $itemsJson,
             'pagination' => $paginationJson,
+            'properties' => $listResult->getProperties(),
         ];
     }
 
@@ -85,8 +86,6 @@ class JsonService
             $filterJson = [
                 'name' => $filter->getName(),
                 'label' => $filter->getLabel(),
-                'prefix' => $filter->getPrefix(),
-                'suffix' => $filter->getSuffix(),
                 'allValues' => [
                     'label' => $filter->getAllValues()->getLabel(),
                     'link' => $filter->getAllValues()->getLink(),

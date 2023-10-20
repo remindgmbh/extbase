@@ -4,8 +4,11 @@ declare(strict_types=1);
 
 namespace Remind\Extbase\Backend;
 
-use Remind\Extbase\FlexForms\DetailDataSheets;
-use Remind\Extbase\FlexForms\ListFiltersSheets;
+use Remind\Extbase\FlexForms\DetailSheets;
+use Remind\Extbase\FlexForms\FrontendFilterSheets;
+use Remind\Extbase\FlexForms\ListSheets;
+use Remind\Extbase\FlexForms\PredefinedFilterSheets;
+use Remind\Extbase\FlexForms\PropertyOverrideSheets;
 use Remind\Extbase\Service\DatabaseService;
 use Remind\Extbase\Utility\FilterUtility;
 use Remind\Extbase\Utility\PluginUtility;
@@ -48,7 +51,19 @@ class ItemsProc
         }
     }
 
-    public function getDetailDataSourceItems(array &$params): void
+    public function getListProperties(array $params): void
+    {
+        $flexParentDatabaseRow = $params['flexParentDatabaseRow'];
+        $cType = $flexParentDatabaseRow['CType'];
+
+        $currentValues = GeneralUtility::trimExplode(',', $params['row']['settings.' . ListSheets::PROPERTIES], true);
+
+        $properties = $this->getModelProperties($cType, $currentValues);
+
+        array_push($params['items'], ...$properties);
+    }
+
+    public function getDetailSources(array &$params): void
     {
         $flexParentDatabaseRow = $params['flexParentDatabaseRow'];
         $sources = PluginUtility::getDetailSources($flexParentDatabaseRow['CType']);
@@ -57,60 +72,49 @@ class ItemsProc
         }
     }
 
-    public function getDetailDataRecordItems(array &$params): void
+    public function getDetailRecords(array &$params): void
     {
         array_push($params['items'], ...$this->getRecordsInPages($params));
     }
 
-    public function getDetailDataPropertyFieldItems(array $params): void
+    public function getDetailProperties(array $params): void
     {
         $flexParentDatabaseRow = $params['flexParentDatabaseRow'];
         $cType = $flexParentDatabaseRow['CType'];
-        $row = $params['row'];
-        $settings = $this->getSettings($params, DetailDataSheets::SHEET_ID);
 
-        $currentFields = array_filter([$row[DetailDataSheets::FIELD]]);
+        $currentValues = GeneralUtility::trimExplode(',', $params['row']['settings.' . DetailSheets::PROPERTIES], true);
 
-        $properties = $settings[DetailDataSheets::PROPERTIES];
-        $properties = array_map(function (array $property) {
-            return $property[DetailDataSheets::PROPERTY];
-        }, $properties);
-
-        $usedFields = array_reduce($properties, function (array $result, array $property) use ($currentFields) {
-            $field = $property[DetailDataSheets::FIELD];
-            $field = is_array($field) ? current($field) : $field;
-            if (!in_array($field, $currentFields)) {
-                $result[] = $field;
-            }
-            return $result;
-        }, []);
-
-        $properties = $this->getModelProperties($cType, $currentFields, $usedFields);
+        $properties = $this->getModelProperties($cType, $currentValues);
 
         array_push($params['items'], ...$properties);
     }
 
-    public function getSelectionDataRecordsItems(array &$params): void
+    public function getSelectionRecords(array &$params): void
     {
         array_push($params['items'], ...$this->getRecordsInPages($params));
     }
 
-    public function getListFiltersFieldItems(array $params): void
+    public function getPredefinedFilterFields(array $params): void
     {
-        array_push($params['items'], ...$this->getFilterFields($params));
+        array_push(
+            $params['items'],
+            ...$this->getModelPropertiesForSection(
+                $params,
+                PredefinedFilterSheets::SHEET_ID,
+                PredefinedFilterSheets::FILTERS,
+                PredefinedFilterSheets::FILTER,
+                PredefinedFilterSheets::FIELDS,
+            )
+        );
     }
 
-    public function getListFiltersFieldsItems(array $params): void
+    public function getPredefinedFilterValues(array &$params): void
     {
-        array_push($params['items'], ...$this->getFilterFields($params));
-    }
-
-    public function getListFiltersAppliedValuesItems(array &$params): void
-    {
-        $currentValues = $this->getCurrentFilterValues($params);
+        $currentValues = json_decode($params['row'][$params['field']], true) ?? [];
         $items = $this->databaseService->getAvailableFieldValues(
+            $this->getSysLanguageUid($params),
             $this->getTableName($params),
-            $this->getFieldNames($params),
+            $this->getFieldNames($params, PredefinedFilterSheets::FIELDS),
             $this->getPages($params),
             $this->getRecursive($params),
         );
@@ -118,18 +122,33 @@ class ItemsProc
         array_push($params['items'], ...$items);
     }
 
-    public function getListFiltersAvailableValuesItems(array &$params): void
+    public function getFrontendFilterFields(array &$params): void
+    {
+        array_push(
+            $params['items'],
+            ...$this->getModelPropertiesForSection(
+                $params,
+                FrontendFilterSheets::SHEET_ID,
+                FrontendFilterSheets::FILTERS,
+                FrontendFilterSheets::FILTER,
+                FrontendFilterSheets::FIELDS,
+            )
+        );
+    }
+
+    public function getFrontendFilterValues(array &$params): void
     {
         $tableName = $this->getTableName($params);
 
-        $filters = FilterUtility::getAppliedValuesDatabaseFilters(
-            $this->getSettings($params, ListFiltersSheets::SHEET_ID),
+        $filters = FilterUtility::getPredefinedDatabaseFilters(
+            $this->getSettings($params, PredefinedFilterSheets::SHEET_ID),
             $tableName,
         );
 
         $items = $this->databaseService->getAvailableFieldValues(
+            $this->getSysLanguageUid($params),
             $tableName,
-            $this->getFieldNames($params),
+            $this->getFieldNames($params, FrontendFilterSheets::FIELDS),
             $this->getPages($params),
             $this->getRecursive($params),
             $filters,
@@ -138,71 +157,76 @@ class ItemsProc
         array_push($params['items'], ...$items);
     }
 
-    public function getListFiltersAvailableValuesItemProps(array &$params): void
+    public function getPropertyFields(array &$params): void
     {
-        $row = $params['row'];
-        $allowMultipleFields = (bool) $row[ListFiltersSheets::ALLOW_MULTIPLE_FIELDS];
-        $fields = $allowMultipleFields
-            ? GeneralUtility::trimExplode(',', $row[ListFiltersSheets::FIELDS], true)
-            : [$row[ListFiltersSheets::FIELD]];
-        $params['items'] = array_map(function (string $field) {
-            return ['label' => $field, 'value' => $field];
-        }, $fields);
+        array_push(
+            $params['items'],
+            ...$this->getModelPropertiesForSection(
+                $params,
+                PropertyOverrideSheets::SHEET_ID,
+                PropertyOverrideSheets::OVERRIDES,
+                PropertyOverrideSheets::OVERRIDE,
+                PropertyOverrideSheets::FIELDS,
+            )
+        );
+    }
+
+    public function getPropertyValues(array &$params): void
+    {
+        $tableName = $this->getTableName($params);
+
+        if ($tableName) {
+            $items = $this->databaseService->getAvailableFieldValues(
+                $this->getSysLanguageUid($params),
+                $tableName,
+                $this->getFieldNames($params, PropertyOverrideSheets::FIELDS),
+            );
+
+            array_push($params['items'], ...$items);
+        }
     }
 
     private function getRecordsInPages(array &$params): array
     {
-        $pages = $this->getPages($params);
-        $recursive = $this->getRecursive($params);
-        $tableName = $this->getTableName($params);
-
-        return $this->databaseService->getRecords($tableName, $pages, $recursive);
+        return $this->databaseService->getRecords(
+            $this->getSysLanguageUid($params),
+            $this->getTableName($params),
+            $this->getPages($params),
+            $this->getRecursive($params),
+        );
     }
 
-    private function getFilterFields(array &$params): array
-    {
+    private function getModelPropertiesForSection(
+        array &$params,
+        int $sheetId,
+        string $sectionName,
+        string $elementName,
+        string $valueElementName
+    ): array {
         $flexParentDatabaseRow = $params['flexParentDatabaseRow'];
         $cType = $flexParentDatabaseRow['CType'];
         $row = $params['row'];
-        $allowMultipleFields = (bool) $row[ListFiltersSheets::ALLOW_MULTIPLE_FIELDS];
 
-        if (
-            !$allowMultipleFields && $params['field'] === ListFiltersSheets::FIELDS ||
-            $allowMultipleFields && $params['field'] === ListFiltersSheets::FIELD
-        ) {
-            return [];
-        }
+        $settings = $this->getSettings($params, $sheetId);
+        $sections = $settings[$sectionName];
+        $sections = array_map(function (array $section) use ($elementName) {
+            return $section[$elementName];
+        }, $sections);
 
-        $filters = $this->getFilterDefinitions($params);
+        $currentValues = GeneralUtility::trimExplode(',', $row[$valueElementName], true);
 
-        if ($allowMultipleFields) {
-            $currentFields = GeneralUtility::trimExplode(',', $row[ListFiltersSheets::FIELDS], true);
-        } else {
-            $currentFields = array_filter([$row[ListFiltersSheets::FIELD]]);
-        }
-
-        $usedFields = array_reduce($filters, function (array $result, array $filter) use ($currentFields) {
-            $allowMultipleFields = (bool) $filter[ListFiltersSheets::ALLOW_MULTIPLE_FIELDS];
-            if ($allowMultipleFields) {
-                $fields = $filter[ListFiltersSheets::FIELDS] ?? [];
-                $fields = is_array($fields) ? $fields : GeneralUtility::trimExplode(',', $fields, true);
-                foreach ($fields as $field) {
-                    if (!in_array($field, $currentFields)) {
-                        $result[] = $field;
-                    }
-                }
-            } else {
-                $field = $filter[ListFiltersSheets::FIELD];
-                $field = is_array($field) ? current($field) : $field;
-                if (!in_array($field, $currentFields)) {
+        $usedFields = array_reduce($sections, function (array $result, array $section) use ($currentValues, $valueElementName) {
+            $fields = $section[$valueElementName] ?? [];
+            $fields = is_array($fields) ? $fields : GeneralUtility::trimExplode(',', $fields, true);
+            foreach ($fields as $field) {
+                if (!in_array($field, $currentValues)) {
                     $result[] = $field;
                 }
             }
-
             return $result;
         }, []);
 
-        return $this->getModelProperties($cType, $currentFields, $usedFields);
+        return $this->getModelProperties($cType, $currentValues, $usedFields);
     }
 
     private function getModelProperties(string $cType, ?array $currentValues = [], ?array $excludedValues = []): array
@@ -230,11 +254,6 @@ class ItemsProc
         }, $values);
 
         return array_merge($notMatchingValues, $properties);
-    }
-
-    private function getCurrentFilterValues(array $params): array
-    {
-        return json_decode($params['row'][$params['field']], true) ?? [];
     }
 
     private function addInvalidValues(array &$result, array $currentValues): void
@@ -265,15 +284,6 @@ class ItemsProc
         );
     }
 
-    private function getFilterDefinitions(array $params): array
-    {
-        $settings = $this->getSettings($params, ListFiltersSheets::SHEET_ID);
-        $filters = $settings[ListFiltersSheets::FILTERS];
-        return array_map(function (array $filter) {
-            return $filter[ListFiltersSheets::FILTER];
-        }, $filters);
-    }
-
     private function getSettings(array $params, int $sheetId): array
     {
         $flexForm = $this->flexFormService->walkFlexFormNode($params['flexParentDatabaseRow']['pi_flexform']);
@@ -290,16 +300,19 @@ class ItemsProc
         return intval($params['flexParentDatabaseRow']['recursive'] ?? 0);
     }
 
+    private function getSysLanguageUid(array $params): int
+    {
+        return (int) $params['flexParentDatabaseRow']['sys_language_uid'];
+    }
+
     private function getTableName(array $params): string
     {
         return PluginUtility::getTableName($params['flexParentDatabaseRow']['CType']);
     }
 
-    private function getFieldNames(array $params): array
+    private function getFieldNames(array $params, string $fieldsElementName): array
     {
-        $allowMultipleFields = (bool) $params['row'][ListFiltersSheets::ALLOW_MULTIPLE_FIELDS] ?? false;
-        $fieldsElement = $allowMultipleFields ? ListFiltersSheets::FIELDS : ListFiltersSheets::FIELD;
-        $fieldNames = $params['row'][$fieldsElement];
+        $fieldNames = $params['row'][$fieldsElementName];
         if (!is_array($fieldNames)) {
             $fieldNames = GeneralUtility::trimExplode(',', $fieldNames, true);
         }

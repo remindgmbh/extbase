@@ -7,24 +7,22 @@ namespace Remind\Extbase\FlexForms;
 use Remind\Extbase\Backend\ItemsProc;
 use Remind\Extbase\Utility\Dto\Conjunction;
 
-class ListFiltersSheets
+class FrontendFilterSheets
 {
+    public const SHEET_ID = 1697788482;
     public const ALL_VALUES_LABEL = 'allValuesLabel';
-    public const ALLOW_MULTIPLE_FIELDS = 'allowMultipleFields';
-    public const APPLIED_VALUES = 'appliedValues';
-    public const AVAILABLE_VALUES = 'availableValues';
     public const CONJUNCTION = 'conjunction';
     public const DISABLED = 'disabled';
-    public const DYNAMIC_AVAILABLE_VALUES = 'dynamicAvailableValues';
+    public const DYNAMIC_VALUES = 'dynamicValues';
+    public const EXCLUDED_VALUES = 'excludedValues';
     public const EXCLUSIVE = 'exclusive';
-    public const FIELD = 'field';
     public const FIELDS = 'fields';
     public const FILTER = 'filter';
-    public const FILTERS = 'filters';
+    public const FILTERS = 'frontendFilters';
     public const LABEL = 'label';
+    public const VALUES = 'values';
     public const VALUE_PREFIX = 'valuePrefix';
     public const VALUE_SUFFIX = 'valueSuffix';
-    public const SHEET_ID = 1669190816;
     private const LOCALLANG = 'LLL:EXT:rmnd_extbase/Resources/Private/Language/locallang.xlf:';
 
     public static function getSheets(): array
@@ -32,7 +30,7 @@ class ListFiltersSheets
         return [
             self::SHEET_ID => [
                 'ROOT' => [
-                    'sheetTitle' => self::LOCALLANG . 'filters',
+                    'sheetTitle' => self::LOCALLANG . 'filters.frontend',
                     'type' => 'array',
                     'el' => [
                         'settings.' . self::FILTERS => [
@@ -41,9 +39,8 @@ class ListFiltersSheets
                             'el' => [
                                 self::FILTER => [
                                     'type' => 'array',
-                                    'title' => self::LOCALLANG . 'filter',
+                                    'title' => self::LOCALLANG . 'filters.filter',
                                     'titleField' => self::FIELDS,
-                                    'titleField_alt' => self::FIELD,
                                     'disabledField' => self::DISABLED,
                                     'el' => [
                                         self::DISABLED => [
@@ -59,50 +56,14 @@ class ListFiltersSheets
                                                 ],
                                             ],
                                         ],
-                                        self::ALLOW_MULTIPLE_FIELDS => [
-                                            'label' => self::LOCALLANG . 'filters.multipleFields',
-                                            'onChange' => 'reload',
-                                            'config' => [
-                                                'type' => 'check',
-                                                'items' => [
-                                                    [
-                                                        'label' => '',
-                                                        'value' => 0,
-                                                    ],
-                                                ],
-                                            ],
-                                        ],
-                                        self::FIELD => [
-                                            'label' => self::LOCALLANG . 'filters.field',
-                                            'onChange' => 'reload',
-                                            'displayCond' => 'FIELD:' . self::ALLOW_MULTIPLE_FIELDS . ':REQ:false',
-                                            'config' => [
-                                                'type' => 'select',
-                                                'renderType' => 'selectSingle',
-                                                'default' => null,
-                                                'size' => '1',
-                                                'minitems' => '1',
-                                                'maxitems' => '1',
-                                                'multiple' => '0',
-                                                'itemsProcFunc' => ItemsProc::class . '->getListFiltersFieldItems',
-                                                'items' => [
-                                                    [
-                                                        'value' => null,
-                                                        'label' => self::LOCALLANG . 'filters.field.empty',
-                                                    ],
-                                                ],
-                                            ],
-                                        ],
                                         self::FIELDS => [
                                             'label' => self::LOCALLANG . 'filters.fields',
                                             'onChange' => 'reload',
-                                            'displayCond' => 'FIELD:' . self::ALLOW_MULTIPLE_FIELDS . ':REQ:true',
                                             'config' => [
                                                 'type' => 'select',
                                                 'renderType' => 'selectMultipleSideBySide',
-                                                'minitems' => '2',
                                                 'multiple' => '0',
-                                                'itemsProcFunc' => ItemsProc::class . '->getListFiltersFieldsItems',
+                                                'itemsProcFunc' => ItemsProc::class . '->getFrontendFilterFields',
                                             ],
                                         ],
                                         self::CONJUNCTION => [
@@ -127,71 +88,18 @@ class ListFiltersSheets
                                                 ],
                                             ],
                                         ],
-                                        self::APPLIED_VALUES => [
-                                            'label' => self::LOCALLANG . 'filters.appliedValues',
-                                            'description' => self::LOCALLANG . 'filters.appliedValues.description',
-                                            'onChange' => 'reload',
-                                            'config' => [
-                                                'type' => 'user',
-                                                'renderType' => 'selectMultipleSideBySideJson',
-                                                'itemsProcFunc' => ItemsProc::class . '->getListFiltersAppliedValuesItems',
-                                            ],
-                                        ],
-                                        self::LABEL => [
-                                            'label' => self::LOCALLANG . 'filters.label',
-                                            'description' => self::LOCALLANG . 'filters.label.description',
-                                            'config' => [
-                                                'type' => 'input',
-                                            ],
-                                        ],
                                         self::EXCLUSIVE => [
                                             'label' => self::LOCALLANG . 'filters.exclusive',
                                             'description' => self::LOCALLANG . 'filters.exclusive.description',
                                             'config' => [
                                                 'type' => 'check',
+                                                'default' => 1,
                                                 'items' => [
                                                     [
                                                         'label' => '',
                                                         'value' => 0,
                                                     ],
                                                 ],
-                                            ],
-                                        ],
-                                        self::VALUE_PREFIX => [
-                                            'label' => self::LOCALLANG . 'filters.valuePrefix',
-                                            'description' => self::LOCALLANG . 'filters.valuePrefix.description',
-                                            'config' => [
-                                                'type' => 'input',
-                                            ],
-                                        ],
-                                        self::VALUE_SUFFIX => [
-                                            'label' => self::LOCALLANG . 'filters.valueSuffix',
-                                            'description' => self::LOCALLANG . 'filters.valueSuffix.description',
-                                            'config' => [
-                                                'type' => 'input',
-                                            ],
-                                        ],
-                                        self::DYNAMIC_AVAILABLE_VALUES => [
-                                            'label' => self::LOCALLANG . 'filters.dynamicAvailableValues',
-                                            'description' => self::LOCALLANG . 'filters.dynamicAvailableValues.description',
-                                            'config' => [
-                                                'type' => 'check',
-                                                'items' => [
-                                                    [
-                                                        'label' => '',
-                                                        'value' => 0,
-                                                    ],
-                                                ],
-                                            ],
-                                        ],
-                                        self::AVAILABLE_VALUES => [
-                                            'label' => self::LOCALLANG . 'filters.availableValues',
-                                            'description' => self::LOCALLANG . 'filters.availableValues.description',
-                                            'config' => [
-                                                'type' => 'user',
-                                                'renderType' => 'valueLabelPairs',
-                                                'itemsProcFunc' => ItemsProc::class . '->getListFiltersAvailableValuesItems',
-                                                'itemPropsProcFunc' => ItemsProc::class . '->getListFiltersAvailableValuesItemProps',
                                             ],
                                         ],
                                         self::ALL_VALUES_LABEL => [
@@ -199,6 +107,40 @@ class ListFiltersSheets
                                             'description' => self::LOCALLANG . 'filters.allValuesLabel.description',
                                             'config' => [
                                                 'type' => 'input',
+                                            ],
+                                        ],
+                                        self::DYNAMIC_VALUES => [
+                                            'label' => self::LOCALLANG . 'filters.dynamicValues',
+                                            'description' => self::LOCALLANG . 'filters.dynamicValues.description',
+                                            'onChange' => 'reload',
+                                            'config' => [
+                                                'type' => 'check',
+                                                'default' => 1,
+                                                'items' => [
+                                                    [
+                                                        'label' => '',
+                                                        'value' => 0,
+                                                    ],
+                                                ],
+                                            ],
+                                        ],
+                                        self::EXCLUDED_VALUES => [
+                                            'label' => self::LOCALLANG . 'filters.excludedValues',
+                                            'description' => self::LOCALLANG . 'filters.excludedValues.description',
+                                            'displayCond' => 'FIELD:' . self::DYNAMIC_VALUES . ':REQ:true',
+                                            'config' => [
+                                                'type' => 'user',
+                                                'renderType' => 'selectMultipleSideBySideJson',
+                                                'itemsProcFunc' => ItemsProc::class . '->getFrontendFilterValues',
+                                            ],
+                                        ],
+                                        self::VALUES => [
+                                            'label' => self::LOCALLANG . 'filters.values',
+                                            'displayCond' => 'FIELD:' . self::DYNAMIC_VALUES . ':REQ:false',
+                                            'config' => [
+                                                'type' => 'user',
+                                                'renderType' => 'selectMultipleSideBySideJson',
+                                                'itemsProcFunc' => ItemsProc::class . '->getFrontendFilterValues',
                                             ],
                                         ],
                                     ],

@@ -10,40 +10,31 @@
                 <target>Eintrag hinzufügen</target>
             </trans-unit>
             <trans-unit id="customValueEditor">
-                <source>Individuelle Werte Editor</source>
+                <target>Individuelle Werte Editor</target>
             </trans-unit>
-            <trans-unit id="data">
+            <trans-unit id="detail">
                 <target>Daten</target>
             </trans-unit>
-            <trans-unit id="data.source">
+            <trans-unit id="detail.source">
                 <target>Quelle</target>
             </trans-unit>
-            <trans-unit id="data.source.default">
+            <trans-unit id="detail.source.default">
                 <target>Standard</target>
             </trans-unit>
-            <trans-unit id="data.source.record">
+            <trans-unit id="detail.source.record">
                 <target>Datensatz</target>
             </trans-unit>
-            <trans-unit id="data.properties">
+            <trans-unit id="detail.properties">
                 <target>Model Eigenschaften</target>
             </trans-unit>
-            <trans-unit id="data.properties.description">
+            <trans-unit id="detail.properties.description">
                 <target>Model Eigenschaften, die im Frontend angezeigt werden</target>
             </trans-unit>
-            <trans-unit id="data.record">
+            <trans-unit id="detail.record">
                 <target>Datensatz</target>
-            </trans-unit>
-            <trans-unit id="data.records">
-                <target>Datensätze</target>
             </trans-unit>
             <trans-unit id="emptyValue">
                 <target>(Wert nicht gesetzt)</target>
-            </trans-unit>
-            <trans-unit id="filter">
-                <target>Filter</target>
-            </trans-unit>
-            <trans-unit id="filters">
-                <target>Filter</target>
             </trans-unit>
             <trans-unit id="filters.allValuesLabel">
                 <target>Alle Werte Beschriftung</target>
@@ -51,23 +42,11 @@
             <trans-unit id="filters.allValuesLabel.description">
                 <target>Beschriftung zur Berücksichtigung von allen Werten für diesen Filter im Frontend</target>
             </trans-unit>
-            <trans-unit id="filters.appliedValues">
-                <target>Angewandte Werte (leer = keine Filter)</target>
-            </trans-unit>
-            <trans-unit id="filters.appliedValues.description">
-                <target>Diese Filter Werte werden immer angewandt</target>
-            </trans-unit>
-            <trans-unit id="filters.availableValues">
-                <target>Verfügbare Werte (leer = Filter nicht verfügbar)</target>
-            </trans-unit>
-            <trans-unit id="filters.availableValues.description">
-                <target>Filter Werte festlegen, die im Frontend auswählbar sind</target>
-            </trans-unit>
             <trans-unit id="filters.conjunction">
                 <target>Verknüpfungs-Modus</target>
             </trans-unit>
             <trans-unit id="filters.conjunction.description">
-                <target>Legt fest, ob die Filter Werte mit 'UND' oder 'ODER' verknüpft werden. Bezieht sich auf 'Verfügbare Werte' (außer wenn exklusiv ausgewählt ist) und 'Angewandte Werte' </target>
+                <target>Legt fest, ob die Filter Werte mit 'UND' oder 'ODER' verknüpft werden.</target>
             </trans-unit>
             <trans-unit id="filters.conjunction.items.and">
                 <target>Und</target>
@@ -78,11 +57,17 @@
             <trans-unit id="filters.disabled">
                 <target>Deaktiviert</target>
             </trans-unit>
-            <trans-unit id="filters.dynamicAvailableValues">
-                <target>Dynamische verfügbare Werte</target>
+            <trans-unit id="filters.dynamicValues">
+                <target>Dynamische Werte</target>
             </trans-unit>
-            <trans-unit id="filters.dynamicAvailableValues.description">
+            <trans-unit id="filters.dynamicValues.description">
                 <target>Zeige alle verfügbaren Filterwerte automatisch im Frontend an</target>
+            </trans-unit>
+            <trans-unit id="filters.excludedValues">
+                <target>Ausgeschlossene Werte</target>
+            </trans-unit>
+            <trans-unit id="filters.excludedValues.description">
+                <target>Schließe bestimmte Filter Werte im Frontend aus</target>
             </trans-unit>
             <trans-unit id="filters.exclusive">
                 <target>Exklusiv</target>
@@ -90,14 +75,14 @@
             <trans-unit id="filters.exclusive.description">
                 <target>Wenn aktiv kann im Frontend nur ein Wert für dieses Feld gewählt werden</target>
             </trans-unit>
-            <trans-unit id="filters.field">
-                <target>Feld</target>
-            </trans-unit>
-            <trans-unit id="filters.field.empty">
-                <source>Bitte ein Feld auswählen</source>
-            </trans-unit>
             <trans-unit id="filters.fields">
                 <target>Felder</target>
+            </trans-unit>
+            <trans-unit id="filters.filter">
+                <target>Filter</target>
+            </trans-unit>
+            <trans-unit id="filters.frontend">
+                <target>Frontend Filter</target>
             </trans-unit>
             <trans-unit id="filters.label">
                 <target>Beschriftung</target>
@@ -105,8 +90,17 @@
             <trans-unit id="filters.label.description">
                 <target>Sichtbar in der Frontend Filterung, standardmäßig der Feldname</target>
             </trans-unit>
-            <trans-unit id="filters.multipleFields">
-                <target>Mehrere Felder</target>
+            <trans-unit id="filters.predefined">
+                <target>Vordefinierte Filter</target>
+            </trans-unit>
+            <trans-unit id="filters.values">
+                <target>Werte</target>
+            </trans-unit>
+            <trans-unit id="filters.valueOverrides">
+                <target>Überschriebene Werte</target>
+            </trans-unit>
+            <trans-unit id="filters.valueOverrides.description">
+                <target>Überschreibe bestimmte Werte im Frontend</target>
             </trans-unit>
             <trans-unit id="filters.valuePrefix">
                 <target>Wert Präfix</target>
@@ -150,35 +144,56 @@
             <trans-unit id="list.pagination.limit">
                 <target>Limit</target>
             </trans-unit>
-            <trans-unit id="properties">
-                <target>Eigenschaften</target>
+            <trans-unit id="list.properties">
+                <target>Model Eigenschaften</target>
             </trans-unit>
-            <trans-unit id="properties.field">
-                <target>Feld</target>
+            <trans-unit id="list.properties.description">
+                <target>Model Eigenschaften, die im Frontend angezeigt werden</target>
             </trans-unit>
-            <trans-unit id="properties.field.empty">
-                <target>Bitte ein Feld auswählen</target>
+            <trans-unit id="propertyOverrides">
+                <target>Eigenschaften überschreiben</target>
             </trans-unit>
-            <trans-unit id="properties.label">
+            <trans-unit id="propertyOverrides.fields">
+                <target>Felder</target>
+            </trans-unit>
+            <trans-unit id="propertyOverrides.label">
                 <target>Beschriftung</target>
             </trans-unit>
-            <trans-unit id="properties.label.description">
+            <trans-unit id="propertyOverrides.label.description">
                 <target>Sichtbar im Frontend</target>
             </trans-unit>
-            <trans-unit id="properties.valuePrefix">
+            <trans-unit id="propertyOverrides.property">
+                <target>Eigenschaft</target>
+            </trans-unit>
+            <trans-unit id="propertyOverrides.reference">
+                <target>Referenz</target>
+            </trans-unit>
+            <trans-unit id="propertyOverrides.reference.description">
+                <target>Benutze überschriebene Eigeschaften aus anderem Content Element</target>
+            </trans-unit>
+            <trans-unit id="propertyOverrides.valueOverrides">
+                <target>Werte ersetzen</target>
+            </trans-unit>
+            <trans-unit id="propertyOverrides.valueOverrides.description">
+                <target>Ausgewählte Werte für Anzeige im Frontend ersetzen</target>
+            </trans-unit>
+            <trans-unit id="propertyOverrides.valuePrefix">
                 <target>Wert Präfix</target>
             </trans-unit>
-            <trans-unit id="properties.valuePrefix.description">
+            <trans-unit id="propertyOverrides.valuePrefix.description">
                 <target>Zeichenkette, die vor allen Eigenschaften Werten hinzugefügt wird</target>
             </trans-unit>
-            <trans-unit id="properties.valueSuffix">
+            <trans-unit id="propertyOverrides.valueSuffix">
                 <target>Wert Suffix</target>
             </trans-unit>
-            <trans-unit id="properties.valueSuffix.description">
+            <trans-unit id="propertyOverrides.valueSuffix.description">
                 <target>Zeichenkette, die nach allen Eigenschaften Werten hinzugefügt wird</target>
             </trans-unit>
-            <trans-unit id="property">
-                <target>Eigenschaft</target>
+            <trans-unit id="selection">
+                <target>Daten</target>
+            </trans-unit>
+            <trans-unit id="selection.records">
+                <target>Datensätze</target>
             </trans-unit>
             <trans-unit id="settings">
                 <target>Einstellungen</target>

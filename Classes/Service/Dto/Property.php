@@ -12,17 +12,20 @@ class Property implements JsonSerializable
     private string $label = '';
     private string $prefix = '';
     private string $suffix = '';
+    private array $valueOverrides = [];
 
     public function __construct(
         string $name,
         string $label,
         string $prefix,
         string $suffix,
+        array $valueOverrides,
     ) {
         $this->label = $label;
         $this->name = $name;
         $this->prefix = $prefix;
         $this->suffix = $suffix;
+        $this->valueOverrides = $valueOverrides;
     }
 
     public function jsonSerialize(): array
@@ -32,6 +35,7 @@ class Property implements JsonSerializable
             'label' => $this->label,
             'prefix' => $this->prefix,
             'suffix' => $this->suffix,
+            'valueOverrides' => $this->valueOverrides,
         ];
     }
 
@@ -79,6 +83,18 @@ class Property implements JsonSerializable
     public function setSuffix(string $suffix): self
     {
         $this->suffix = $suffix;
+
+        return $this;
+    }
+
+    public function getValueOverrides(): array
+    {
+        return $this->valueOverrides;
+    }
+
+    public function addValueOverride(array $valueOverride): self
+    {
+        $this->valueOverrides[] = $valueOverride;
 
         return $this;
     }

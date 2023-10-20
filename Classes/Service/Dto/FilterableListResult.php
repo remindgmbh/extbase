@@ -16,6 +16,7 @@ class FilterableListResult extends ListResult
         $this->setCurrentPage($listResult->getCurrentPage());
         $this->setPagination($listResult->getPagination());
         $this->setPaginatedItems($listResult->getPaginatedItems());
+        $this->setProperties($listResult->getProperties());
     }
 
     /**

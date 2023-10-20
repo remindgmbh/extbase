@@ -4,10 +4,12 @@ declare(strict_types=1);
 
 namespace Remind\Extbase\Utility;
 
-use Remind\Extbase\FlexForms\DetailDataSheets;
-use Remind\Extbase\FlexForms\ListFiltersSheets;
+use Remind\Extbase\FlexForms\DetailSheets;
+use Remind\Extbase\FlexForms\FrontendFilterSheets;
 use Remind\Extbase\FlexForms\ListSheets;
-use Remind\Extbase\FlexForms\SelectionDataSheets;
+use Remind\Extbase\FlexForms\PredefinedFilterSheets;
+use Remind\Extbase\FlexForms\PropertyOverrideSheets;
+use Remind\Extbase\FlexForms\SelectionSheets;
 use Remind\Extbase\Utility\Dto\PluginType;
 use RuntimeException;
 use TYPO3\CMS\Core\Configuration\FlexForm\FlexFormTools;
@@ -196,18 +198,25 @@ class PluginUtility
 
         switch ($pluginType) {
             case PluginType::DETAIL:
-                $sheets = DetailDataSheets::getSheets();
+                $sheets = array_replace(
+                    DetailSheets::getSheets(),
+                    PropertyOverrideSheets::getSheets(),
+                );
                 break;
             case PluginType::FILTERABLE_LIST:
-                $sheets = ListSheets::getSheets();
-                ArrayUtility::mergeRecursiveWithOverrule(
-                    $sheets,
-                    ListFiltersSheets::getSheets()
+                $sheets = array_replace(
+                    ListSheets::getSheets(),
+                    PredefinedFilterSheets::getSheets(),
+                    FrontendFilterSheets::getSheets(),
+                    PropertyOverrideSheets::getSheets(),
                 );
                 break;
             case PluginType::SELECTION_LIST:
-                $sheets = ListSheets::getSheets();
-                ArrayUtility::mergeRecursiveWithOverrule($sheets, SelectionDataSheets::getSheets());
+                $sheets = array_replace(
+                    ListSheets::getSheets(),
+                    SelectionSheets::getSheets(),
+                    PropertyOverrideSheets::getSheets(),
+                );
                 break;
             default:
                 break;

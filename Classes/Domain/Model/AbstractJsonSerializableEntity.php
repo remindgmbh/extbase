@@ -33,26 +33,25 @@ abstract class AbstractJsonSerializableEntity extends AbstractEntity implements 
             if (isset($settings['jsonFields'][$className])) {
                 $fields = $settings['jsonFields'][$className];
                 foreach (GeneralUtility::trimExplode(',', $fields, true) as $field) {
-                    $property = null;
-                    if ($this->_hasProperty($field)) {
-                        $property = $this->_getProperty($field);
-                    } elseif (method_exists($this, 'get' . ucfirst($field))) {
-                        $property = $this->{'get' . ucfirst($field)}();
-                    }
-                    if ($property) {
-                        if ($property instanceof FileReference) {
-                            $property = $fileUtility->processFile($property->getOriginalResource());
+                    if ($this->_hasProperty($field) || method_exists($this, 'get' . ucfirst($field))) {
+                        if ($this->_hasProperty($field)) {
+                            $value = $this->_getProperty($field);
+                        } else {
+                            $value = $this->{'get' . ucfirst($field)}();
                         }
-                        if ($property instanceof ObjectStorage) {
-                            $property = array_map(function (mixed $object) use ($fileUtility) {
+                        if ($value instanceof FileReference) {
+                            $value = $fileUtility->processFile($value->getOriginalResource());
+                        }
+                        if ($value instanceof ObjectStorage) {
+                            $value = array_map(function (mixed $object) use ($fileUtility) {
                                 if ($object instanceof FileReference) {
                                     return $fileUtility->processFile($object->getOriginalResource());
                                 } else {
                                     return $object;
                                 }
-                            }, $property->toArray());
+                            }, $value->toArray());
                         }
-                        $result[$field] = $property;
+                        $result[$field] = $value;
                     }
                 }
                 return $result;

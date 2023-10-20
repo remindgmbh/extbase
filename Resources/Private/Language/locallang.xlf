@@ -12,38 +12,29 @@
             <trans-unit id="customValueEditor">
                 <source>Custom Value Editor</source>
             </trans-unit>
-            <trans-unit id="data">
+            <trans-unit id="detail">
                 <source>Data</source>
             </trans-unit>
-            <trans-unit id="data.source">
+            <trans-unit id="detail.source">
                 <source>Source</source>
             </trans-unit>
-            <trans-unit id="data.source.default">
+            <trans-unit id="detail.source.default">
                 <source>Default</source>
             </trans-unit>
-            <trans-unit id="data.source.record">
+            <trans-unit id="detail.source.record">
                 <source>Record</source>
             </trans-unit>
-            <trans-unit id="data.properties">
-                <source>Model Properties</source>
+            <trans-unit id="detail.properties">
+                <source>Display Properties</source>
             </trans-unit>
-            <trans-unit id="data.properties.description">
+            <trans-unit id="detail.properties.description">
                 <source>Model Properties used for display in frontend</source>
             </trans-unit>
-            <trans-unit id="data.record">
+            <trans-unit id="detail.record">
                 <source>Record</source>
-            </trans-unit>
-            <trans-unit id="data.records">
-                <source>Records</source>
             </trans-unit>
             <trans-unit id="emptyValue">
                 <source>(Value not set)</source>
-            </trans-unit>
-            <trans-unit id="filter">
-                <source>Filter</source>
-            </trans-unit>
-            <trans-unit id="filters">
-                <source>Filters</source>
             </trans-unit>
             <trans-unit id="filters.allValuesLabel">
                 <source>All Values Label</source>
@@ -51,23 +42,11 @@
             <trans-unit id="filters.allValuesLabel.description">
                 <source>Label to include all values for this filter in frontend</source>
             </trans-unit>
-            <trans-unit id="filters.appliedValues">
-                <source>Applied Values (empty = no filter)</source>
-            </trans-unit>
-            <trans-unit id="filters.appliedValues.description">
-                <source>These filter values are always applied</source>
-            </trans-unit>
-            <trans-unit id="filters.availableValues">
-                <source>Available Values (empty = filter not available)</source>
-            </trans-unit>
-            <trans-unit id="filters.availableValues.description">
-                <source>Define filter values which should be available for filtering in frontend</source>
-            </trans-unit>
             <trans-unit id="filters.conjunction">
                 <source>Conjunction Mode</source>
             </trans-unit>
             <trans-unit id="filters.conjunction.description">
-                <source>Determines whether filter values should be combined with 'AND' or 'OR'. Applies to 'Available Values' (unless exclusive is set) and 'Applied Values' </source>
+                <source>Determines whether filter values should be combined with 'AND' or 'OR'.</source>
             </trans-unit>
             <trans-unit id="filters.conjunction.items.and">
                 <source>And</source>
@@ -78,11 +57,17 @@
             <trans-unit id="filters.disabled">
                 <source>Disabled</source>
             </trans-unit>
-            <trans-unit id="filters.dynamicAvailableValues">
-                <source>Dynamic Available Values</source>
+            <trans-unit id="filters.dynamicValues">
+                <source>Dynamic Values</source>
             </trans-unit>
-            <trans-unit id="filters.dynamicAvailableValues.description">
+            <trans-unit id="filters.dynamicValues.description">
                 <source>Display all available filter values automatically in frontend</source>
+            </trans-unit>
+            <trans-unit id="filters.excludedValues">
+                <source>Excluded Values</source>
+            </trans-unit>
+            <trans-unit id="filters.excludedValues.description">
+                <source>Exclude specific values from display in frontend</source>
             </trans-unit>
             <trans-unit id="filters.exclusive">
                 <source>Exclusive</source>
@@ -90,14 +75,14 @@
             <trans-unit id="filters.exclusive.description">
                 <source>If checked only one value for this field can be selected in frontend</source>
             </trans-unit>
-            <trans-unit id="filters.field">
-                <source>Field</source>
-            </trans-unit>
-            <trans-unit id="filters.field.empty">
-                <source>Please select a field</source>
-            </trans-unit>
             <trans-unit id="filters.fields">
                 <source>Fields</source>
+            </trans-unit>
+            <trans-unit id="filters.filter">
+                <source>Filter</source>
+            </trans-unit>
+            <trans-unit id="filters.frontend">
+                <source>Frontend Filters</source>
             </trans-unit>
             <trans-unit id="filters.label">
                 <source>Label</source>
@@ -105,8 +90,17 @@
             <trans-unit id="filters.label.description">
                 <source>Visible in frontend filtering, defaults to label from field TCA</source>
             </trans-unit>
-            <trans-unit id="filters.multipleFields">
-                <source>Multiple Fields</source>
+            <trans-unit id="filters.predefined">
+                <source>Predefined Filters</source>
+            </trans-unit>
+            <trans-unit id="filters.values">
+                <source>Values</source>
+            </trans-unit>
+            <trans-unit id="filters.valueOverrides">
+                <source>Value Overrides</source>
+            </trans-unit>
+            <trans-unit id="filters.valueOverrides.description">
+                <source>Override specific values for display in frontend</source>
             </trans-unit>
             <trans-unit id="filters.valuePrefix">
                 <source>Value Prefix</source>
@@ -150,35 +144,56 @@
             <trans-unit id="list.pagination.limit">
                 <source>Limit</source>
             </trans-unit>
-            <trans-unit id="properties">
-                <source>Properties</source>
+            <trans-unit id="list.properties">
+                <source>Display Properties</source>
             </trans-unit>
-            <trans-unit id="properties.field">
-                <source>Field</source>
+            <trans-unit id="list.properties.description">
+                <source>Model Properties used for display in frontend</source>
             </trans-unit>
-            <trans-unit id="properties.field.empty">
-                <source>Please select a field</source>
+            <trans-unit id="propertyOverrides">
+                <source>Property Overrides</source>
             </trans-unit>
-            <trans-unit id="properties.label">
+            <trans-unit id="propertyOverrides.fields">
+                <source>Fields</source>
+            </trans-unit>
+            <trans-unit id="propertyOverrides.label">
                 <source>Label</source>
             </trans-unit>
-            <trans-unit id="properties.label.description">
+            <trans-unit id="propertyOverrides.label.description">
                 <source>Visible in frontend</source>
             </trans-unit>
-            <trans-unit id="properties.valuePrefix">
+            <trans-unit id="propertyOverrides.property">
+                <source>Property</source>
+            </trans-unit>
+            <trans-unit id="propertyOverrides.reference">
+                <source>Reference</source>
+            </trans-unit>
+            <trans-unit id="propertyOverrides.reference.description">
+                <source>Use property overrides from another content element</source>
+            </trans-unit>
+            <trans-unit id="propertyOverrides.valueOverrides">
+                <source>Value Overrides</source>
+            </trans-unit>
+            <trans-unit id="propertyOverrides.valueOverrides.description">
+                <source>Override specific value for display in frontend</source>
+            </trans-unit>
+            <trans-unit id="propertyOverrides.valuePrefix">
                 <source>Value Prefix</source>
             </trans-unit>
-            <trans-unit id="properties.valuePrefix.description">
+            <trans-unit id="propertyOverrides.valuePrefix.description">
                 <source>Characters appended to every property value</source>
             </trans-unit>
-            <trans-unit id="properties.valueSuffix">
+            <trans-unit id="propertyOverrides.valueSuffix">
                 <source>Value Suffix</source>
             </trans-unit>
-            <trans-unit id="properties.valueSuffix.description">
+            <trans-unit id="propertyOverrides.valueSuffix.description">
                 <source>Characters prepended to every property value label</source>
             </trans-unit>
-            <trans-unit id="property">
-                <source>Property</source>
+            <trans-unit id="selection">
+                <source>Data</source>
+            </trans-unit>
+            <trans-unit id="selection.records">
+                <source>Records</source>
             </trans-unit>
             <trans-unit id="settings">
                 <source>Settings</source>

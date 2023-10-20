@@ -10,10 +10,11 @@ use Remind\Extbase\Domain\Repository\FilterableRepository;
 use Remind\Extbase\Event\CustomDetailEntitySourceEvent;
 use Remind\Extbase\Event\EnrichDetailResultEvent;
 use Remind\Extbase\Event\ModifyFilterableListResultEvent;
-use Remind\Extbase\FlexForms\DetailDataSheets;
-use Remind\Extbase\FlexForms\ListFiltersSheets;
+use Remind\Extbase\FlexForms\DetailSheets;
+use Remind\Extbase\FlexForms\FrontendFilterSheets;
 use Remind\Extbase\FlexForms\ListSheets;
-use Remind\Extbase\FlexForms\SelectionDataSheets;
+use Remind\Extbase\FlexForms\PropertyOverrideSheets;
+use Remind\Extbase\FlexForms\SelectionSheets;
 use Remind\Extbase\Service\Dto\DetailResult;
 use Remind\Extbase\Service\Dto\FilterableListResult;
 use Remind\Extbase\Service\Dto\FilterValue;
@@ -25,8 +26,10 @@ use Remind\Extbase\Utility\Dto\DatabaseFilter;
 use Remind\Extbase\Utility\FilterUtility;
 use Remind\Extbase\Utility\PluginUtility;
 use TYPO3\CMS\Backend\Utility\BackendUtility;
+use TYPO3\CMS\Core\Database\Connection;
 use TYPO3\CMS\Core\Database\ConnectionPool;
 use TYPO3\CMS\Core\Pagination\SimplePagination;
+use TYPO3\CMS\Core\Service\FlexFormService;
 use TYPO3\CMS\Core\Utility\ArrayUtility;
 use TYPO3\CMS\Core\Utility\GeneralUtility;
 use TYPO3\CMS\Extbase\Configuration\ConfigurationManagerInterface;
@@ -50,6 +53,7 @@ class ControllerService
     private string $tableName;
     private string $filtersArgumentName;
     private bool $disableFilterCount;
+    private array $propertyOverrides;
     private Request $request;
     private FilterableRepository $repository;
     private ContentObjectRenderer $cObj;
@@ -60,6 +64,7 @@ class ControllerService
         private readonly ConnectionPool $connectionPool,
         private readonly EventDispatcherInterface $eventDispatcher,
         private readonly DatabaseService $databaseService,
+        private readonly FlexFormService $flexFormService,
         ConfigurationManagerInterface $configurationManager,
         RequestBuilder $requestBuilder,
     ) {
@@ -76,6 +81,7 @@ class ControllerService
         $cType = strtolower($this->extensionName . '_' . $this->pluginName);
         $this->tableName = PluginUtility::getTableName($cType);
         $this->disableFilterCount = PluginUtility::getDisableFilterCount($cType);
+        $this->propertyOverrides = $this->getPropertyOverrides();
     }
 
     public function getFilterableList(
@@ -87,17 +93,17 @@ class ControllerService
         $this->repository = $repository;
         $this->filtersArgumentName = $filtersArgumentName;
         $queryDatabaseFilters = $this->getQueryDatabaseFilters($filters);
-        $appliedDatabaseFilters = FilterUtility::getAppliedValuesDatabaseFilters(
+        $predefinedDatabaseFilters = FilterUtility::getPredefinedDatabaseFilters(
             $this->settings,
             $this->tableName
         );
         $databaseFilters = array_merge(
-            array_values($appliedDatabaseFilters),
+            array_values($predefinedDatabaseFilters),
             array_values($queryDatabaseFilters)
         );
         $listResult = $this->getListResult($currentPage, $databaseFilters);
         $filterableListResult = new FilterableListResult($listResult);
-        $frontendFilters = $this->getFrontendFilters($appliedDatabaseFilters, $queryDatabaseFilters);
+        $frontendFilters = $this->getFrontendFilters($predefinedDatabaseFilters, $queryDatabaseFilters);
         $filterableListResult->setFrontendFilters($frontendFilters);
         /** @var ModifyFilterableListResultEvent $event */
         $event = $this->eventDispatcher->dispatch(new ModifyFilterableListResultEvent($filterableListResult));
@@ -109,7 +115,7 @@ class ControllerService
     public function getSelectionList(FilterableRepository $repository, int $currentPage): ListResult
     {
         $this->repository = $repository;
-        $recordUids = $this->settings[SelectionDataSheets::RECORDS];
+        $recordUids = $this->settings[SelectionSheets::RECORDS];
         $recordUids = GeneralUtility::intExplode(',', $recordUids, true);
 
         if (empty($recordUids)) {
@@ -131,15 +137,15 @@ class ControllerService
         RepositoryInterface $repository,
         ?AbstractEntity $entity
     ): ?DetailResult {
-        $source = $this->settings[DetailDataSheets::SOURCE];
+        $source = $this->settings[DetailSheets::SOURCE];
         $result = new DetailResult();
         $item = null;
         switch ($source) {
-            case DetailDataSheets::SOURCE_DEFAULT:
+            case DetailSheets::SOURCE_DEFAULT:
                 $item = $entity;
                 break;
-            case DetailDataSheets::SOURCE_RECORD:
-                $uid = (int) ($this->settings[DetailDataSheets::RECORD] ?? null);
+            case DetailSheets::SOURCE_RECORD:
+                $uid = (int) ($this->settings[DetailSheets::RECORD] ?? null);
                 $item = $repository->findByUid($uid);
                 break;
             default:
@@ -156,25 +162,9 @@ class ControllerService
         }
         $result->setItem($item);
 
-        $properties = $this->settings[DetailDataSheets::PROPERTIES];
-
-        if (is_array($properties)) {
-            $properties = array_values(array_map(function ($property) {
-                $property = $property[DetailDataSheets::PROPERTY];
-                $field = $property[DetailDataSheets::FIELD];
-                $label = $property[DetailDataSheets::LABEL];
-                $label = $label ? $label : $this->getItemLabel($field);
-                return new Property(
-                    GeneralUtility::underscoredToLowerCamelCase($field),
-                    $label,
-                    $property[DetailDataSheets::VALUE_PREFIX],
-                    $property[DetailDataSheets::VALUE_SUFFIX],
-                );
-            }, $properties));
-        } else {
-            $properties = [];
-        }
-
+        $properties = $this->getProperties(
+            GeneralUtility::trimExplode(',', $this->settings[DetailSheets::PROPERTIES], true)
+        );
         $result->setProperties($properties);
 
         /** @var EnrichDetailResultEvent $event */
@@ -211,6 +201,11 @@ class ControllerService
         $orderDirection = $this->settings[ListSheets::ORDER_DIRECTION] ?? null;
         $itemsPerPage = (int) ($this->settings[ListSheets::ITEMS_PER_PAGE] ?? null);
 
+        $properties = $this->getProperties(
+            GeneralUtility::trimExplode(',', $this->settings[ListSheets::PROPERTIES], true)
+        );
+        $result->setProperties($properties);
+
         $queryResult = $this->repository->findByFilters(
             $filters,
             $limit,
@@ -245,73 +240,75 @@ class ControllerService
     }
 
     /**
-     * @param DatabaseFilter[] $appliedDatabaseFilters
+     * @param DatabaseFilter[] $predefinedDatabaseFilters
      * @param DatabaseFilter[] $queryDatabaseFilters
      * @return FrontendFilter[]
      */
-    private function getFrontendFilters(array $appliedDatabaseFilters, array $queryDatabaseFilters): array
+    private function getFrontendFilters(array $predefinedDatabaseFilters, array $queryDatabaseFilters): array
     {
         $result = [];
-        $filterSettings = $this->settings[ListFiltersSheets::FILTERS] ?? [];
+        $filterSettings = $this->settings[FrontendFilterSheets::FILTERS] ?? [];
         foreach ($filterSettings as $filterSetting) {
-            $filterSetting = $filterSetting[ListFiltersSheets::FILTER] ?? [];
+            $filterSetting = $filterSetting[FrontendFilterSheets::FILTER] ?? [];
             $filterName = FilterUtility::getFilterName($filterSetting);
 
-            $disabled = (bool) ($filterSetting[ListFiltersSheets::DISABLED] ?? false);
+            $disabled = (bool) ($filterSetting[FrontendFilterSheets::DISABLED] ?? false);
 
             if ($disabled) {
                 continue;
             }
 
-            $filterValues = json_decode($filterSetting[ListFiltersSheets::AVAILABLE_VALUES] ?? '', true);
+            $filterValues = [];
 
-            $dynamicValues = (bool) ($filterSetting[ListFiltersSheets::DYNAMIC_AVAILABLE_VALUES] ?? false);
+            $dynamicValues = (bool) ($filterSetting[FrontendFilterSheets::DYNAMIC_VALUES] ?? false);
 
             if ($dynamicValues) {
                 $fieldNames = GeneralUtility::trimExplode(',', $filterName, true);
                 $dynamicFilterValues = $this->databaseService->getAvailableFieldValues(
+                    $this->cObj->data['sys_language_uid'],
                     $this->tableName,
                     $fieldNames,
                     $this->cObj->data['pages'],
                     $this->cObj->data['recursive'],
-                    $appliedDatabaseFilters,
+                    $predefinedDatabaseFilters,
                 );
 
-                foreach ($filterValues as $filterValue) {
-                    foreach ($dynamicFilterValues as &$dynamicFilterValue) {
-                        if ($dynamicFilterValue['value'] === $filterValue['value']) {
-                            $dynamicFilterValue = $filterValue;
+                $excludedValues = json_decode($filterSetting[FrontendFilterSheets::EXCLUDED_VALUES], true) ?? [];
+                foreach ($excludedValues as $excludedValue) {
+                    foreach ($dynamicFilterValues as $key => $dynamicFilterValue) {
+                        if ($dynamicFilterValue['value'] === $excludedValue) {
+                            unset($dynamicFilterValues[$key]);
                             break;
                         }
                     }
                 }
 
-                $filterValues = $dynamicFilterValues;
+                $filterValues = array_values($dynamicFilterValues);
+            } else {
+                $filterValues = json_decode($filterSetting[FrontendFilterSheets::VALUES] ?? '', true);
             }
 
             if (empty($filterValues)) {
                 continue;
             }
 
-            $exclusive = (bool) $filterSetting[ListFiltersSheets::EXCLUSIVE];
+            $exclusive = (bool) $filterSetting[FrontendFilterSheets::EXCLUSIVE];
 
-            $label = $this->getFrontendFilterLabel($filterName, $filterSetting);
+            $label = $this->getFieldLabel($filterName);
 
-            $allValuesLabel = $filterSetting[ListFiltersSheets::ALL_VALUES_LABEL] ?? '';
+            $allValuesLabel = $filterSetting[FrontendFilterSheets::ALL_VALUES_LABEL] ?? '';
 
             $allValues = new FilterValue([], $allValuesLabel);
-            $allValues->setLink($this->getFrontendFilterLink($filterName, $queryDatabaseFilters, [], $exclusive));
+            $allValues->setLink($this->getFrontendFilterValueLink($filterName, $queryDatabaseFilters, [], $exclusive));
 
             $frontendFilter = new FrontendFilter(
                 $filterName,
                 $label,
                 $allValues,
-                $filterSetting[ListFiltersSheets::VALUE_PREFIX] ?? '',
-                $filterSetting[ListFiltersSheets::VALUE_SUFFIX] ?? '',
             );
 
             foreach ($filterValues as $filterValue) {
-                $label = $filterValue['label'];
+                $label = $this->getFrontendFilterValueLabel($filterName, $filterValue);
                 $value = json_decode($filterValue['value'], true);
                 $frontendFilter->addValue(new FilterValue($value, $label));
             }
@@ -319,14 +316,14 @@ class ControllerService
             foreach ($frontendFilter->getValues() as $filterValue) {
                 $value = $filterValue->getValue();
 
-                $active = $this->getFrontendFilterActive(
+                $active = $this->getFrontendFilterValueActive(
                     $filterName,
                     $queryDatabaseFilters,
                     $value
                 );
                 $filterValue->setActive($active);
 
-                $link = $this->getFrontendFilterLink(
+                $link = $this->getFrontendFilterValueLink(
                     $filterName,
                     $queryDatabaseFilters,
                     $value,
@@ -335,10 +332,10 @@ class ControllerService
                 $filterValue->setLink($link);
 
                 if (!$this->disableFilterCount) {
-                    $count = $this->getFrontendFilterCount(
+                    $count = $this->getFrontendFilterValueCount(
                         $filterSetting,
                         $filterName,
-                        $appliedDatabaseFilters,
+                        $predefinedDatabaseFilters,
                         $queryDatabaseFilters,
                         $value,
                         $exclusive
@@ -352,13 +349,22 @@ class ControllerService
         return $result;
     }
 
+    private function getFrontendFilterValueLabel(string $filterName, array $filterValue): string
+    {
+        $propertyOverrides = $this->propertyOverrides[$filterName] ?? [];
+        $valueOverrides = $propertyOverrides[PropertyOverrideSheets::VALUE_OVERRIDES] ?? [];
+        $prefix = $propertyOverrides[PropertyOverrideSheets::VALUE_PREFIX] ?? '';
+        $suffix = $propertyOverrides[PropertyOverrideSheets::VALUE_SUFFIX] ?? '';
+        return $valueOverrides[$filterValue['value']] ?? $prefix . $filterValue['label'] . $suffix;
+    }
+
     /**
      * @param string $filterName
      * @param DatabaseFilter[] $queryDatabaseFilters
      * @param array $value
      * @return bool
      */
-    private function getFrontendFilterActive(
+    private function getFrontendFilterValueActive(
         string $filterName,
         array $queryDatabaseFilters,
         array $value,
@@ -377,19 +383,6 @@ class ControllerService
         return false;
     }
 
-    private function getFrontendFilterLabel(string $filterName, array $filterSetting): string
-    {
-        $label = $filterSetting[ListFiltersSheets::LABEL];
-        if (!$label) {
-            $fields = GeneralUtility::trimExplode(',', $filterName, true);
-            $labels = array_map(function (string $field) {
-                return $this->getItemLabel($field);
-            }, $fields);
-            $label = implode(', ', $labels);
-        }
-        return $label;
-    }
-
     /**
      * @param string $filterName
      * @param DatabaseFilter[] $queryDatabaseFilters
@@ -397,7 +390,7 @@ class ControllerService
      * @param bool $exclusive
      * @return string
      */
-    private function getFrontendFilterLink(
+    private function getFrontendFilterValueLink(
         string $filterName,
         array $queryDatabaseFilters,
         array $values,
@@ -423,7 +416,7 @@ class ControllerService
         $filters = array_filter($filters);
 
         array_walk_recursive($filters, function (mixed $value, string $key) use (&$filterArguments) {
-            $filterArguments[$key][] = $value;
+            $filterArguments[$key][] = $value ?? '';
         });
 
         $filterArguments = FilterUtility::simplifyQueryParameters($filterArguments);
@@ -434,13 +427,13 @@ class ControllerService
     }
 
     /**
-     * @param DatabaseFilter[] $appliedDatabaseFilters
+     * @param DatabaseFilter[] $predefinedDatabaseFilters
      * @param DatabaseFilter[] $queryDatabaseFilters
      */
-    private function getFrontendFilterCount(
+    private function getFrontendFilterValueCount(
         array $filterSetting,
         string $filterName,
-        array $appliedDatabaseFilters,
+        array $predefinedDatabaseFilters,
         array $queryDatabaseFilters,
         array $value,
         bool $exclusive
@@ -466,7 +459,7 @@ class ControllerService
         }
 
         $databaseFilters = array_merge(
-            array_values($appliedDatabaseFilters),
+            array_values($predefinedDatabaseFilters),
             array_values($tmpFilters)
         );
 
@@ -488,13 +481,12 @@ class ControllerService
             }
         }
 
-        $filterSettings = $this->settings[ListFiltersSheets::FILTERS] ?? [];
+        $filterSettings = $this->settings[FrontendFilterSheets::FILTERS] ?? [];
         foreach ($filterSettings as $filterSetting) {
-            $filterSetting = $filterSetting[ListFiltersSheets::FILTER];
+            $filterSetting = $filterSetting[FrontendFilterSheets::FILTER];
             $filterName = FilterUtility::getFilterName($filterSetting);
-            $allowMultipleFields = (bool) $filterSetting[ListFiltersSheets::ALLOW_MULTIPLE_FIELDS];
-            if ($allowMultipleFields) {
-                $fields = GeneralUtility::trimExplode(',', $filterName, true);
+            $fields = GeneralUtility::trimExplode(',', $filterName, true);
+            if (count($fields) > 1) {
                 foreach ($fields as $field) {
                     if (isset($filters[$field])) {
                         if (!isset($filters[$filterName])) {
@@ -518,10 +510,88 @@ class ControllerService
         return $result;
     }
 
-    private function getItemLabel(string $field)
+    private function getProperties(array $properties): array
     {
-        $label = BackendUtility::getItemLabel($this->tableName, $field);
-        return str_starts_with($label, 'LLL:') ? LocalizationUtility::translate($label) : $label;
+        return array_map(function (string $property) {
+            // Overrides currently only work for properties with single fields
+            $valueOverrides = $this->propertyOverrides[$property][PropertyOverrideSheets::VALUE_OVERRIDES] ?? [];
+            $valueOverrides = array_reduce(
+                array_keys($valueOverrides),
+                function (array $result, string $jsonValue) use ($valueOverrides) {
+                    $value = json_decode($jsonValue, true);
+                    if (count($value) === 1) {
+                        $label = $valueOverrides[$jsonValue];
+                        $key = array_key_first($value);
+                        $result[$value[$key]] = $label;
+                    }
+                    return $result;
+                },
+                []
+            );
+            return new Property(
+                GeneralUtility::underscoredToLowerCamelCase($property),
+                $this->getFieldLabel($property),
+                $this->propertyOverrides[$property][PropertyOverrideSheets::VALUE_PREFIX] ?? '',
+                $this->propertyOverrides[$property][PropertyOverrideSheets::VALUE_SUFFIX] ?? '',
+                $valueOverrides,
+            );
+        }, $properties);
+    }
+
+    private function getPropertyOverrides(): array
+    {
+        $propertyOverrides = $this->settings[PropertyOverrideSheets::OVERRIDES] ?? [];
+
+        $contentElementId = $this->settings[PropertyOverrideSheets::REFERENCE] ?? null;
+
+        if ($contentElementId) {
+            $propertyOverrides = [];
+            $queryBuilder = $this->connectionPool->getQueryBuilderForTable('tt_content');
+            $result = $queryBuilder
+                ->select('pi_flexform')
+                ->from('tt_content')
+                ->where(
+                    $queryBuilder->expr()->eq(
+                        'uid',
+                        $queryBuilder->createNamedParameter($contentElementId, Connection::PARAM_INT)
+                    )
+                )
+                ->executeQuery();
+
+            $row = $result->fetchOne();
+            if ($row) {
+                $flexForm = $this->flexFormService->convertFlexFormContentToArray($row);
+                $propertyOverrides = $flexForm['settings'][PropertyOverrideSheets::OVERRIDES] ?? [];
+            }
+        }
+        return array_reduce($propertyOverrides, function (array $result, array $property) {
+            $property = $property[PropertyOverrideSheets::OVERRIDE];
+            $valueOverrides = json_decode($property[PropertyOverrideSheets::VALUE_OVERRIDES], true) ?? [];
+            $property[PropertyOverrideSheets::VALUE_OVERRIDES] = array_reduce(
+                $valueOverrides,
+                function (array $result, array $valueOverride) {
+                    $result[$valueOverride['value']] = $valueOverride['label'];
+                    return $result;
+                },
+                []
+            );
+            $result[$property[PropertyOverrideSheets::FIELDS]] = $property;
+            return $result;
+        }, []);
+    }
+
+    private function getFieldLabel(string $field)
+    {
+        $label = $this->propertyOverrides[$field][PropertyOverrideSheets::LABEL] ?? null;
+        if (!$label) {
+            $fields = GeneralUtility::trimExplode(',', $field, true);
+            $labels = array_map(function (string $field) {
+                $label = BackendUtility::getItemLabel($this->tableName, $field);
+                return str_starts_with($label, 'LLL:') ? LocalizationUtility::translate($label) : $label;
+            }, $fields);
+            $label = implode(', ', $labels);
+        }
+        return $label;
     }
 
     private function getTypoScriptFrontendController(): ?TypoScriptFrontendController

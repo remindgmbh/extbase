@@ -18,6 +18,10 @@ class ListResult
 
     protected int $currentPage = 0;
 
+    /** @var Property[] $properties */
+    protected ?array $properties = [];
+
+
     public function getPaginatedItems(): ?iterable
     {
         return $this->paginatedItems;
@@ -74,6 +78,24 @@ class ListResult
     public function setCurrentPage(int $currentPage): self
     {
         $this->currentPage = $currentPage;
+
+        return $this;
+    }
+
+    /**
+     * @return Property[]
+     */
+    public function getProperties(): ?array
+    {
+        return $this->properties;
+    }
+
+    /**
+     * @param Property[] $properties
+     */
+    public function setProperties(?array $properties): self
+    {
+        $this->properties = $properties;
 
         return $this;
     }

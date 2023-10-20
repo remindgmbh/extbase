@@ -26,8 +26,12 @@ class DatabaseService
         $this->pageRepository = GeneralUtility::makeInstance(PageRepository::class);
     }
 
-    public function getRecords(string $tableName, string $pages, ?int $recursive = 0): array
-    {
+    public function getRecords(
+        int $sysLanguageUid,
+        string $tableName,
+        string $pages,
+        ?int $recursive = 0
+    ): array {
         $result = [];
 
         $pageIds = $this->getPageIds($pages, $recursive);
@@ -44,9 +48,9 @@ class DatabaseService
         $queryBuilder
             ->select(...$fieldList)
             ->from($tableName)
-            ->where($queryBuilder->expr()->in(
-                $tableName . '.pid',
-                $queryBuilder->createNamedParameter($pageIds, Connection::PARAM_INT_ARRAY)
+            ->where($queryBuilder->expr()->and(
+                $this->getLanguageConstraint($queryBuilder, $tableName, $sysLanguageUid),
+                $this->getPageConstraint($queryBuilder, $tableName, $pageIds),
             ));
 
         $queryResult = $queryBuilder->executeQuery();
@@ -64,9 +68,10 @@ class DatabaseService
      * @param \Remind\Extbase\Utility\Dto\DatabaseFilter[] $filters
      */
     public function getAvailableFieldValues(
+        int $sysLanguageUid,
         string $tableName,
         array $fieldNames,
-        string $pages,
+        ?string $pages = null,
         ?int $recursive = 0,
         ?array $filters = [],
     ): array {
@@ -77,7 +82,7 @@ class DatabaseService
             return $result;
         }
 
-        $pageIds = $this->getPageIds($pages, $recursive);
+        $pageIds = $pages ? $this->getPageIds($pages, $recursive) : [];
 
         $fieldNames = array_map(function (string $fieldName) {
             return GeneralUtility::camelCaseToLowerCaseUnderscored($fieldName);
@@ -111,20 +116,21 @@ class DatabaseService
             }
         }
 
-        $constraints = $this->getConstraint($queryBuilder, $tableName, $filters);
+        $constraints = [
+            $this->getLanguageConstraint($queryBuilder, $tableName, $sysLanguageUid),
+            $this->getFilterConstraint($queryBuilder, $tableName, $filters),
+        ];
+
+        if (!empty($pageIds)) {
+            $constraints[] = $this->getPageConstraint($queryBuilder, $tableName, $pageIds);
+        }
 
         $queryBuilder
             ->select(...$selectFields)
             ->from($tableName)
             ->distinct()
             ->where(
-                $queryBuilder->expr()->and(
-                    $queryBuilder->expr()->in(
-                        $tableName . '.pid',
-                        $queryBuilder->createNamedParameter($pageIds, Connection::PARAM_INT_ARRAY)
-                    ),
-                    $constraints,
-                )
+                $queryBuilder->expr()->and(...$constraints)
             );
 
         $queryResult = $queryBuilder->executeQuery();
@@ -143,10 +149,26 @@ class DatabaseService
         return $result;
     }
 
+    private function getPageConstraint(QueryBuilder $queryBuilder, string $tableName, array $pageIds): string
+    {
+        return $queryBuilder->expr()->in(
+            $tableName . '.pid',
+            $queryBuilder->createNamedParameter($pageIds, Connection::PARAM_INT_ARRAY)
+        );
+    }
+
+    private function getLanguageConstraint(QueryBuilder $queryBuilder, string $tableName, int $sysLanguageUid): string
+    {
+        return $queryBuilder->expr()->eq(
+            $tableName . '.sys_language_uid',
+            $queryBuilder->createNamedParameter($sysLanguageUid, Connection::PARAM_INT)
+        );
+    }
+
     /**
      * @param \Remind\Extbase\Utility\Dto\DatabaseFilter[] $filters
      */
-    private function getConstraint(
+    private function getFilterConstraint(
         QueryBuilder $queryBuilder,
         string $tableName,
         array $filters,
@@ -206,7 +228,7 @@ class DatabaseService
                             $data['label'][] = $value
                                 ? $value
                                 : LocalizationUtility::translate('emptyValue', 'rmnd_extbase');
-                            $data['value'][$fieldName] = $value ?? '';
+                            $data['value'][$fieldName] = $value;
                         }
                     }
                 }

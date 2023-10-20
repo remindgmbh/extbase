@@ -6,7 +6,7 @@ namespace Remind\Extbase\FlexForms;
 
 use Remind\Extbase\Backend\ItemsProc;
 
-class SelectionDataSheets
+class SelectionSheets
 {
     public const SHEET_ID = 1669192705;
     public const RECORDS = 'records';
@@ -17,18 +17,18 @@ class SelectionDataSheets
         return [
             self::SHEET_ID => [
                 'ROOT' => [
-                    'sheetTitle' => self::LOCALLANG . 'data',
+                    'sheetTitle' => self::LOCALLANG . 'selection',
                     'type' => 'array',
                     'el' => [
                         'settings.' . self::RECORDS => [
-                            'label' => self::LOCALLANG . 'data.records',
+                            'label' => self::LOCALLANG . 'selection.records',
                             'config' => [
                                 'type' => 'select',
                                 'renderType' => 'selectMultipleSideBySide',
                                 'size' => '7',
                                 'minitems' => '0',
                                 'multiple' => '0',
-                                'itemsProcFunc' => ItemsProc::class . '->getSelectionDataRecordsItems',
+                                'itemsProcFunc' => ItemsProc::class . '->getSelectionRecords',
                             ],
                         ],
                     ],

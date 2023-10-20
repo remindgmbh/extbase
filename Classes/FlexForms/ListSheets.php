@@ -14,6 +14,7 @@ class ListSheets
     public const ORDER_DIRECTION = 'orderDirection';
     public const ITEMS_PER_PAGE = 'itemsPerPage';
     public const LIMIT = 'limit';
+    public const PROPERTIES = 'properties';
     private const LOCALLANG = 'LLL:EXT:rmnd_extbase/Resources/Private/Language/locallang.xlf:';
 
     public static function getSheets(): array
@@ -93,6 +94,16 @@ class ListSheets
                             'config' => [
                                 'type' => 'input',
                                 'size' => '2',
+                            ],
+                        ],
+                        'settings.' . self::PROPERTIES => [
+                            'label' => self::LOCALLANG . 'list.properties',
+                            'description' => self::LOCALLANG . 'list.properties.description',
+                            'config' => [
+                                'type' => 'select',
+                                'renderType' => 'selectMultipleSideBySide',
+                                'multiple' => '0',
+                                'itemsProcFunc' => ItemsProc::class . '->getListProperties',
                             ],
                         ],
                     ],

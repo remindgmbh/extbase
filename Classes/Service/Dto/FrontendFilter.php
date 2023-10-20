@@ -4,8 +4,10 @@ declare(strict_types=1);
 
 namespace Remind\Extbase\Service\Dto;
 
-class FrontendFilter extends Property
+class FrontendFilter
 {
+    private string $name = '';
+    private string $label = '';
     private FilterValue $allValues;
 
     /**
@@ -16,12 +18,35 @@ class FrontendFilter extends Property
     public function __construct(
         string $name,
         string $label,
-        FilterValue $allValues,
-        string $prefix,
-        string $suffix,
+        FilterValue $allValues
     ) {
-        parent::__construct($name, $label, $prefix, $suffix);
+        $this->name = $name;
+        $this->label = $label;
         $this->allValues = $allValues;
+    }
+
+    public function getName(): string
+    {
+        return $this->name;
+    }
+
+    public function setName(string $name): self
+    {
+        $this->name = $name;
+
+        return $this;
+    }
+
+    public function getLabel(): string
+    {
+        return $this->label;
+    }
+
+    public function setLabel(string $label): self
+    {
+        $this->label = $label;
+
+        return $this;
     }
 
     public function getAllValues(): FilterValue
