@@ -254,7 +254,7 @@ class ControllerService
 
             $disabled = (bool) ($filterSetting[FrontendFilterSheets::DISABLED] ?? false);
 
-            if ($disabled) {
+            if ($disabled || !$filterName) {
                 continue;
             }
 
@@ -485,6 +485,11 @@ class ControllerService
         foreach ($filterSettings as $filterSetting) {
             $filterSetting = $filterSetting[FrontendFilterSheets::FILTER];
             $filterName = FilterUtility::getFilterName($filterSetting);
+
+            if (!$filterName) {
+                continue;
+            }
+
             $fields = GeneralUtility::trimExplode(',', $filterName, true);
             if (count($fields) > 1) {
                 foreach ($fields as $field) {

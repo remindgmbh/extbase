@@ -28,11 +28,11 @@ class FilterUtility
                 json_decode($filterSetting[PredefinedFilterSheets::VALUES] ?? '', true) ?? []
             );
 
-            if ($disabled || empty($values)) {
+            $filterName = self::getFilterName($filterSetting);
+
+            if (!$filterName || $disabled || empty($values)) {
                 continue;
             }
-
-            $filterName = self::getFilterName($filterSetting);
 
             $result[$filterName] = self::getDatabaseFilter($filterSetting, $filterName, $values, $table);
         }
@@ -56,10 +56,10 @@ class FilterUtility
         );
     }
 
-    public static function getFilterName(array $filterSetting): string
+    public static function getFilterName(array $filterSetting): ?string
     {
-        $filterName = $filterSetting[PredefinedFilterSheets::FIELDS];
-        return is_array($filterName) ? $filterName[0] : $filterName;
+        $filterName = $filterSetting[PredefinedFilterSheets::FIELDS] ?? null;
+        return is_array($filterName) ? (empty($filterName) ? null : $filterName[0]) : $filterName;
     }
     public static function normalizeQueryParameters(array $filters): array
     {
