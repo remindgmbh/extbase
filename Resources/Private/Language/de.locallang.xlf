@@ -36,12 +36,6 @@
             <trans-unit id="emptyValue">
                 <target>(Wert nicht gesetzt)</target>
             </trans-unit>
-            <trans-unit id="filters.allValuesLabel">
-                <target>Alle Werte Beschriftung</target>
-            </trans-unit>
-            <trans-unit id="filters.allValuesLabel.description">
-                <target>Beschriftung zur Berücksichtigung von allen Werten für diesen Filter im Frontend</target>
-            </trans-unit>
             <trans-unit id="filters.conjunction">
                 <target>Verknüpfungs-Modus</target>
             </trans-unit>
@@ -92,6 +86,15 @@
             </trans-unit>
             <trans-unit id="filters.predefined">
                 <target>Vordefinierte Filter</target>
+            </trans-unit>
+            <trans-unit id="filters.resetFilterLabel">
+                <target>Filter zurücksetzen Beschriftung</target>
+            </trans-unit>
+            <trans-unit id="filters.resetFilterLabel.description">
+                <target>Beschriftung zur Berücksichtigung von allen Werten für diesen Filter im Frontend</target>
+            </trans-unit>
+            <trans-unit id="filters.resetFiltersLabel">
+                <target>Alle Filter zurücksetzen Beschriftung</target>
             </trans-unit>
             <trans-unit id="filters.values">
                 <target>Werte</target>

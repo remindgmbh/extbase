@@ -10,7 +10,6 @@ use Remind\Extbase\Utility\Dto\Conjunction;
 class FrontendFilterSheets
 {
     public const SHEET_ID = 1697788482;
-    public const ALL_VALUES_LABEL = 'allValuesLabel';
     public const CONJUNCTION = 'conjunction';
     public const DISABLED = 'disabled';
     public const DYNAMIC_VALUES = 'dynamicValues';
@@ -20,6 +19,8 @@ class FrontendFilterSheets
     public const FILTER = 'filter';
     public const FILTERS = 'frontendFilters';
     public const LABEL = 'label';
+    public const RESET_FILTER_LABEL = 'resetFilterLabel';
+    public const RESET_FILTERS_LABEL = 'resetFiltersLabel';
     public const VALUES = 'values';
     public const VALUE_PREFIX = 'valuePrefix';
     public const VALUE_SUFFIX = 'valueSuffix';
@@ -33,6 +34,12 @@ class FrontendFilterSheets
                     'sheetTitle' => self::LOCALLANG . 'filters.frontend',
                     'type' => 'array',
                     'el' => [
+                        'settings.' . self::RESET_FILTERS_LABEL => [
+                            'label' => self::LOCALLANG . 'filters.resetFiltersLabel',
+                            'config' => [
+                                'type' => 'input',
+                            ],
+                        ],
                         'settings.' . self::FILTERS => [
                             'type' => 'array',
                             'section' => 1,
@@ -102,9 +109,9 @@ class FrontendFilterSheets
                                                 ],
                                             ],
                                         ],
-                                        self::ALL_VALUES_LABEL => [
-                                            'label' => self::LOCALLANG . 'filters.allValuesLabel',
-                                            'description' => self::LOCALLANG . 'filters.allValuesLabel.description',
+                                        self::RESET_FILTER_LABEL => [
+                                            'label' => self::LOCALLANG . 'filters.resetFilterLabel',
+                                            'description' => self::LOCALLANG . 'filters.resetFilterLabel.description',
                                             'config' => [
                                                 'type' => 'input',
                                             ],

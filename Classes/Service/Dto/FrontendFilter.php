@@ -4,11 +4,13 @@ declare(strict_types=1);
 
 namespace Remind\Extbase\Service\Dto;
 
-class FrontendFilter
+use JsonSerializable;
+
+class FrontendFilter implements JsonSerializable
 {
     private string $name = '';
     private string $label = '';
-    private FilterValue $allValues;
+    private FilterValue $resetFilter;
 
     /**
      * @var FilterValue[] $values
@@ -18,11 +20,21 @@ class FrontendFilter
     public function __construct(
         string $name,
         string $label,
-        FilterValue $allValues
+        FilterValue $resetFilter
     ) {
         $this->name = $name;
         $this->label = $label;
-        $this->allValues = $allValues;
+        $this->resetFilter = $resetFilter;
+    }
+
+    public function jsonSerialize(): array
+    {
+        return [
+            'name' => $this->name,
+            'label' => $this->label,
+            'resetFilter' => $this->resetFilter,
+            'values' => $this->values,
+        ];
     }
 
     public function getName(): string
@@ -49,14 +61,14 @@ class FrontendFilter
         return $this;
     }
 
-    public function getAllValues(): FilterValue
+    public function getResetFilter(): FilterValue
     {
-        return $this->allValues;
+        return $this->resetFilter;
     }
 
-    public function setAllValues(FilterValue $allValues): self
+    public function setResetFilter(FilterValue $resetFilter): self
     {
-        $this->allValues = $allValues;
+        $this->resetFilter = $resetFilter;
 
         return $this;
     }

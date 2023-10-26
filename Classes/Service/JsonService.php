@@ -40,10 +40,10 @@ class JsonService
         string $detailActionName,
         string $detailUidArgument,
     ): array {
-        $paginationJson = null;
+        $serializedPagination = null;
         $pagination = $listResult->getPagination();
         if ($pagination) {
-            $paginationJson = $this->headlessJsonService->serializePagination(
+            $serializedPagination = $this->headlessJsonService->serializePagination(
                 $pagination,
                 'page',
                 $page,
@@ -51,13 +51,13 @@ class JsonService
         }
 
         $items = iterator_to_array($listResult->getPaginatedItems());
-        $itemsJson = $this->serializeListItems($items, $detailActionName, $detailUidArgument);
+        $serializedItems = $this->serializeListItems($items, $detailActionName, $detailUidArgument);
 
         return [
             'count' => $listResult->getCount(),
             'countWithoutLimit' => $listResult->getCountWithoutLimit(),
-            'items' => $itemsJson,
-            'pagination' => $paginationJson,
+            'items' => $serializedItems,
+            'pagination' => $serializedPagination,
             'properties' => $listResult->getProperties(),
         ];
     }
@@ -69,44 +69,8 @@ class JsonService
         string $detailUidArgument
     ): array {
         $result = $this->serializeList($listResult, $page, $detailActionName, $detailUidArgument);
-        $filters = $listResult->getFrontendFilters();
-        $filtersJson = $this->serializeFilters($filters);
-        $result['filters'] = $filtersJson;
-        return $result;
-    }
-
-    /**
-     * @param \Remind\Extbase\Service\Dto\FrontendFilter[] $filters
-     * @return array
-     */
-    private function serializeFilters(array $filters): array
-    {
-        $result = [];
-        foreach ($filters as $filter) {
-            $filterJson = [
-                'name' => $filter->getName(),
-                'label' => $filter->getLabel(),
-                'allValues' => [
-                    'label' => $filter->getAllValues()->getLabel(),
-                    'link' => $filter->getAllValues()->getLink(),
-                ],
-                'values' => [],
-            ];
-
-            foreach ($filter->getValues() as $filterValue) {
-                $filterValueJson = [
-                    'value' => $filterValue->getValue(),
-                    'label' => $filterValue->getLabel(),
-                    'link' => $filterValue->getLink(),
-                    'count' => $filterValue->getCount(),
-                    'active' => $filterValue->isActive(),
-                ];
-
-                $filterJson['values'][] = $filterValueJson;
-            }
-
-            $result[] = $filterJson;
-        }
+        $result['filters'] = $listResult->getFrontendFilters();
+        $result['resetFilters'] = $listResult->getResetFilters();
         return $result;
     }
 
@@ -122,13 +86,13 @@ class JsonService
                     ]
                 );
             }
-            $itemJson = json_decode(json_encode($item), true);
+            $serializedItem = json_decode(json_encode($item), true);
             $link = $this->uriBuilder
                 ->reset()
                 ->setTargetPageUid((int) ($this->settings[ListSheets::DETAIL_PAGE] ?? null))
                 ->uriFor($detailActionName, [$detailUidArgument => $item->getUid()]);
-            $itemJson['link'] = $link;
-            return $itemJson;
+            $serializedItem['link'] = $link;
+            return $serializedItem;
         }, $items);
     }
 

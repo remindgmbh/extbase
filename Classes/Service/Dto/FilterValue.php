@@ -4,7 +4,9 @@ declare(strict_types=1);
 
 namespace Remind\Extbase\Service\Dto;
 
-class FilterValue
+use JsonSerializable;
+
+class FilterValue implements JsonSerializable
 {
     protected array $value = [];
     protected string $label = '';
@@ -17,6 +19,18 @@ class FilterValue
         $this->value = $value;
         $this->label = $label;
     }
+
+    public function jsonSerialize(): array
+    {
+        return [
+            'value' => $this->value,
+            'label' => $this->label,
+            'active' => $this->active,
+            'count' => $this->count,
+            'link' => $this->link,
+        ];
+    }
+
 
     public function getValue(): array
     {

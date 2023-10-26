@@ -36,12 +36,6 @@
             <trans-unit id="emptyValue">
                 <source>(Value not set)</source>
             </trans-unit>
-            <trans-unit id="filters.allValuesLabel">
-                <source>All Values Label</source>
-            </trans-unit>
-            <trans-unit id="filters.allValuesLabel.description">
-                <source>Label to include all values for this filter in frontend</source>
-            </trans-unit>
             <trans-unit id="filters.conjunction">
                 <source>Conjunction Mode</source>
             </trans-unit>
@@ -92,6 +86,15 @@
             </trans-unit>
             <trans-unit id="filters.predefined">
                 <source>Predefined Filters</source>
+            </trans-unit>
+            <trans-unit id="filters.resetFilterLabel">
+                <source>Reset Filter Label</source>
+            </trans-unit>
+            <trans-unit id="filters.resetFilterLabel.description">
+                <source>Label to include all values for this filter in frontend</source>
+            </trans-unit>
+            <trans-unit id="filters.resetFiltersLabel">
+                <source>Reset All Filters Label</source>
             </trans-unit>
             <trans-unit id="filters.values">
                 <source>Values</source>

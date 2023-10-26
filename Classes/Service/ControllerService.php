@@ -105,6 +105,9 @@ class ControllerService
         $filterableListResult = new FilterableListResult($listResult);
         $frontendFilters = $this->getFrontendFilters($predefinedDatabaseFilters, $queryDatabaseFilters);
         $filterableListResult->setFrontendFilters($frontendFilters);
+        $resetFilters = new FilterValue([], $this->settings[FrontendFilterSheets::RESET_FILTERS_LABEL] ?? '');
+        $resetFilters->setLink($this->uriBuilder->reset()->uriFor());
+        $filterableListResult->setResetFilters($resetFilters);
         /** @var ModifyFilterableListResultEvent $event */
         $event = $this->eventDispatcher->dispatch(new ModifyFilterableListResultEvent($filterableListResult));
         $filterableListResult = $event->getFilterableListResult();
@@ -296,15 +299,17 @@ class ControllerService
 
             $label = $this->getFieldLabel($filterName);
 
-            $allValuesLabel = $filterSetting[FrontendFilterSheets::ALL_VALUES_LABEL] ?? '';
+            $resetFilterLabel = $filterSetting[FrontendFilterSheets::RESET_FILTER_LABEL] ?? '';
 
-            $allValues = new FilterValue([], $allValuesLabel);
-            $allValues->setLink($this->getFrontendFilterValueLink($filterName, $queryDatabaseFilters, [], $exclusive));
+            $resetFilter = new FilterValue([], $resetFilterLabel);
+            $resetFilter->setLink(
+                $this->getFrontendFilterValueLink($filterName, $queryDatabaseFilters, [], $exclusive)
+            );
 
             $frontendFilter = new FrontendFilter(
                 $filterName,
                 $label,
-                $allValues,
+                $resetFilter,
             );
 
             foreach ($filterValues as $filterValue) {

@@ -8,6 +8,7 @@ class FilterableListResult extends ListResult
 {
     /** @var FrontendFilter[] */
     protected array $frontendFilters = [];
+    protected FilterValue $resetFilters;
 
     public function __construct(ListResult $listResult)
     {
@@ -33,6 +34,18 @@ class FilterableListResult extends ListResult
     public function setFrontendFilters(array $frontendFilters): self
     {
         $this->frontendFilters = $frontendFilters;
+
+        return $this;
+    }
+
+    public function getResetFilters(): FilterValue
+    {
+        return $this->resetFilters;
+    }
+
+    public function setResetFilters(FilterValue $resetFilters): self
+    {
+        $this->resetFilters = $resetFilters;
 
         return $this;
     }
