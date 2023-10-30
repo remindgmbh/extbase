@@ -6,7 +6,7 @@ namespace Remind\Extbase\Routing\Aspect;
 
 use InvalidArgumentException;
 use PDO;
-use Remind\Extbase\FlexForms\ListFiltersSheets;
+use Remind\Extbase\FlexForms\FrontendFilterSheets;
 use TYPO3\CMS\Core\Context\ContextAwareInterface;
 use TYPO3\CMS\Core\Context\ContextAwareTrait;
 use TYPO3\CMS\Core\Database\ConnectionPool;
@@ -89,13 +89,13 @@ class FilterValueMapper implements
         $parameterKeys = $this->getParameterKeys();
         $values = json_decode($originalValue, true);
         $result = [];
-        $filters = $this->getFilters();
         foreach ($values as $fieldName => $value) {
-            if (!$this->isValid($value, $filters, $fieldName)) {
-                return null;
-            }
             $generatedValue = $this->processValue($fieldName, $value, 'generate');
             $result[$parameterKeys[$fieldName] ?? $fieldName] = $generatedValue;
+        }
+
+        if (!$this->isValid($result)) {
+            return null;
         }
 
         return json_encode($result);
@@ -106,42 +106,62 @@ class FilterValueMapper implements
         $parameterKeys = array_flip($this->getParameterKeys());
         $values = json_decode($originalValue, true);
         $result = [];
-        $filters = $this->getFilters();
         foreach ($values as $mappedFieldName => $value) {
             $fieldName = $parameterKeys[$mappedFieldName] ?? $mappedFieldName;
             $resolvedValue = $this->processValue($fieldName, $value, 'resolve');
-            if (!$this->isValid($resolvedValue, $filters, $fieldName)) {
-                return null;
-            }
             $result[$fieldName] = $resolvedValue;
+        }
+
+        if (!$this->isValid($result)) {
+            return null;
         }
 
         return json_encode($result);
     }
 
-    private function isValid(mixed $value, array $filters, string $fieldName): bool
+    private function isValid(array $values): bool
     {
-        $filter = current(array_filter($filters, function (array $filter) use ($fieldName) {
-            $allowMultipleFields = (bool) ($filter[ListFiltersSheets::ALLOW_MULTIPLE_FIELDS] ?? false);
+        $filters = $this->getFilters();
+
+        foreach ($filters as $filter) {
             $fields = GeneralUtility::trimExplode(
                 ',',
-                $filter[$allowMultipleFields ? ListFiltersSheets::FIELDS : ListFiltersSheets::FIELD],
+                $filter[FrontendFilterSheets::FIELDS],
                 true,
             );
-            return in_array($fieldName, $fields);
-        }));
-        if (!$filter) {
-            return false;
-        }
-        $jsonValues = GeneralUtility::trimExplode(',', $filter[ListFiltersSheets::AVAILABLE_VALUES]);
-        $availableValues = array_reduce($jsonValues, function (array $result, string $jsonValue) use ($fieldName) {
-            $value = json_decode($jsonValue, true);
-            if (array_key_exists($fieldName, $value['value'])) {
-                $result[] = $value['value'][$fieldName];
+
+            $valuesToCheck = [];
+
+            foreach ($values as $key => $value) {
+                if (in_array($key, $fields)) {
+                    $valuesToCheck[$key] = $values[$key];
+                    unset($values[$key]);
+                }
             }
-            return $result;
-        }, []);
-        return empty(array_diff(is_array($value) ? $value : [$value], $availableValues));
+
+            if (!empty($valuesToCheck)) {
+                $dynamicValues = (bool) ($filter[FrontendFilterSheets::DYNAMIC_VALUES] ?? null);
+
+                if ($dynamicValues) {
+                    if (
+                        $this->isValueInJsonValues($filter[FrontendFilterSheets::EXCLUDED_VALUES], $valuesToCheck) ||
+                        !$this->recordExists($valuesToCheck)
+                    ) {
+                        return false;
+                    }
+                } else {
+                    if (!$this->isValueInJsonValues($filter[FrontendFilterSheets::VALUES], $valuesToCheck)) {
+                        return false;
+                    }
+                }
+            }
+
+            if (empty($values)) {
+                break;
+            }
+        }
+
+        return true;
     }
 
     private function processValue(string $key, mixed $value, string $aspectFunction): mixed
@@ -212,6 +232,51 @@ class FilterValueMapper implements
         return $result;
     }
 
+    private function isValueInJsonValues(string $jsonValues, array $valueToCheck): bool
+    {
+        $values = array_map(function (string $jsonValue) {
+            return json_decode($jsonValue, true);
+        }, json_decode($jsonValues ?? '', true) ?? []);
+
+        foreach ($values as $value) {
+            $diff = array_diff_assoc($value, $valueToCheck);
+            if (count($diff) === 0) {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    private function recordExists(array $values): bool
+    {
+        $queryBuilder = GeneralUtility::makeInstance(ConnectionPool::class)
+            ->getQueryBuilderForTable($this->tableName)
+            ->from($this->tableName);
+
+        $constraints = array_map(function (string $field) use ($queryBuilder, $values) {
+            $value = $values[$field];
+
+            if (!$value) {
+                // if $value is empty (should be '' because query param cannot be null) either
+                // an empty string or null is allowed
+                return $queryBuilder->expr()->or(
+                    $queryBuilder->expr()->isNull($field),
+                    $queryBuilder->expr()->eq($field, $queryBuilder->createNamedParameter(''))
+                );
+            } else {
+                return $queryBuilder->expr()->eq($field, $queryBuilder->createNamedParameter($value));
+            }
+        }, array_keys($values));
+
+        $queryResult = $queryBuilder
+            ->select('uid')
+            ->where($queryBuilder->expr()->and(...$constraints))
+            ->setMaxResults(1)
+            ->executeQuery();
+        return $queryResult->rowCount() > 0;
+    }
+
     private function getFilters(): array
     {
         $pageUid = $this->context->getPropertyFromAspect('page', 'uid');
@@ -240,7 +305,7 @@ class FilterValueMapper implements
         $flexFormString = $queryBuilder->executeQuery()->fetchOne();
         $flexForm = $this->flexFormService->convertFlexFormContentToArray($flexFormString);
         return array_map(function (array $filter) {
-            return $filter[ListFiltersSheets::FILTER];
-        }, $flexForm['settings'][ListFiltersSheets::FILTERS]);
+            return $filter[FrontendFilterSheets::FILTER];
+        }, $flexForm['settings'][FrontendFilterSheets::FILTERS]);
     }
 }
