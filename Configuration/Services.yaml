@@ -10,3 +10,6 @@ services:
     shared: false
   Remind\Extbase\Controller\CustomValueEditorController:
     tags: ['backend.controller']
+  Remind\Extbase\Event\Listener\SiteConfigurationLoaded:
+    tags:
+      - name: event.listener

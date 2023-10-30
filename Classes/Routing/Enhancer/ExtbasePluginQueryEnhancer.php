@@ -39,9 +39,13 @@ class ExtbasePluginQueryEnhancer extends AbstractEnhancer implements RoutingEnha
         $this->types = $configuration['types'] ?? [0];
         $this->parameters = $configuration['parameters'] ?? [];
 
-        if (!isset($configuration['limitToPages']) || empty($configuration['limitToPages'])) {
+        if (
+            !isset($configuration['limitToPages']) ||
+            !is_array($configuration['limitToPages']) ||
+            empty($configuration['limitToPages'])
+        ) {
             throw new InvalidArgumentException(
-                'QueryExtbase route enhancer required \'limitToPages\' configuration option to be set!',
+                'QueryExtbase route enhancer requires \'limitToPages\' configuration option to be set!',
                 1663321859
             );
         }
