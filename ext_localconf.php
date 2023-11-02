@@ -5,13 +5,12 @@ declare(strict_types=1);
 use Remind\Extbase\Backend\Form\Container\FlexFormContainerContainer;
 use Remind\Extbase\Backend\Form\Element\SelectMultipleSideBySideJsonElement;
 use Remind\Extbase\Backend\Form\Element\ValueLabelPairsElement;
+use Remind\Extbase\Backend\Form\FormDataProvider\UserItemProvider;
 use Remind\Extbase\Routing\Aspect\FilterValueMapper;
 use Remind\Extbase\Routing\Aspect\PersistedValueMapper;
 use Remind\Extbase\Routing\Enhancer\ExtbasePluginQueryEnhancer;
 use TYPO3\CMS\Backend\Form\Container\FlexFormContainerContainer as BaseFlexFormContainerContainer;
 use TYPO3\CMS\Backend\Form\FormDataProvider\SiteResolving;
-use Remind\Extbase\Backend\Form\FormDataProvider\SelectMultipleSideBySideJsonItems;
-use Remind\Extbase\Backend\Form\FormDataProvider\UserItemProvider;
 
 defined('TYPO3') || die('Access denied.');
 

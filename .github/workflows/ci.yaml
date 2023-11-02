@@ -1,0 +1,14 @@
+name: CI
+
+on:
+  pull_request:
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v4
+    - uses: php-actions/composer@v6
+      with:
+        php_version: 8.2
+    - run: composer run-script phpcs
+    
