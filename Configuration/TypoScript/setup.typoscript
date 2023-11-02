@@ -1,0 +1,6 @@
+config.pageTitleProviders {
+    extbase {
+        provider = Remind\Extbase\PageTitle\ExtbasePageTitleProvider
+        before = seo
+    }
+}

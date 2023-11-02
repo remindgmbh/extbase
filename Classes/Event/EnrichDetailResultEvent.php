@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Remind\Extbase\Event;
 
 use Remind\Extbase\Service\Dto\DetailResult;

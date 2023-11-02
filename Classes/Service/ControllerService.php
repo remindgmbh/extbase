@@ -7,14 +7,16 @@ namespace Remind\Extbase\Service;
 use Psr\EventDispatcher\EventDispatcherInterface;
 use Psr\Http\Message\ServerRequestInterface;
 use Remind\Extbase\Domain\Repository\FilterableRepository;
-use Remind\Extbase\Event\CustomDetailEntitySourceEvent;
 use Remind\Extbase\Event\EnrichDetailResultEvent;
+use Remind\Extbase\Event\ModifyDetailItemEvent;
+use Remind\Extbase\Event\ModifyDetailPageTitleEvent;
 use Remind\Extbase\Event\ModifyFilterableListResultEvent;
 use Remind\Extbase\FlexForms\DetailSheets;
 use Remind\Extbase\FlexForms\FrontendFilterSheets;
 use Remind\Extbase\FlexForms\ListSheets;
 use Remind\Extbase\FlexForms\PropertyOverrideSheets;
 use Remind\Extbase\FlexForms\SelectionSheets;
+use Remind\Extbase\PageTitle\ExtbasePageTitleProvider;
 use Remind\Extbase\Service\Dto\DetailResult;
 use Remind\Extbase\Service\Dto\FilterableListResult;
 use Remind\Extbase\Service\Dto\FilterValue;
@@ -64,6 +66,7 @@ class ControllerService
         private readonly EventDispatcherInterface $eventDispatcher,
         private readonly DatabaseService $databaseService,
         private readonly FlexFormService $flexFormService,
+        private readonly ExtbasePageTitleProvider $pageTitleProvider,
         ConfigurationManagerInterface $configurationManager,
         RequestBuilder $requestBuilder,
     ) {
@@ -154,11 +157,11 @@ class ControllerService
                 $routing = $this->request->getAttribute('routing');
                 $arguments = $routing->getArguments();
 
-                /** @var CustomDetailEntitySourceEvent $event */
-                $event = $this->eventDispatcher->dispatch(
-                    new CustomDetailEntitySourceEvent($this->extensionName, $source, $arguments)
+                /** @var ModifyDetailItemEvent $modifyDetailItemEvent */
+                $modifyDetailItemEvent = $this->eventDispatcher->dispatch(
+                    new ModifyDetailItemEvent($this->extensionName, $source, $arguments)
                 );
-                $item = $event->getResult();
+                $item = $modifyDetailItemEvent->getResult();
                 break;
         }
         $result->setItem($item);
@@ -168,14 +171,21 @@ class ControllerService
         );
         $result->setProperties($properties);
 
-        /** @var EnrichDetailResultEvent $event */
-        $event = $this->eventDispatcher->dispatch(
+        /** @var EnrichDetailResultEvent $enrichDetailResultEvent */
+        $enrichDetailResultEvent = $this->eventDispatcher->dispatch(
             new EnrichDetailResultEvent($result)
         );
 
-        $result = $event->getDetailResult();
+        $result = $enrichDetailResultEvent->getDetailResult();
 
         if ($item) {
+            /** @var ModifyDetailPageTitleEvent $modifyDetailPageTitleEvent */
+            $modifyDetailPageTitleEvent = $this->eventDispatcher->dispatch(
+                new ModifyDetailPageTitleEvent($this->extensionName, $item)
+            );
+
+            $this->pageTitleProvider->setTitle($modifyDetailPageTitleEvent->getTitle());
+
             $this->addCacheTag($this->tableName . '_' . $item->getUid());
         }
         return $result;
