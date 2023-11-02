@@ -42,7 +42,6 @@ use TYPO3\CMS\Extbase\Persistence\Generic\Query;
 use TYPO3\CMS\Extbase\Persistence\PersistenceManagerInterface;
 use TYPO3\CMS\Extbase\Persistence\RepositoryInterface;
 use TYPO3\CMS\Extbase\Utility\LocalizationUtility;
-use TYPO3\CMS\Frontend\ContentObject\ContentObjectRenderer;
 use TYPO3\CMS\Frontend\Controller\TypoScriptFrontendController;
 
 class ControllerService
@@ -56,7 +55,7 @@ class ControllerService
     private array $propertyOverrides;
     private Request $request;
     private FilterableRepository $repository;
-    private ContentObjectRenderer $cObj;
+    private TypoScriptFrontendController $frontendController;
 
     public function __construct(
         private readonly PersistenceManagerInterface $persistenceManager,
@@ -71,13 +70,12 @@ class ControllerService
         $configuration = $configurationManager->getConfiguration(
             ConfigurationManagerInterface::CONFIGURATION_TYPE_FRAMEWORK
         );
-        // TODO: replace deprecated function call
-        $this->cObj = $configurationManager->getContentObject();
+        $this->request = $requestBuilder->build($this->getRequest());
+        $this->uriBuilder->setRequest($this->request);
+        $this->frontendController = $this->request->getAttribute('frontend.controller');
         $this->settings = $configuration['settings'] ?? [];
         $this->extensionName = $configuration['extensionName'];
         $this->pluginName = $configuration['pluginName'];
-        $this->request = $requestBuilder->build($this->getRequest());
-        $this->uriBuilder->setRequest($this->request);
         $cType = strtolower($this->extensionName . '_' . $this->pluginName);
         $this->tableName = PluginUtility::getTableName($cType);
         $this->disableFilterCount = PluginUtility::getDisableFilterCount($cType);
@@ -185,12 +183,8 @@ class ControllerService
 
     public function addCacheTag(string $cacheTag)
     {
-        $typoScriptFrontendController = $this->getTypoScriptFrontendController();
-        if ($typoScriptFrontendController) {
-            $typoScriptFrontendController->addCacheTags([$cacheTag]);
-        }
+        $this->frontendController->addCacheTags([$cacheTag]);
     }
-
 
     /**
      * @param int $currentPage
@@ -267,12 +261,13 @@ class ControllerService
 
             if ($dynamicValues) {
                 $fieldNames = GeneralUtility::trimExplode(',', $filterName, true);
+                $data = $this->frontendController->cObj->data;
                 $dynamicFilterValues = $this->databaseService->getAvailableFieldValues(
-                    $this->cObj->data['sys_language_uid'],
+                    $data['sys_language_uid'],
                     $this->tableName,
                     $fieldNames,
-                    $this->cObj->data['pages'],
-                    $this->cObj->data['recursive'],
+                    $data['pages'],
+                    $data['recursive'],
                     $predefinedDatabaseFilters,
                 );
 
@@ -602,11 +597,6 @@ class ControllerService
             $label = implode(', ', $labels);
         }
         return $label;
-    }
-
-    private function getTypoScriptFrontendController(): ?TypoScriptFrontendController
-    {
-        return $GLOBALS['TSFE'] ?? null;
     }
 
     private function getRequest(): ServerRequestInterface
