@@ -44,6 +44,7 @@ use TYPO3\CMS\Extbase\Persistence\Generic\Query;
 use TYPO3\CMS\Extbase\Persistence\PersistenceManagerInterface;
 use TYPO3\CMS\Extbase\Persistence\RepositoryInterface;
 use TYPO3\CMS\Extbase\Utility\LocalizationUtility;
+use TYPO3\CMS\Frontend\ContentObject\ContentObjectRenderer;
 use TYPO3\CMS\Frontend\Controller\TypoScriptFrontendController;
 
 class ControllerService
@@ -58,6 +59,7 @@ class ControllerService
     private Request $request;
     private FilterableRepository $repository;
     private TypoScriptFrontendController $frontendController;
+    private ContentObjectRenderer $cObj;
 
     public function __construct(
         private readonly PersistenceManagerInterface $persistenceManager,
@@ -73,6 +75,7 @@ class ControllerService
         $configuration = $configurationManager->getConfiguration(
             ConfigurationManagerInterface::CONFIGURATION_TYPE_FRAMEWORK
         );
+        $this->cObj = $configurationManager->getContentObject();
         $this->request = $requestBuilder->build($this->getRequest());
         $this->uriBuilder->setRequest($this->request);
         $this->frontendController = $this->request->getAttribute('frontend.controller');
@@ -271,13 +274,12 @@ class ControllerService
 
             if ($dynamicValues) {
                 $fieldNames = GeneralUtility::trimExplode(',', $filterName, true);
-                $data = $this->frontendController->cObj->data;
                 $dynamicFilterValues = $this->databaseService->getAvailableFieldValues(
-                    $data['sys_language_uid'],
+                    $this->cObj->data['sys_language_uid'],
                     $this->tableName,
                     $fieldNames,
-                    $data['pages'],
-                    $data['recursive'],
+                    $this->cObj->data['pages'],
+                    $this->cObj->data['recursive'],
                     $predefinedDatabaseFilters,
                 );
 
