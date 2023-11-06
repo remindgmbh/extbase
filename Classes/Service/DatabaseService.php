@@ -57,7 +57,7 @@ class DatabaseService
         $rows = $queryResult->fetchAllAssociative();
 
         foreach ($rows as $row) {
-            $title = BackendUtility::getRecordTitle($tableName, $row);
+            $title = $this->getRecordTitle($tableName, $row);
             $result[] = ['label' => $title, 'value' => $row['uid']];
         }
 
@@ -236,7 +236,7 @@ class DatabaseService
                     $foreignTableRow = $data['foreignTableRows'][$table];
                     $value = $foreignTableRow['uid'] ?? '';
                     $label = $value
-                        ? BackendUtility::getRecordTitle($table, $foreignTableRow)
+                        ? $this->getRecordTitle($table, $foreignTableRow)
                         : LocalizationUtility::translate('emptyValue', 'rmnd_extbase');
                     $data['label'][] = $label;
                     $data['value'][$foreignTables[$table]] = $value;
@@ -317,6 +317,12 @@ class DatabaseService
             ->add(GeneralUtility::makeInstance(WorkspaceRestriction::class, $this->getBackendUser()?->workspace ?? 0));
 
         return $queryBuilder;
+    }
+
+    private function getRecordTitle(string $tableName, array $row): string
+    {
+        $labelField = $GLOBALS['TCA'][$tableName]['ctrl']['label'];
+        return $row[$labelField];
     }
 
     private function getBackendUser(): ?BackendUserAuthentication
