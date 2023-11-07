@@ -75,6 +75,7 @@ class ControllerService
         $configuration = $configurationManager->getConfiguration(
             ConfigurationManagerInterface::CONFIGURATION_TYPE_FRAMEWORK
         );
+        // TODO: replace deprecated function call
         $this->cObj = $configurationManager->getContentObject();
         $this->request = $requestBuilder->build($this->getRequest());
         $this->uriBuilder->setRequest($this->request);

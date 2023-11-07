@@ -32,7 +32,12 @@ class FilterableRepository extends Repository
                 foreach ($fields as $field) {
                     $fieldValue = $value[$field];
                     if ($filter->isMm()) {
-                        $fieldConstraints[] = $query->contains($field, $fieldValue);
+                        if (!$fieldValue) {
+                            // $field contains the number of relations, so if $fieldValue is "" it should be 0
+                            $fieldConstraints[] = $query->equals($field, 0);
+                        } else {
+                            $fieldConstraints[] = $query->contains($field, $fieldValue);
+                        }
                     } else {
                         if (!$fieldValue) {
                             // if $value is empty (should be '' because query param cannot be null) either
