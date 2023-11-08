@@ -6,13 +6,15 @@ namespace Remind\Extbase\Event;
 
 use Remind\Extbase\Service\Dto\DetailResult;
 
-final class EnrichDetailResultEvent
+final class EnrichDetailResultEvent extends AbstractExtbaseEvent
 {
     private DetailResult $detailResult;
 
     public function __construct(
+        string $extensionName,
         DetailResult $detailResult,
     ) {
+        parent::__construct($extensionName);
         $this->detailResult = $detailResult;
     }
 

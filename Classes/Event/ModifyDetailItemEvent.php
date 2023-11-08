@@ -6,9 +6,8 @@ namespace Remind\Extbase\Event;
 
 use TYPO3\CMS\Extbase\DomainObject\AbstractEntity;
 
-final class ModifyDetailItemEvent
+final class ModifyDetailItemEvent extends AbstractExtbaseEvent
 {
-    private string $extensionName;
     private string $source;
     private array $arguments;
     private ?AbstractEntity $result = null;
@@ -18,14 +17,9 @@ final class ModifyDetailItemEvent
         string $source,
         array $arguments,
     ) {
-        $this->extensionName = $extensionName;
+        parent::__construct($extensionName);
         $this->source = $source;
         $this->arguments = $arguments;
-    }
-
-    public function getExtensionName(): string
-    {
-        return $this->extensionName;
     }
 
     public function getSource(): string

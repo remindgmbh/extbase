@@ -6,21 +6,15 @@ namespace Remind\Extbase\Event;
 
 use TYPO3\CMS\Extbase\DomainObject\AbstractEntity;
 
-final class ModifyDetailPageTitleEvent
+final class ModifyDetailPageTitleEvent extends AbstractExtbaseEvent
 {
-    private string $extensionName;
     private AbstractEntity $entity;
     private string $title = '';
 
     public function __construct(string $extensionName, AbstractEntity $entity)
     {
-        $this->extensionName = $extensionName;
+        parent::__construct($extensionName);
         $this->entity = $entity;
-    }
-
-    public function getExtensionName(): string
-    {
-        return $this->extensionName;
     }
 
     public function getEntity(): AbstractEntity

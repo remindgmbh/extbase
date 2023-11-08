@@ -114,7 +114,9 @@ class ControllerService
         $resetFilters->setLink($this->uriBuilder->reset()->uriFor());
         $filterableListResult->setResetFilters($resetFilters);
         /** @var ModifyFilterableListResultEvent $event */
-        $event = $this->eventDispatcher->dispatch(new ModifyFilterableListResultEvent($filterableListResult));
+        $event = $this->eventDispatcher->dispatch(
+            new ModifyFilterableListResultEvent($this->extensionName, $filterableListResult)
+        );
         $filterableListResult = $event->getFilterableListResult();
         $this->addCacheTag($this->tableName);
         return $filterableListResult;
@@ -177,7 +179,7 @@ class ControllerService
 
         /** @var EnrichDetailResultEvent $enrichDetailResultEvent */
         $enrichDetailResultEvent = $this->eventDispatcher->dispatch(
-            new EnrichDetailResultEvent($result)
+            new EnrichDetailResultEvent($this->extensionName, $result)
         );
 
         $result = $enrichDetailResultEvent->getDetailResult();
