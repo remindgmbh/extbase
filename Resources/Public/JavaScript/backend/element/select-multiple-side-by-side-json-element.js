@@ -76,7 +76,7 @@ class SelectMultipleSideBySideJsonElement extends LitElement {
                                     const label = this.possibleItems.find(
                                         (possibleItem) =>
                                             possibleItem.value === item
-                                    ).label;
+                                    )?.label;
                                     return html`
                                         <option value="${item}">
                                             ${label}

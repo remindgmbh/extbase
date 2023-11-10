@@ -154,6 +154,10 @@ class ItemsProc
             $filters,
         );
 
+        $currentValues = json_decode($params['row'][$params['field']], true) ?? [];
+
+        $this->addInvalidValues($items, $currentValues);
+
         array_push($params['items'], ...$items);
     }
 
