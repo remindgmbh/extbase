@@ -198,10 +198,10 @@ class FilterValueMapper implements
 
         if (is_array($value)) {
             return array_map(function (mixed $value) use ($aspect, $aspectFunction) {
-                return $aspect->{$aspectFunction}($value);
+                return $aspect->{$aspectFunction}((string) $value);
             }, $value);
         } else {
-            return $aspect->{$aspectFunction}($value);
+            return $aspect->{$aspectFunction}((string) $value);
         }
     }
 
