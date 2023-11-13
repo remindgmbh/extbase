@@ -7,6 +7,7 @@ namespace Remind\Extbase\Routing\Aspect;
 use InvalidArgumentException;
 use PDO;
 use Remind\Extbase\FlexForms\FrontendFilterSheets;
+use TYPO3\CMS\Backend\Utility\BackendUtility;
 use TYPO3\CMS\Core\Context\ContextAwareInterface;
 use TYPO3\CMS\Core\Context\ContextAwareTrait;
 use TYPO3\CMS\Core\Database\ConnectionPool;
@@ -254,20 +255,43 @@ class FilterValueMapper implements
             ->getQueryBuilderForTable($this->tableName)
             ->from($this->tableName);
 
-        $constraints = array_map(function (string $field) use ($queryBuilder, $values) {
-            $value = $values[$field];
+        $constraints = [];
+        foreach ($values as $field => $value) {
+            $fieldTca = BackendUtility::getTcaFieldConfiguration($this->tableName, $field);
+            $mmTable = $fieldTca['MM'] ?? null;
 
-            if (!$value) {
-                // if $value is empty (should be '' because query param cannot be null) either
-                // an empty string or null is allowed
-                return $queryBuilder->expr()->or(
-                    $queryBuilder->expr()->isNull($field),
-                    $queryBuilder->expr()->eq($field, $queryBuilder->createNamedParameter(''))
-                );
+            if ($mmTable) {
+                if (!$value) {
+                    // $field contains the number of relations, so if $value is "" it should be 0
+                    $constraints[] = $queryBuilder->expr()->eq($field, 0);
+                } else {
+                    $queryBuilder = $queryBuilder->join(
+                        $this->tableName,
+                        $mmTable,
+                        $mmTable,
+                        $queryBuilder->expr()->eq(
+                            $mmTable . '.uid_local',
+                            $queryBuilder->quoteIdentifier($this->tableName . '.uid')
+                        ),
+                    );
+                    $constraints[] = $queryBuilder->expr()->eq(
+                        $mmTable . '.uid_foreign',
+                        $queryBuilder->createNamedParameter($value)
+                    );
+                }
             } else {
-                return $queryBuilder->expr()->eq($field, $queryBuilder->createNamedParameter($value));
+                if (!$value) {
+                    // if $value is empty (should be '' because query param cannot be null) either
+                    // an empty string or null is allowed
+                    $constraints[] = $queryBuilder->expr()->or(
+                        $queryBuilder->expr()->isNull($field),
+                        $queryBuilder->expr()->eq($field, $queryBuilder->createNamedParameter(''))
+                    );
+                } else {
+                    $constraints[] = $queryBuilder->expr()->eq($field, $queryBuilder->createNamedParameter($value));
+                }
             }
-        }, array_keys($values));
+        }
 
         $queryResult = $queryBuilder
             ->select('uid')
