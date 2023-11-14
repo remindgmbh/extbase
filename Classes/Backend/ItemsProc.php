@@ -219,16 +219,20 @@ class ItemsProc
 
         $currentValues = GeneralUtility::trimExplode(',', $row[$valueElementName], true);
 
-        $usedFields = array_reduce($sections, function (array $result, array $section) use ($currentValues, $valueElementName) {
-            $fields = $section[$valueElementName] ?? [];
-            $fields = is_array($fields) ? $fields : GeneralUtility::trimExplode(',', $fields, true);
-            foreach ($fields as $field) {
-                if (!in_array($field, $currentValues)) {
-                    $result[] = $field;
+        $usedFields = array_reduce(
+            $sections,
+            function (array $result, array $section) use ($currentValues, $valueElementName) {
+                $fields = $section[$valueElementName] ?? [];
+                $fields = is_array($fields) ? $fields : GeneralUtility::trimExplode(',', $fields, true);
+                foreach ($fields as $field) {
+                    if (!in_array($field, $currentValues)) {
+                        $result[] = $field;
+                    }
                 }
-            }
-            return $result;
-        }, []);
+                return $result;
+            },
+            []
+        );
 
         return $this->getModelProperties($cType, $currentValues, $usedFields);
     }
