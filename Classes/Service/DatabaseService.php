@@ -204,7 +204,7 @@ class DatabaseService
                         );
                     }
                 }
-                return $queryBuilder->expr()->and(...$valueConstraints);
+                $filterConstraints[] = $queryBuilder->expr()->and(...$valueConstraints);
             }
 
             $constraints[] = ($filter->getConjunction() === Conjunction::AND->value)
