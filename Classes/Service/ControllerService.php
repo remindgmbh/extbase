@@ -14,7 +14,6 @@ use Remind\Extbase\Event\ModifyFilterableListResultEvent;
 use Remind\Extbase\FlexForms\DetailSheets;
 use Remind\Extbase\FlexForms\FrontendFilterSheets;
 use Remind\Extbase\FlexForms\ListSheets;
-use Remind\Extbase\FlexForms\PropertyOverrideSheets;
 use Remind\Extbase\FlexForms\SelectionSheets;
 use Remind\Extbase\PageTitle\ExtbasePageTitleProvider;
 use Remind\Extbase\Service\Dto\DetailResult;
@@ -22,16 +21,12 @@ use Remind\Extbase\Service\Dto\FilterableListResult;
 use Remind\Extbase\Service\Dto\FilterValue;
 use Remind\Extbase\Service\Dto\FrontendFilter;
 use Remind\Extbase\Service\Dto\ListResult;
-use Remind\Extbase\Service\Dto\Property;
+use Remind\Extbase\Utility\ControllerUtility;
 use Remind\Extbase\Utility\Dto\Conjunction;
 use Remind\Extbase\Utility\Dto\DatabaseFilter;
 use Remind\Extbase\Utility\FilterUtility;
 use Remind\Extbase\Utility\PluginUtility;
-use TYPO3\CMS\Backend\Utility\BackendUtility;
-use TYPO3\CMS\Core\Database\Connection;
-use TYPO3\CMS\Core\Database\ConnectionPool;
 use TYPO3\CMS\Core\Pagination\SimplePagination;
-use TYPO3\CMS\Core\Service\FlexFormService;
 use TYPO3\CMS\Core\Utility\ArrayUtility;
 use TYPO3\CMS\Core\Utility\GeneralUtility;
 use TYPO3\CMS\Extbase\Configuration\ConfigurationManagerInterface;
@@ -41,9 +36,7 @@ use TYPO3\CMS\Extbase\Mvc\Web\RequestBuilder;
 use TYPO3\CMS\Extbase\Mvc\Web\Routing\UriBuilder;
 use TYPO3\CMS\Extbase\Pagination\QueryResultPaginator;
 use TYPO3\CMS\Extbase\Persistence\Generic\Query;
-use TYPO3\CMS\Extbase\Persistence\PersistenceManagerInterface;
 use TYPO3\CMS\Extbase\Persistence\RepositoryInterface;
-use TYPO3\CMS\Extbase\Utility\LocalizationUtility;
 use TYPO3\CMS\Frontend\ContentObject\ContentObjectRenderer;
 use TYPO3\CMS\Frontend\Controller\TypoScriptFrontendController;
 
@@ -55,6 +48,8 @@ class ControllerService
     private string $tableName;
     private string $filtersArgumentName;
     private bool $disableFilterCount;
+
+    /** @var Property[] $propertyOverrides */
     private array $propertyOverrides;
     private Request $request;
     private FilterableRepository $repository;
@@ -62,13 +57,11 @@ class ControllerService
     private ContentObjectRenderer $cObj;
 
     public function __construct(
-        private readonly PersistenceManagerInterface $persistenceManager,
         private readonly UriBuilder $uriBuilder,
-        private readonly ConnectionPool $connectionPool,
         private readonly EventDispatcherInterface $eventDispatcher,
         private readonly DatabaseService $databaseService,
-        private readonly FlexFormService $flexFormService,
         private readonly ExtbasePageTitleProvider $pageTitleProvider,
+        private readonly FlexFormSheetsService $flexFormSheetsService,
         ConfigurationManagerInterface $configurationManager,
         RequestBuilder $requestBuilder,
     ) {
@@ -86,7 +79,7 @@ class ControllerService
         $cType = strtolower($this->extensionName . '_' . $this->pluginName);
         $this->tableName = PluginUtility::getTableName($cType);
         $this->disableFilterCount = PluginUtility::getDisableFilterCount($cType);
-        $this->propertyOverrides = $this->getPropertyOverrides();
+        $this->propertyOverrides = $this->flexFormSheetsService->getPropertyOverrides($this->settings);
     }
 
     public function getFilterableList(
@@ -172,8 +165,10 @@ class ControllerService
         }
         $result->setItem($item);
 
-        $properties = $this->getProperties(
-            GeneralUtility::trimExplode(',', $this->settings[DetailSheets::PROPERTIES], true)
+        $properties = ControllerUtility::getProperties(
+            GeneralUtility::trimExplode(',', $this->settings[DetailSheets::PROPERTIES], true),
+            $this->propertyOverrides,
+            $this->tableName,
         );
         $result->setProperties($properties);
 
@@ -214,8 +209,10 @@ class ControllerService
         $orderDirection = $this->settings[ListSheets::ORDER_DIRECTION] ?? null;
         $itemsPerPage = (int) ($this->settings[ListSheets::ITEMS_PER_PAGE] ?? null);
 
-        $properties = $this->getProperties(
-            GeneralUtility::trimExplode(',', $this->settings[ListSheets::PROPERTIES], true)
+        $properties = ControllerUtility::getProperties(
+            GeneralUtility::trimExplode(',', $this->settings[ListSheets::PROPERTIES], true),
+            $this->propertyOverrides,
+            $this->tableName,
         );
         $result->setProperties($properties);
 
@@ -307,7 +304,7 @@ class ControllerService
 
             $exclusive = (bool) $filterSetting[FrontendFilterSheets::EXCLUSIVE];
 
-            $label = $this->getFieldLabel($filterName);
+            $label = ControllerUtility::getFieldLabel($filterName, $this->propertyOverrides, $this->tableName);
 
             $resetFilterLabel = $filterSetting[FrontendFilterSheets::RESET_FILTER_LABEL] ?? '';
 
@@ -366,10 +363,10 @@ class ControllerService
 
     private function getFrontendFilterValueLabel(string $filterName, array $filterValue): string
     {
-        $propertyOverrides = $this->propertyOverrides[$filterName] ?? [];
-        $valueOverrides = $propertyOverrides[PropertyOverrideSheets::VALUE_OVERRIDES] ?? [];
-        $prefix = $propertyOverrides[PropertyOverrideSheets::VALUE_PREFIX] ?? '';
-        $suffix = $propertyOverrides[PropertyOverrideSheets::VALUE_SUFFIX] ?? '';
+        $propertyOverrides = $this->propertyOverrides[$filterName] ?? null;
+        $valueOverrides = $propertyOverrides?->getOverrides() ?? [];
+        $prefix = $propertyOverrides?->getPrefix() ?? '';
+        $suffix = $propertyOverrides?->getSuffix() ?? '';
         return $valueOverrides[$filterValue['value']] ?? $prefix . $filterValue['label'] . $suffix;
     }
 
@@ -528,90 +525,6 @@ class ControllerService
         }
 
         return $result;
-    }
-
-    private function getProperties(array $properties): array
-    {
-        return array_map(function (string $property) {
-            // Overrides currently only work for properties with single fields
-            $valueOverrides = $this->propertyOverrides[$property][PropertyOverrideSheets::VALUE_OVERRIDES] ?? [];
-            $valueOverrides = array_reduce(
-                array_keys($valueOverrides),
-                function (array $result, string $jsonValue) use ($valueOverrides) {
-                    $value = json_decode($jsonValue, true);
-                    if (count($value) === 1) {
-                        $label = $valueOverrides[$jsonValue];
-                        $key = array_key_first($value);
-                        $result[$value[$key]] = $label;
-                    }
-                    return $result;
-                },
-                []
-            );
-            return new Property(
-                GeneralUtility::underscoredToLowerCamelCase($property),
-                $this->getFieldLabel($property),
-                $this->propertyOverrides[$property][PropertyOverrideSheets::VALUE_PREFIX] ?? '',
-                $this->propertyOverrides[$property][PropertyOverrideSheets::VALUE_SUFFIX] ?? '',
-                $valueOverrides,
-            );
-        }, $properties);
-    }
-
-    private function getPropertyOverrides(): array
-    {
-        $propertyOverrides = $this->settings[PropertyOverrideSheets::OVERRIDES] ?? [];
-
-        $contentElementId = $this->settings[PropertyOverrideSheets::REFERENCE] ?? null;
-
-        if ($contentElementId) {
-            $propertyOverrides = [];
-            $queryBuilder = $this->connectionPool->getQueryBuilderForTable('tt_content');
-            $result = $queryBuilder
-                ->select('pi_flexform')
-                ->from('tt_content')
-                ->where(
-                    $queryBuilder->expr()->eq(
-                        'uid',
-                        $queryBuilder->createNamedParameter($contentElementId, Connection::PARAM_INT)
-                    )
-                )
-                ->executeQuery();
-
-            $row = $result->fetchOne();
-            if ($row) {
-                $flexForm = $this->flexFormService->convertFlexFormContentToArray($row);
-                $propertyOverrides = $flexForm['settings'][PropertyOverrideSheets::OVERRIDES] ?? [];
-            }
-        }
-        return array_reduce($propertyOverrides, function (array $result, array $property) {
-            $property = $property[PropertyOverrideSheets::OVERRIDE];
-            $valueOverrides = json_decode($property[PropertyOverrideSheets::VALUE_OVERRIDES], true) ?? [];
-            $property[PropertyOverrideSheets::VALUE_OVERRIDES] = array_reduce(
-                $valueOverrides,
-                function (array $result, array $valueOverride) {
-                    $result[$valueOverride['value']] = $valueOverride['label'];
-                    return $result;
-                },
-                []
-            );
-            $result[$property[PropertyOverrideSheets::FIELDS]] = $property;
-            return $result;
-        }, []);
-    }
-
-    private function getFieldLabel(string $field)
-    {
-        $label = $this->propertyOverrides[$field][PropertyOverrideSheets::LABEL] ?? null;
-        if (!$label) {
-            $fields = GeneralUtility::trimExplode(',', $field, true);
-            $labels = array_map(function (string $field) {
-                $label = BackendUtility::getItemLabel($this->tableName, $field);
-                return str_starts_with($label, 'LLL:') ? LocalizationUtility::translate($label) : $label;
-            }, $fields);
-            $label = implode(', ', $labels);
-        }
-        return $label;
     }
 
     private function getRequest(): ServerRequestInterface

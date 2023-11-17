@@ -14,16 +14,62 @@ use TYPO3\CMS\Core\Database\Query\QueryBuilder;
 use TYPO3\CMS\Core\Database\Query\Restriction\DeletedRestriction;
 use TYPO3\CMS\Core\Database\Query\Restriction\WorkspaceRestriction;
 use TYPO3\CMS\Core\Domain\Repository\PageRepository;
+use TYPO3\CMS\Core\Service\FlexFormService;
 use TYPO3\CMS\Core\Utility\GeneralUtility;
 use TYPO3\CMS\Extbase\Utility\LocalizationUtility;
 
 class DatabaseService
 {
     private PageRepository $pageRepository;
+    private FlexFormService $flexFormService;
 
     public function __construct()
     {
         $this->pageRepository = GeneralUtility::makeInstance(PageRepository::class);
+        $this->flexFormService = GeneralUtility::makeInstance(FlexFormService::class);
+    }
+
+    public function getQueryBuilder(string $tableName): QueryBuilder
+    {
+        $queryBuilder = GeneralUtility::makeInstance(ConnectionPool::class)
+            ->getQueryBuilderForTable($tableName);
+
+        $queryBuilder->getRestrictions()
+            ->removeAll()
+            ->add(GeneralUtility::makeInstance(DeletedRestriction::class))
+            ->add(GeneralUtility::makeInstance(WorkspaceRestriction::class, $this->getBackendUser()?->workspace ?? 0));
+
+        return $queryBuilder;
+    }
+
+    public function getFlexFormByContentElementUid(int $uid): array
+    {
+        $queryBuilder = $this->getQueryBuilder('tt_content');
+        return $this->getFlexForm(
+            $queryBuilder,
+            $queryBuilder->expr()->eq(
+                'uid',
+                $queryBuilder->createNamedParameter($uid, Connection::PARAM_INT)
+            )
+        );
+    }
+
+    public function getFlexFormByPageUidAndCType(int $pageUid, string $cType): array
+    {
+        $queryBuilder = $this->getQueryBuilder('tt_content');
+        return $this->getFlexForm(
+            $queryBuilder,
+            $queryBuilder->expr()->and(
+                $queryBuilder->expr()->eq(
+                    'pid',
+                    $queryBuilder->createNamedParameter($pageUid, Connection::PARAM_INT)
+                ),
+                $queryBuilder->expr()->eq(
+                    'CType',
+                    $queryBuilder->createNamedParameter($cType)
+                )
+            )
+        );
     }
 
     public function getRecords(
@@ -147,6 +193,18 @@ class DatabaseService
         $result = array_unique($result, SORT_REGULAR);
 
         return $result;
+    }
+
+    private function getFlexForm(QueryBuilder $queryBuilder, CompositeExpression|string ...$predicates): array
+    {
+        $result = $queryBuilder
+            ->select('pi_flexform')
+            ->from('tt_content')
+            ->where(...$predicates)
+            ->executeQuery();
+
+        $row = $result->fetchOne();
+        return $row ? $this->flexFormService->convertFlexFormContentToArray($row) : [];
     }
 
     private function getPageConstraint(QueryBuilder $queryBuilder, string $tableName, array $pageIds): string
@@ -303,19 +361,6 @@ class DatabaseService
                     )
                 );
         }
-        return $queryBuilder;
-    }
-
-    private function getQueryBuilder(string $tableName): QueryBuilder
-    {
-        $queryBuilder = GeneralUtility::makeInstance(ConnectionPool::class)
-            ->getQueryBuilderForTable($tableName);
-
-        $queryBuilder->getRestrictions()
-            ->removeAll()
-            ->add(GeneralUtility::makeInstance(DeletedRestriction::class))
-            ->add(GeneralUtility::makeInstance(WorkspaceRestriction::class, $this->getBackendUser()?->workspace ?? 0));
-
         return $queryBuilder;
     }
 

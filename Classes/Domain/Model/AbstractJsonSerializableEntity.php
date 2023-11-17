@@ -6,6 +6,7 @@ namespace Remind\Extbase\Domain\Model;
 
 use FriendsOfTYPO3\Headless\Utility\FileUtility;
 use JsonSerializable;
+use Remind\Extbase\Service\Dto\Property;
 use TYPO3\CMS\Core\Utility\GeneralUtility;
 use TYPO3\CMS\Extbase\Configuration\ConfigurationManagerInterface;
 use TYPO3\CMS\Extbase\Domain\Model\FileReference;
@@ -58,5 +59,27 @@ abstract class AbstractJsonSerializableEntity extends AbstractEntity implements 
             }
         }
         return $result;
+    }
+
+    /**
+     * @param Property[] $properties
+     */
+    public function getProcessedProperties(array $properties): array
+    {
+        return array_reduce($properties, function (array $result, Property $property) {
+            $propertyName = $property->getName();
+            $value = $this->_getProperty($propertyName);
+            $field = GeneralUtility::camelCaseToLowerCaseUnderscored($propertyName);
+
+            $valueOverrides = $property->getOverrides();
+            $prefix = $property->getPrefix();
+            $suffix = $property->getSuffix();
+
+            $result[$field] = [
+                'label' => $property->getLabel(),
+                'value' => $valueOverrides[$value] ?? $prefix . $value . $suffix,
+            ];
+            return $result;
+        }, []);
     }
 }
