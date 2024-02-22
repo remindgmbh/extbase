@@ -54,6 +54,25 @@ class DatabaseService
         );
     }
 
+    public function getFieldByPageUidAndCType(string $field, int $pageUid, string $cType): mixed
+    {
+        $queryBuilder = $this->getQueryBuilder('tt_content');
+        return $this->getField(
+            $field,
+            $queryBuilder,
+            $queryBuilder->expr()->and(
+                $queryBuilder->expr()->eq(
+                    'pid',
+                    $queryBuilder->createNamedParameter($pageUid, Connection::PARAM_INT)
+                ),
+                $queryBuilder->expr()->eq(
+                    'CType',
+                    $queryBuilder->createNamedParameter($cType)
+                )
+            )
+        );
+    }
+
     public function getFlexFormByPageUidAndCType(int $pageUid, string $cType): array
     {
         $queryBuilder = $this->getQueryBuilder('tt_content');
@@ -197,14 +216,19 @@ class DatabaseService
 
     private function getFlexForm(QueryBuilder $queryBuilder, CompositeExpression|string ...$predicates): array
     {
+        $row = $this->getField('pi_flexform', $queryBuilder, ...$predicates);
+        return $row ? $this->flexFormService->convertFlexFormContentToArray($row) : [];
+    }
+
+    private function getField(string $field, QueryBuilder $queryBuilder, CompositeExpression|string ...$predicates): mixed
+    {
         $result = $queryBuilder
-            ->select('pi_flexform')
+            ->select($field)
             ->from('tt_content')
             ->where(...$predicates)
             ->executeQuery();
 
-        $row = $result->fetchOne();
-        return $row ? $this->flexFormService->convertFlexFormContentToArray($row) : [];
+        return $result->fetchOne();
     }
 
     private function getPageConstraint(QueryBuilder $queryBuilder, string $tableName, array $pageIds): string
