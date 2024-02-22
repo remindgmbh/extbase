@@ -77,7 +77,7 @@ abstract class AbstractJsonSerializableEntity extends AbstractEntity implements 
 
             $result[$field] = [
                 'label' => $property->getLabel(),
-                'value' => $valueOverrides[$value] ?? $prefix . $value . $suffix,
+                'value' => $valueOverrides[strval($value)] ?? $prefix . $value . $suffix,
             ];
             return $result;
         }, []);
