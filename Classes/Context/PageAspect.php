@@ -21,6 +21,8 @@ class PageAspect implements AspectInterface
         switch ($name) {
             case 'uid':
                 return $this->page['uid'];
+            case 'l10n_parent':
+                return $this->page['l10n_parent'];
         }
         throw new AspectPropertyNotFoundException(
             'Property "' . $name . '" not found in Aspect "' . __CLASS__ . '".',

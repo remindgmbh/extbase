@@ -303,7 +303,8 @@ class FilterValueMapper implements
 
     private function getFilters(): array
     {
-        $pageUid = $this->context->getPropertyFromAspect('page', 'uid');
+        $l10nParent = $this->context->getPropertyFromAspect('page', 'l10n_parent');
+        $pageUid = $l10nParent ? $l10nParent : $this->context->getPropertyFromAspect('page', 'uid');
         $queryBuilder = GeneralUtility::makeInstance(ConnectionPool::class)
             ->getQueryBuilderForTable('tt_content')
             ->from('tt_content');
@@ -322,7 +323,11 @@ class FilterValueMapper implements
                     $queryBuilder->expr()->eq(
                         'CType',
                         $queryBuilder->createNamedParameter($this->cType, PDO::PARAM_STR)
-                    )
+                    ),
+                    $queryBuilder->expr()->eq(
+                        'sys_language_uid',
+                        $queryBuilder->createNamedParameter($this->siteLanguage->getLanguageId())
+                    ),
                 )
             );
 
