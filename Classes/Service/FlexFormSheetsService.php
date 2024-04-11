@@ -21,9 +21,9 @@ class FlexFormSheetsService
      */
     public function getPropertyOverrides(array $settings, int $sysLanguageUid): array
     {
-        $propertyOverrides = $settings[PropertyOverrideSheets::OVERRIDES] ? $settings[PropertyOverrideSheets::OVERRIDES] : [];
+        $propertyOverrides = $settings[PropertyOverrideSheets::OVERRIDES] ?? null;
 
-        $contentElementId = $settings[PropertyOverrideSheets::REFERENCE] ? $settings[PropertyOverrideSheets::REFERENCE] : null;
+        $contentElementId = $settings[PropertyOverrideSheets::REFERENCE] ?? null;
 
         if ($contentElementId) {
             $propertyOverrides = [];
@@ -35,7 +35,7 @@ class FlexFormSheetsService
             }
         }
 
-        return array_reduce($propertyOverrides, function (array $result, array $property) {
+        return array_reduce($propertyOverrides ? $propertyOverrides : [], function (array $result, array $property) {
             $property = $property[PropertyOverrideSheets::OVERRIDE];
             $valueOverrides = json_decode($property[PropertyOverrideSheets::VALUE_OVERRIDES], true) ?? [];
 
