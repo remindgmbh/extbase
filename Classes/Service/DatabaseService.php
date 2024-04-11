@@ -42,14 +42,23 @@ class DatabaseService
         return $queryBuilder;
     }
 
-    public function getFlexFormByContentElementUid(int $uid): array
+    public function getFlexFormByContentElementUid(int $uid, int $sysLanguageUid): array
     {
         $queryBuilder = $this->getQueryBuilder('tt_content');
         return $this->getFlexForm(
             $queryBuilder,
-            $queryBuilder->expr()->eq(
-                'uid',
-                $queryBuilder->createNamedParameter($uid, Connection::PARAM_INT)
+            $queryBuilder->expr()->and(
+                $queryBuilder->expr()->or(
+                    $queryBuilder->expr()->eq(
+                        'uid',
+                        $queryBuilder->createNamedParameter($uid, Connection::PARAM_INT)
+                    ),
+                    $queryBuilder->expr()->eq(
+                        'l18n_parent',
+                        $queryBuilder->createNamedParameter($uid, Connection::PARAM_INT)
+                    ),
+                ),
+                $this->getLanguageConstraint($queryBuilder, 'tt_content', $sysLanguageUid)
             )
         );
     }

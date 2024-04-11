@@ -49,7 +49,7 @@ class ControllerService
     private string $filtersArgumentName;
     private bool $disableFilterCount;
 
-    /** @var Property[] $propertyOverrides */
+    /** @var \Remind\Extbase\Service\Dto\Property[] $propertyOverrides */
     private array $propertyOverrides;
     private Request $request;
     private FilterableRepository $repository;
@@ -79,7 +79,7 @@ class ControllerService
         $cType = strtolower($this->extensionName . '_' . $this->pluginName);
         $this->tableName = PluginUtility::getTableName($cType);
         $this->disableFilterCount = PluginUtility::getDisableFilterCount($cType);
-        $this->propertyOverrides = $this->flexFormSheetsService->getPropertyOverrides($this->settings);
+        $this->propertyOverrides = $this->flexFormSheetsService->getPropertyOverrides($this->settings, $this->cObj->data['sys_language_uid']);
     }
 
     public function getFilterableList(

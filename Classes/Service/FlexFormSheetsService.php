@@ -19,7 +19,7 @@ class FlexFormSheetsService
     /**
      * @return Property[]
      */
-    public function getPropertyOverrides(array $settings): array
+    public function getPropertyOverrides(array $settings, int $sysLanguageUid): array
     {
         $propertyOverrides = $settings[PropertyOverrideSheets::OVERRIDES] ?? [];
 
@@ -28,7 +28,7 @@ class FlexFormSheetsService
         if ($contentElementId) {
             $propertyOverrides = [];
 
-            $flexForm = $this->databaseService->getFlexFormByContentElementUid((int) $contentElementId);
+            $flexForm = $this->databaseService->getFlexFormByContentElementUid((int) $contentElementId, $sysLanguageUid);
 
             if (!empty($flexForm)) {
                 $propertyOverrides = $flexForm['settings'][PropertyOverrideSheets::OVERRIDES] ?? [];
