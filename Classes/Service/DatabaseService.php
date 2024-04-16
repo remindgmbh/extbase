@@ -172,13 +172,38 @@ class DatabaseService
 
             if ($foreignTable) {
                 $foreignTables[$foreignTable] = $fieldName;
+
+                $aliasPrefix = 'original';
+
                 $queryBuilder = $this->addQueryBuilderJoins(
                     $queryBuilder,
                     $tableName,
                     $foreignTable,
                     $fieldName,
-                    $mmTable
+                    $mmTable,
+                    $aliasPrefix
                 );
+
+                // required to retrieve localized title fields
+                $queryBuilder = $queryBuilder->leftJoin(
+                    $aliasPrefix . $foreignTable,
+                    $foreignTable,
+                    $foreignTable,
+                    strval($queryBuilder->expr()->and(
+                        $this->getLanguageConstraint($queryBuilder, $foreignTable, $sysLanguageUid),
+                        $queryBuilder->expr()->or(
+                            $queryBuilder->expr()->eq(
+                                $foreignTable . '.uid',
+                                $queryBuilder->quoteIdentifier($foreignTable . '.uid')
+                            ),
+                            $queryBuilder->expr()->eq(
+                                $foreignTable . '.uid',
+                                $queryBuilder->quoteIdentifier($foreignTable . '.l10n_parent')
+                            ),
+                        )
+                    ))
+                );
+
                 $foreignTableSelectFields = BackendUtility::getCommonSelectFields($foreignTable);
                 $foreignTableSelectFields = GeneralUtility::trimExplode(',', $foreignTableSelectFields, true);
                 $foreignTableSelectFields = array_map(function (string $field) use ($foreignTable) {
