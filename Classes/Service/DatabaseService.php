@@ -63,7 +63,7 @@ class DatabaseService
         );
     }
 
-    public function getFieldByPageUidAndCType(string $field, int $pageUid, string $cType): mixed
+    public function getFieldByPageUidAndCType(string $field, int $pageUid, string $cType, int $sysLanguageUid): mixed
     {
         $queryBuilder = $this->getQueryBuilder('tt_content');
         return $this->getField(
@@ -77,12 +77,13 @@ class DatabaseService
                 $queryBuilder->expr()->eq(
                     'CType',
                     $queryBuilder->createNamedParameter($cType)
-                )
+                ),
+                $this->getLanguageConstraint($queryBuilder, 'tt_content', $sysLanguageUid)
             )
         );
     }
 
-    public function getFlexFormByPageUidAndCType(int $pageUid, string $cType): array
+    public function getFlexFormByPageUidAndCType(int $pageUid, string $cType, int $sysLanguageUid): array
     {
         $queryBuilder = $this->getQueryBuilder('tt_content');
         return $this->getFlexForm(
@@ -95,7 +96,8 @@ class DatabaseService
                 $queryBuilder->expr()->eq(
                     'CType',
                     $queryBuilder->createNamedParameter($cType)
-                )
+                ),
+                $this->getLanguageConstraint($queryBuilder, 'tt_content', $sysLanguageUid)
             )
         );
     }
