@@ -16,7 +16,6 @@ use TYPO3\CMS\Core\Database\Query\Restriction\WorkspaceRestriction;
 use TYPO3\CMS\Core\Domain\Repository\PageRepository;
 use TYPO3\CMS\Core\Service\FlexFormService;
 use TYPO3\CMS\Core\Utility\GeneralUtility;
-use TYPO3\CMS\Extbase\Utility\LocalizationUtility;
 
 class DatabaseService
 {
@@ -345,7 +344,7 @@ class DatabaseService
                         } else {
                             $data['label'][] = $value
                                 ? $value
-                                : LocalizationUtility::translate('emptyValue', 'rmnd_extbase');
+                                : '';
                             $data['value'][$fieldName] = $value;
                         }
                     }
@@ -355,7 +354,7 @@ class DatabaseService
                     $value = $foreignTableRow['uid'] ?? '';
                     $label = $value
                         ? $this->getRecordTitle($table, $foreignTableRow)
-                        : LocalizationUtility::translate('emptyValue', 'rmnd_extbase');
+                        : '';
                     $data['label'][] = $label;
                     $data['value'][$foreignTables[$table]] = $value;
                     unset($data['foreignTableRows']);
