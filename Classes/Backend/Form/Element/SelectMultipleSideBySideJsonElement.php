@@ -8,6 +8,7 @@ use TYPO3\CMS\Backend\Form\Element\AbstractFormElement;
 use TYPO3\CMS\Core\Page\JavaScriptModuleInstruction;
 use TYPO3\CMS\Core\Utility\GeneralUtility;
 use TYPO3\CMS\Core\Utility\StringUtility;
+use TYPO3\CMS\Extbase\Utility\LocalizationUtility;
 
 class SelectMultipleSideBySideJsonElement extends AbstractFormElement
 {
@@ -56,7 +57,12 @@ class SelectMultipleSideBySideJsonElement extends AbstractFormElement
             $value = $item['value'];
             return [
                 'value' => $value,
-                'label' => $this->appendValueToLabelInDebugMode($label, $value),
+                'label' => $this->appendValueToLabelInDebugMode(
+                    $label
+                        ? $label
+                        : LocalizationUtility::translate('emptyValue', 'rmnd_extbase'),
+                    $value
+                ),
             ];
         }, $possibleItems);
 

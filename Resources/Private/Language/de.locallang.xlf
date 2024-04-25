@@ -33,6 +33,9 @@
             <trans-unit id="detail.record">
                 <target>Datensatz</target>
             </trans-unit>
+            <trans-unit id="emptyValue">
+                <target>(leer)</target>
+            </trans-unit>
             <trans-unit id="filters.conjunction">
                 <target>Verknüpfungs-Modus</target>
             </trans-unit>

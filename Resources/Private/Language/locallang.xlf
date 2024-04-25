@@ -33,6 +33,9 @@
             <trans-unit id="detail.record">
                 <source>Record</source>
             </trans-unit>
+            <trans-unit id="emptyValue">
+                <source>(empty)</source>
+            </trans-unit>
             <trans-unit id="filters.conjunction">
                 <source>Conjunction Mode</source>
             </trans-unit>
