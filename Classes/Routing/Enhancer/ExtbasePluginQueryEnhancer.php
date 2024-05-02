@@ -214,6 +214,7 @@ class ExtbasePluginQueryEnhancer extends AbstractEnhancer implements RoutingEnha
     private function cTypeExistsOnPage(Route $route): bool
     {
         $page = $route->getOption('_page');
-        return (bool) $this->databaseService->getFieldByPageUidAndCType('uid', $page['uid'], $this->cType, $page['sys_language_uid']);
+        $pageUid = $page['l10n_parent'] ? $page['l10n_parent'] : $page['uid'];
+        return (bool) $this->databaseService->getFieldByPageUidAndCType('uid', $pageUid, $this->cType, $page['sys_language_uid']);
     }
 }
