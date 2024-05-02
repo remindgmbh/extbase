@@ -7,21 +7,26 @@ namespace Remind\Extbase\Context;
 use TYPO3\CMS\Core\Context\AspectInterface;
 use TYPO3\CMS\Core\Context\Exception\AspectPropertyNotFoundException;
 
-class PageAspect implements AspectInterface
+class ExtbaseAspect implements AspectInterface
 {
     protected array $page;
 
-    public function __construct(array $page)
+    protected string $cType;
+
+    public function __construct(array $page, string $cType)
     {
         $this->page = $page;
+        $this->cType = $cType;
     }
 
     public function get(string $name)
     {
         switch ($name) {
-            case 'uid':
+            case 'CType':
+                return $this->cType;
+            case 'page.uid':
                 return $this->page['uid'];
-            case 'l10n_parent':
+            case 'page.l10n_parent':
                 return $this->page['l10n_parent'];
         }
         throw new AspectPropertyNotFoundException(

@@ -36,7 +36,6 @@ class FilterValueMapper implements
     use SiteAccessorTrait;
 
     private string $tableName;
-    private string $cType;
     private array $parameters;
     private array $aspects;
     private AspectFactory $aspectFactory;
@@ -45,7 +44,6 @@ class FilterValueMapper implements
     public function __construct(array $settings)
     {
         $tableName = $settings['tableName'] ?? null;
-        $cType = $settings['cType'] ?? null;
         $parameters = $settings['parameters'] ?? [];
         $aspects = $settings['aspects'] ?? [];
 
@@ -53,13 +51,6 @@ class FilterValueMapper implements
             throw new InvalidArgumentException(
                 'tableName must be string',
                 1674134308
-            );
-        }
-
-        if (!is_string($cType)) {
-            throw new InvalidArgumentException(
-                'cType must be string',
-                1678105306
             );
         }
 
@@ -78,7 +69,6 @@ class FilterValueMapper implements
         }
 
         $this->tableName = $tableName;
-        $this->cType = $cType;
         $this->parameters = $parameters;
         $this->aspects = $aspects;
         $this->aspectFactory = GeneralUtility::makeInstance(AspectFactory::class);
@@ -303,8 +293,9 @@ class FilterValueMapper implements
 
     private function getFilters(): array
     {
-        $l10nParent = $this->context->getPropertyFromAspect('page', 'l10n_parent');
-        $pageUid = $l10nParent ? $l10nParent : $this->context->getPropertyFromAspect('page', 'uid');
+        $l10nParent = $this->context->getPropertyFromAspect('extbase', 'page.l10n_parent');
+        $pageUid = $l10nParent ? $l10nParent : $this->context->getPropertyFromAspect('extbase', 'page.uid');
+        $cType = $this->context->getPropertyFromAspect('extbase', 'CType');
         $queryBuilder = GeneralUtility::makeInstance(ConnectionPool::class)
             ->getQueryBuilderForTable('tt_content')
             ->from('tt_content');
@@ -322,7 +313,7 @@ class FilterValueMapper implements
                     ),
                     $queryBuilder->expr()->eq(
                         'CType',
-                        $queryBuilder->createNamedParameter($this->cType, PDO::PARAM_STR)
+                        $queryBuilder->createNamedParameter($cType, PDO::PARAM_STR)
                     ),
                     $queryBuilder->expr()->eq(
                         'sys_language_uid',

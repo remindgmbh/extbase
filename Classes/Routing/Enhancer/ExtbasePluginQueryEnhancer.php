@@ -5,7 +5,8 @@ declare(strict_types=1);
 namespace Remind\Extbase\Routing\Enhancer;
 
 use InvalidArgumentException;
-use Remind\Extbase\Context\PageAspect;
+use Remind\Extbase\Context\ExtbaseAspect;
+use Remind\Extbase\Service\DatabaseService;
 use TYPO3\CMS\Core\Context\ContextAwareInterface;
 use TYPO3\CMS\Core\Routing\Aspect\MappableAspectInterface;
 use TYPO3\CMS\Core\Routing\Aspect\ModifiableAspectInterface;
@@ -16,11 +17,10 @@ use TYPO3\CMS\Core\Routing\PageArguments;
 use TYPO3\CMS\Core\Routing\Route;
 use TYPO3\CMS\Core\Routing\RouteCollection;
 use TYPO3\CMS\Core\Routing\RouteNotFoundException;
+use TYPO3\CMS\Core\Utility\GeneralUtility;
 
 class ExtbasePluginQueryEnhancer extends AbstractEnhancer implements RoutingEnhancerInterface, ResultingInterface
 {
-    private const LABEL_ASPECT_SUFFIX = '_label';
-
     protected string $namespace;
 
     protected string $controllerName;
@@ -33,22 +33,17 @@ class ExtbasePluginQueryEnhancer extends AbstractEnhancer implements RoutingEnha
 
     protected array $parameters;
 
+    protected DatabaseService $databaseService;
+
+    protected string $cType;
+
     public function __construct(array $configuration)
     {
         $this->defaults = $configuration['defaults'] ?? [];
         $this->types = $configuration['types'] ?? [0];
         $this->parameters = $configuration['parameters'] ?? [];
-
-        if (
-            !isset($configuration['limitToPages']) ||
-            !is_array($configuration['limitToPages']) ||
-            empty($configuration['limitToPages'])
-        ) {
-            throw new InvalidArgumentException(
-                'QueryExtbase route enhancer requires \'limitToPages\' configuration option to be set!',
-                1663321859
-            );
-        }
+        $this->databaseService = GeneralUtility::makeInstance(DatabaseService::class);
+        $this->cType = strtolower($configuration['extension'] . '_' . $configuration['plugin']);
 
         if (isset($configuration['extension'], $configuration['plugin'])) {
             $extensionName = $configuration['extension'];
@@ -77,6 +72,13 @@ class ExtbasePluginQueryEnhancer extends AbstractEnhancer implements RoutingEnha
 
     public function enhanceForMatching(RouteCollection $collection): void
     {
+        /** @var Route $defaultPageRoute */
+        $defaultPageRoute = $collection->get('default');
+
+        if (!$this->cTypeExistsOnPage($defaultPageRoute)) {
+            return;
+        }
+
         $parameters = $GLOBALS['_GET'];
 
         $originalKeys = [];
@@ -97,9 +99,6 @@ class ExtbasePluginQueryEnhancer extends AbstractEnhancer implements RoutingEnha
         if (count(array_diff($availableKeys, $usedKeys)) === count($availableKeys)) {
             return;
         }
-
-        /** @var Route $defaultPageRoute */
-        $defaultPageRoute = $collection->get('default');
 
         $defaultPageRoute->setOption('_enhancer', $this);
 
@@ -137,6 +136,10 @@ class ExtbasePluginQueryEnhancer extends AbstractEnhancer implements RoutingEnha
 
         /** @var Route $defaultPageRoute */
         $defaultPageRoute = $collection->get('default');
+
+        if (!$this->cTypeExistsOnPage($defaultPageRoute)) {
+            return;
+        }
 
         $namespaceParameters = $parameters[$this->namespace];
         unset($namespaceParameters['action']);
@@ -203,8 +206,14 @@ class ExtbasePluginQueryEnhancer extends AbstractEnhancer implements RoutingEnha
         $aspect = $aspect instanceof MappableAspectInterface ? $aspect : null;
         if ($aspect instanceof ContextAwareInterface) {
             $page = $route->getOption('_page');
-            $aspect->getContext()->setAspect('page', new PageAspect($page));
+            $aspect->getContext()->setAspect('extbase', new ExtbaseAspect($page, $this->cType));
         }
         return $aspect;
+    }
+
+    private function cTypeExistsOnPage(Route $route): bool
+    {
+        $page = $route->getOption('_page');
+        return (bool) $this->databaseService->getFieldByPageUidAndCType('uid', $page['uid'], $this->cType, $page['sys_language_uid']);
     }
 }
