@@ -13,7 +13,7 @@ class SiteConfigurationLoaded
     {
         $config = $event->getConfiguration();
 
-        foreach ($config['routeEnhancers'] as &$routeEnhancer) {
+        foreach ($config['routeEnhancers'] ?? [] as &$routeEnhancer) {
             $limitToPages = $routeEnhancer['limitToPages'] ?? null;
             if (is_string($limitToPages)) {
                 $routeEnhancer['limitToPages'] = GeneralUtility::trimExplode(',', $limitToPages, true);
