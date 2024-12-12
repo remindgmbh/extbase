@@ -15,17 +15,19 @@ use TYPO3\CMS\Extbase\Utility\LocalizationUtility;
 class ValueLabelPairsElement extends AbstractFormElement
 {
     /**
-     * Default field information enabled for this element.
-     *
-     * @var array
+     * @var mixed[]
      */
+    // phpcs:ignore SlevomatCodingStandard.TypeHints.PropertyTypeHint.MissingNativeTypeHint
     protected $defaultFieldInformation = [
         'tcaDescription' => [
             'renderType' => 'tcaDescription',
         ],
     ];
 
-    public function render()
+    /**
+     * @return mixed[]
+     */
+    public function render(): array
     {
         $uriBuilder = GeneralUtility::makeInstance(UriBuilder::class);
         $uri = $uriBuilder->buildUriFromRoute(CustomValueEditorController::ROUTE);
@@ -39,17 +41,17 @@ class ValueLabelPairsElement extends AbstractFormElement
 
         $attributes = array_merge(
             [
-                'id' => $fieldId,
-                'name' => htmlspecialchars($parameterArray['itemFormElName']),
-                'data-formengine-validation-rules' => $this->getValidationDataAsJsonString($config),
-                'data-formengine-input-name' => htmlspecialchars($parameterArray['itemFormElName']),
-                'wrap' => (string)(($config['wrap'] ?? 'virtual') ?: 'virtual'),
-                'hidden' => 'true',
                 'class' => implode(' ', [
                     'form-control',
                     't3js-formengine-textarea',
                     'formengine-textarea',
                 ]),
+                'data-formengine-input-name' => htmlspecialchars($parameterArray['itemFormElName']),
+                'data-formengine-validation-rules' => $this->getValidationDataAsJsonString($config),
+                'hidden' => 'true',
+                'id' => $fieldId,
+                'name' => htmlspecialchars($parameterArray['itemFormElName']),
+                'wrap' => (string)($config['wrap'] ?? 'virtual' ?: 'virtual'),
             ],
             $this->getOnFieldChangeAttrs('change', $parameterArray['fieldChangeFunc'] ?? [])
         );
@@ -65,16 +67,16 @@ class ValueLabelPairsElement extends AbstractFormElement
             $labelKey = $item['label'];
             $value = $item['value'];
             return [
-                'value' => $value,
+                'defaultLabel' => str_starts_with($labelKey, 'LLL:')
+                    ? LocalizationUtility::translate($labelKey, null, null, $languageCode) ?? $labelKey
+                    : $labelKey,
                 'label' => $this->appendValueToLabelInDebugMode(
                     str_starts_with($labelKey, 'LLL:')
                         ? LocalizationUtility::translate($labelKey) ?? $labelKey
                         : $labelKey,
                     $value,
                 ),
-                'defaultLabel' => str_starts_with($labelKey, 'LLL:')
-                    ? LocalizationUtility::translate($labelKey, null, null, $languageCode) ?? $labelKey
-                    : $labelKey,
+                'value' => $value,
             ];
         }, $possibleItems);
         $itemProps = $config['itemProps'] ?? [];
@@ -82,8 +84,8 @@ class ValueLabelPairsElement extends AbstractFormElement
             $label = $item['label'];
             $value = $item['value'];
             return [
-                'value' => $value,
                 'label' => $this->appendValueToLabelInDebugMode($label, $value),
+                'value' => $value,
             ];
         }, $itemProps);
 
@@ -99,10 +101,10 @@ class ValueLabelPairsElement extends AbstractFormElement
             sprintf(
                 '<typo3-backend-value-label-pairs-element %s></typo3-backend-value-label-pairs-element>',
                 GeneralUtility::implodeAttributes([
+                    'customValueEditorUrl' => (string) $uri,
                     'dataId' => $attributes['id'],
-                    'possibleItems' => json_encode($possibleItems ?? []),
-                    'itemProps' => json_encode($itemProps),
-                    'customValueEditorUrl' => $uri,
+                    'itemProps' => json_encode($itemProps) ?: '[]',
+                    'possibleItems' => json_encode($possibleItems) ?: '[]',
                 ], true),
             ),
             sprintf(
@@ -118,10 +120,8 @@ class ValueLabelPairsElement extends AbstractFormElement
         $resultArray['javaScriptModules'][] = JavaScriptModuleInstruction::create(
             '@remind/extbase/backend/element/value-label-pairs-element.js'
         );
-        $resultArray
-            ['additionalInlineLanguageLabelFiles'][] = 'EXT:rmnd_extbase/Resources/Private/Language/locallang.xlf';
-        $resultArray
-            ['additionalInlineLanguageLabelFiles'][] = 'EXT:core/Resources/Private/Language/locallang_core.xlf';
+        $resultArray['additionalInlineLanguageLabelFiles'][] = 'EXT:rmnd_extbase/Resources/Private/Language/locallang.xlf';
+        $resultArray['additionalInlineLanguageLabelFiles'][] = 'EXT:core/Resources/Private/Language/locallang_core.xlf';
 
         $resultArray['html'] = implode(LF, $html);
         return $resultArray;
@@ -129,7 +129,11 @@ class ValueLabelPairsElement extends AbstractFormElement
 
     protected function appendValueToLabelInDebugMode(string|int $label, string|int $value): string
     {
-        if ($value !== '' && $this->getBackendUser()->shallDisplayDebugInformation() && $value !== $label) {
+        if (
+            $value !== '' &&
+            $this->getBackendUser()->shallDisplayDebugInformation() &&
+            $value !== $label
+        ) {
             return trim($label . ' [' . $value . ']');
         }
 

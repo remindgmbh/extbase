@@ -11,6 +11,11 @@ use TYPO3\CMS\Extbase\Utility\LocalizationUtility;
 
 class ControllerUtility
 {
+    /**
+     * @param mixed[] $propertyNames
+     * @param mixed[] $propertyOverrides
+     * @return Property[]
+     */
     public static function getProperties(array $propertyNames, array $propertyOverrides, string $tableName): array
     {
         return array_map(function (string $property) use ($propertyOverrides, $tableName) {
@@ -19,8 +24,8 @@ class ControllerUtility
             $valueOverrides = $propertyOverride?->getOverrides() ?? [];
             $valueOverrides = array_reduce(
                 array_keys($valueOverrides),
-                function (array $result, string $jsonValue) use ($valueOverrides) {
-                    $value = json_decode($jsonValue, true);
+                function (array $result, int|string $jsonValue) use ($valueOverrides) {
+                    $value = json_decode((string) $jsonValue, true);
                     if (count($value) === 1) {
                         $label = $valueOverrides[$jsonValue];
                         $key = array_key_first($value);
@@ -43,14 +48,14 @@ class ControllerUtility
     /**
      * @param Property[] $propertyOverrides
      */
-    public static function getFieldLabel(string $field, array $propertyOverrides, string $tableName)
+    public static function getFieldLabel(string $field, array $propertyOverrides, string $tableName): string
     {
         $propertyOverride = $propertyOverrides[$field] ?? null;
         $label = $propertyOverride?->getLabel() ?? null;
         if (!$label) {
             $fields = GeneralUtility::trimExplode(',', $field, true);
             $labels = array_map(function (string $field) use ($tableName) {
-                $label = BackendUtility::getItemLabel($tableName, $field);
+                $label = BackendUtility::getItemLabel($tableName, $field) ?? '';
                 return str_starts_with($label, 'LLL:') ? LocalizationUtility::translate($label) : $label;
             }, $fields);
             $label = implode(', ', $labels);

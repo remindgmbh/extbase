@@ -1,12 +1,17 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Remind\Extbase\Backend\Form\Container;
 
 use TYPO3\CMS\Backend\Form\Container\FlexFormContainerContainer as BaseFlexFormContainerContainer;
 
 class FlexFormContainerContainer extends BaseFlexFormContainerContainer
 {
-    public function render()
+    /**
+     * @return mixed[]
+     */
+    public function render(): array
     {
         $resultArray = parent::render();
 

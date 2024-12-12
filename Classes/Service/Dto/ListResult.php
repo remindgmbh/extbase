@@ -8,6 +8,9 @@ use TYPO3\CMS\Core\Pagination\PaginationInterface;
 
 class ListResult
 {
+    /**
+     * @var \Traversable<mixed, mixed>|array<mixed>|null
+     */
     protected ?iterable $paginatedItems = null;
 
     protected ?PaginationInterface $pagination = null;
@@ -21,12 +24,17 @@ class ListResult
     /** @var Property[] $properties */
     protected ?array $properties = [];
 
-
+    /**
+     * @return \Traversable<mixed, mixed>|array<mixed>|null
+     */
     public function getPaginatedItems(): ?iterable
     {
         return $this->paginatedItems;
     }
 
+    /**
+     * @param \Traversable<mixed, mixed>|array<mixed>|null $paginatedItems
+     */
     public function setPaginatedItems(?iterable $paginatedItems): self
     {
         $this->paginatedItems = $paginatedItems;

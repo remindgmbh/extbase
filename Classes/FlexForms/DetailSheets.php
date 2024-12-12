@@ -16,24 +16,40 @@ class DetailSheets
     public const SOURCE_RECORD = 'record';
     private const LOCALLANG = 'LLL:EXT:rmnd_extbase/Resources/Private/Language/locallang.xlf:';
 
+    /**
+     * @return mixed[]
+     */
     public static function getSheets(): array
     {
         return [
             self::SHEET_ID => [
                 'ROOT' => [
-                    'sheetTitle' => self::LOCALLANG . 'detail',
-                    'type' => 'array',
                     'el' => [
-                        'settings.' . self::SOURCE => [
-                            'label' => self::LOCALLANG . 'detail.source',
-                            'onChange' => 'reload',
+                        'settings.' . self::PROPERTIES => [
                             'config' => [
+                                'itemsProcFunc' => ItemsProc::class . '->getDetailProperties',
+                                'multiple' => '0',
+                                'renderType' => 'selectMultipleSideBySide',
                                 'type' => 'select',
+                            ],
+                            'description' => self::LOCALLANG . 'detail.properties.description',
+                            'label' => self::LOCALLANG . 'detail.properties',
+                        ],
+                        'settings.' . self::RECORD => [
+                            'config' => [
+                                'itemsProcFunc' => ItemsProc::class . '->getDetailRecords',
+                                'maxitems' => '1',
+                                'minitems' => '0',
+                                'multiple' => '0',
                                 'renderType' => 'selectSingle',
                                 'size' => '1',
-                                'minitems' => '0',
-                                'maxitems' => '1',
-                                'multiple' => '0',
+                                'type' => 'select',
+                            ],
+                            'displayCond' => 'FIELD:settings.' . self::SOURCE . ':=:' . self::SOURCE_RECORD,
+                            'label' => self::LOCALLANG . 'detail.record',
+                        ],
+                        'settings.' . self::SOURCE => [
+                            'config' => [
                                 'items' => [
                                    [
                                         'label' => self::LOCALLANG . 'detail.source.default',
@@ -45,32 +61,19 @@ class DetailSheets
                                     ],
                                 ],
                                 'itemsProcFunc' => ItemsProc::class . '->getDetailSources',
-                            ],
-                        ],
-                        'settings.' . self::RECORD => [
-                            'label' => self::LOCALLANG . 'detail.record',
-                            'displayCond' => 'FIELD:settings.' . self::SOURCE . ':=:' . self::SOURCE_RECORD,
-                            'config' => [
-                                'type' => 'select',
+                                'maxitems' => '1',
+                                'minitems' => '0',
+                                'multiple' => '0',
                                 'renderType' => 'selectSingle',
                                 'size' => '1',
-                                'minitems' => '0',
-                                'maxitems' => '1',
-                                'multiple' => '0',
-                                'itemsProcFunc' => ItemsProc::class . '->getDetailRecords',
-                            ],
-                        ],
-                        'settings.' . self::PROPERTIES => [
-                            'label' => self::LOCALLANG . 'detail.properties',
-                            'description' => self::LOCALLANG . 'detail.properties.description',
-                            'config' => [
                                 'type' => 'select',
-                                'renderType' => 'selectMultipleSideBySide',
-                                'multiple' => '0',
-                                'itemsProcFunc' => ItemsProc::class . '->getDetailProperties',
                             ],
+                            'label' => self::LOCALLANG . 'detail.source',
+                            'onChange' => 'reload',
                         ],
                     ],
+                    'sheetTitle' => self::LOCALLANG . 'detail',
+                    'type' => 'array',
                 ],
             ],
         ];

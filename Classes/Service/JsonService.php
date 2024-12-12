@@ -18,6 +18,9 @@ use TYPO3\CMS\Extbase\Mvc\Web\Routing\UriBuilder;
 
 class JsonService
 {
+    /**
+     * @var mixed[]
+     */
     private array $settings = [];
 
     public function __construct(
@@ -34,6 +37,9 @@ class JsonService
         );
     }
 
+    /**
+     * @return mixed[]
+     */
     public function serializeList(
         ListResult $listResult,
         int $page,
@@ -50,7 +56,7 @@ class JsonService
             );
         }
 
-        $items = iterator_to_array($listResult->getPaginatedItems());
+        $items = iterator_to_array($listResult->getPaginatedItems() ?? []);
         $serializedItems = $this->serializeListItems($items, $detailActionName, $detailUidArgument);
 
         return [
@@ -62,6 +68,9 @@ class JsonService
         ];
     }
 
+    /**
+     * @return mixed[]
+     */
     public function serializeFilterableList(
         FilterableListResult $listResult,
         int $page,
@@ -74,6 +83,10 @@ class JsonService
         return $result;
     }
 
+    /**
+     * @param AbstractEntity[] $items
+     * @return mixed[]
+     */
     private function serializeListItems(array $items, string $detailActionName, string $detailUidArgument): array
     {
         return array_map(function (AbstractEntity $item) use ($detailActionName, $detailUidArgument) {
@@ -86,7 +99,7 @@ class JsonService
                     ]
                 );
             }
-            $serializedItem = json_decode(json_encode($item), true);
+            $serializedItem = json_decode(json_encode($item) ?: '', true) ?? [];
             $link = $this->uriBuilder
                 ->reset()
                 ->setTargetPageUid((int) ($this->settings[ListSheets::DETAIL_PAGE] ?? null))

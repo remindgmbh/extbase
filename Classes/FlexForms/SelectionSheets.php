@@ -12,26 +12,29 @@ class SelectionSheets
     public const RECORDS = 'records';
     private const LOCALLANG = 'LLL:EXT:rmnd_extbase/Resources/Private/Language/locallang.xlf:';
 
+    /**
+     * @return mixed[]
+     */
     public static function getSheets(): array
     {
         return [
             self::SHEET_ID => [
                 'ROOT' => [
-                    'sheetTitle' => self::LOCALLANG . 'selection',
-                    'type' => 'array',
                     'el' => [
                         'settings.' . self::RECORDS => [
-                            'label' => self::LOCALLANG . 'selection.records',
                             'config' => [
-                                'type' => 'select',
-                                'renderType' => 'selectMultipleSideBySide',
-                                'size' => '7',
+                                'itemsProcFunc' => ItemsProc::class . '->getSelectionRecords',
                                 'minitems' => '0',
                                 'multiple' => '0',
-                                'itemsProcFunc' => ItemsProc::class . '->getSelectionRecords',
+                                'renderType' => 'selectMultipleSideBySide',
+                                'size' => '7',
+                                'type' => 'select',
                             ],
+                            'label' => self::LOCALLANG . 'selection.records',
                         ],
                     ],
+                    'sheetTitle' => self::LOCALLANG . 'selection',
+                    'type' => 'array',
                 ],
             ],
         ];

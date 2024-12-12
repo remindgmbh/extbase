@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 use Remind\Extbase\Controller\CustomValueEditorController;
 
 return [

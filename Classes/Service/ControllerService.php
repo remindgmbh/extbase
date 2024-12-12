@@ -42,19 +42,31 @@ use TYPO3\CMS\Frontend\Controller\TypoScriptFrontendController;
 
 class ControllerService
 {
+    /**
+     * @var mixed[]
+     */
     private array $settings;
+
     private string $extensionName;
+
     private string $pluginName;
+
     private string $tableName;
+
     private string $filtersArgumentName;
+
     private bool $disableFilterCount;
 
     /** @var \Remind\Extbase\Service\Dto\Property[] $propertyOverrides */
     private array $propertyOverrides;
+
     private Request $request;
+
     private FilterableRepository $repository;
-    private TypoScriptFrontendController $frontendController;
-    private ContentObjectRenderer $cObj;
+
+    private ?TypoScriptFrontendController $frontendController;
+
+    private ?ContentObjectRenderer $cObj;
 
     public function __construct(
         private readonly UriBuilder $uriBuilder,
@@ -79,14 +91,17 @@ class ControllerService
         $cType = strtolower($this->extensionName . '_' . $this->pluginName);
         $this->tableName = PluginUtility::getTableName($cType);
         $this->disableFilterCount = PluginUtility::getDisableFilterCount($cType);
-        $this->propertyOverrides = $this->flexFormSheetsService->getPropertyOverrides($this->settings, $this->cObj->data['sys_language_uid']);
+        $this->propertyOverrides = $this->flexFormSheetsService->getPropertyOverrides($this->settings, $this->cObj?->data['sys_language_uid']);
     }
 
+    /**
+     * @param mixed[] $filters
+     */
     public function getFilterableList(
         FilterableRepository $repository,
         int $currentPage,
-        ?array $filters = null,
-        ?string $filtersArgumentName = 'filter',
+        array $filters = [],
+        string $filtersArgumentName = 'filter',
     ): FilterableListResult {
         $this->repository = $repository;
         $this->filtersArgumentName = $filtersArgumentName;
@@ -136,6 +151,9 @@ class ControllerService
         return $this->getListResult($currentPage, $filters);
     }
 
+    /**
+     * @param \TYPO3\CMS\Extbase\Persistence\RepositoryInterface<AbstractEntity> $repository
+     */
     public function getDetailResult(
         RepositoryInterface $repository,
         ?AbstractEntity $entity
@@ -192,16 +210,15 @@ class ControllerService
         return $result;
     }
 
-    public function addCacheTag(string $cacheTag)
+    public function addCacheTag(string $cacheTag): void
     {
-        $this->frontendController->addCacheTags([$cacheTag]);
+        $this->frontendController?->addCacheTags([$cacheTag]);
     }
 
     /**
-     * @param int $currentPage
      * @param DatabaseFilter[] $filters
      */
-    private function getListResult(int $currentPage, ?array $filters = []): ListResult
+    private function getListResult(int $currentPage, array $filters = []): ListResult
     {
         $result = new ListResult();
         $limit = (int) ($this->settings[ListSheets::LIMIT] ?? null);
@@ -264,7 +281,10 @@ class ControllerService
 
             $disabled = (bool) ($filterSetting[FrontendFilterSheets::DISABLED] ?? false);
 
-            if ($disabled || !$filterName) {
+            if (
+                $disabled ||
+                !$filterName
+            ) {
                 continue;
             }
 
@@ -274,14 +294,14 @@ class ControllerService
 
             if ($dynamicValues) {
                 $fieldNames = GeneralUtility::trimExplode(',', $filterName, true);
-                $dynamicFilterValues = $this->databaseService->getAvailableFieldValues(
+                $dynamicFilterValues = $this->cObj ? $this->databaseService->getAvailableFieldValues(
                     $this->cObj->data['sys_language_uid'],
                     $this->tableName,
                     $fieldNames,
                     $this->cObj->data['pages'],
                     $this->cObj->data['recursive'],
                     $predefinedDatabaseFilters,
-                );
+                ) : [];
 
                 $excludedValues = json_decode($filterSetting[FrontendFilterSheets::EXCLUDED_VALUES], true) ?? [];
                 foreach ($excludedValues as $excludedValue) {
@@ -361,6 +381,9 @@ class ControllerService
         return $result;
     }
 
+    /**
+     * @param mixed[] $filterValue
+     */
     private function getFrontendFilterValueLabel(string $filterName, array $filterValue): string
     {
         $propertyOverrides = $this->propertyOverrides[$filterName] ?? null;
@@ -371,10 +394,8 @@ class ControllerService
     }
 
     /**
-     * @param string $filterName
      * @param DatabaseFilter[] $queryDatabaseFilters
-     * @param array $value
-     * @return bool
+     * @param mixed[] $value
      */
     private function getFrontendFilterValueActive(
         string $filterName,
@@ -387,7 +408,7 @@ class ControllerService
             $databaseFilterValues = $databaseFilter->getValues();
             return count(
                 array_filter($databaseFilterValues, function (array $databaseFilterValue) use ($value) {
-                    return $databaseFilterValue == $value;
+                    return $databaseFilterValue === $value;
                 })
             ) > 0;
         }
@@ -396,11 +417,8 @@ class ControllerService
     }
 
     /**
-     * @param string $filterName
      * @param DatabaseFilter[] $queryDatabaseFilters
-     * @param array $values
-     * @param bool $exclusive
-     * @return string
+     * @param mixed[] $values
      */
     private function getFrontendFilterValueLink(
         string $filterName,
@@ -417,7 +435,7 @@ class ControllerService
         $index = array_search($values, $filters[$filterName] ?? []);
         if ($index !== false) {
             // remove argument if it is already active so the link removes the filter
-            array_splice($filters[$filterName], $index, 1);
+            array_splice($filters[$filterName], (int) $index, 1);
         } else {
             if ($exclusive) {
                 $filters[$filterName] = [$values];
@@ -427,7 +445,7 @@ class ControllerService
         }
         $filters = array_filter($filters);
 
-        array_walk_recursive($filters, function (mixed $value, string $key) use (&$filterArguments) {
+        array_walk_recursive($filters, function (mixed $value, string $key) use (&$filterArguments): void {
             $filterArguments[$key][] = $value ?? '';
         });
 
@@ -439,8 +457,10 @@ class ControllerService
     }
 
     /**
+     * @param mixed[] $filterSetting
      * @param DatabaseFilter[] $predefinedDatabaseFilters
      * @param DatabaseFilter[] $queryDatabaseFilters
+     * @param mixed[] $value
      */
     private function getFrontendFilterValueCount(
         array $filterSetting,
@@ -453,7 +473,7 @@ class ControllerService
         $tmpFilters = $queryDatabaseFilters;
 
         $databaseFilter = isset($tmpFilters[$filterName])
-            ? clone ($tmpFilters[$filterName])
+            ? clone $tmpFilters[$filterName]
             : FilterUtility::getDatabaseFilter($filterSetting, $filterName, [], $this->tableName);
 
         $tmpFilters[$filterName] = $databaseFilter;
@@ -466,7 +486,7 @@ class ControllerService
             $databaseFilter->addValue($value);
         } else {
             $databaseFilterValues = $databaseFilter->getValues();
-            array_splice($databaseFilterValues, $index, 1);
+            array_splice($databaseFilterValues, (int) $index, 1);
             $databaseFilter->setValues($databaseFilterValues);
         }
 
@@ -480,6 +500,7 @@ class ControllerService
     }
 
     /**
+     * @param mixed[] $filters
      * @return DatabaseFilter[]
      */
     private function getQueryDatabaseFilters(array $filters): array

@@ -18,57 +18,22 @@ class PredefinedFilterSheets
     public const VALUES = 'values';
     private const LOCALLANG = 'LLL:EXT:rmnd_extbase/Resources/Private/Language/locallang.xlf:';
 
+    /**
+     * @return mixed[]
+     */
     public static function getSheets(): array
     {
         return [
             self::SHEET_ID => [
                 'ROOT' => [
-                    'sheetTitle' => self::LOCALLANG . 'filters.predefined',
-                    'type' => 'array',
                     'el' => [
                         'settings.' . self::FILTERS => [
-                            'type' => 'array',
-                            'section' => 1,
                             'el' => [
                                 self::FILTER => [
-                                    'type' => 'array',
-                                    'title' => self::LOCALLANG . 'filters.filter',
-                                    'titleField' => self::FIELDS,
                                     'disabledField' => self::DISABLED,
                                     'el' => [
-                                        self::DISABLED => [
-                                            'label' => self::LOCALLANG . 'filters.disabled',
-                                            'onChange' => 'reload',
-                                            'config' => [
-                                                'type' => 'check',
-                                                'items' => [
-                                                    [
-                                                        'label' => '',
-                                                        'value' => 0,
-                                                    ],
-                                                ],
-                                            ],
-                                        ],
-                                        self::FIELDS => [
-                                            'label' => self::LOCALLANG . 'filters.fields',
-                                            'onChange' => 'reload',
-                                            'config' => [
-                                                'type' => 'select',
-                                                'renderType' => 'selectMultipleSideBySide',
-                                                'multiple' => '0',
-                                                'itemsProcFunc' => ItemsProc::class . '->getPredefinedFilterFields',
-                                            ],
-                                        ],
                                         self::CONJUNCTION => [
-                                            'label' => self::LOCALLANG . 'filters.conjunction',
-                                            'description' => self::LOCALLANG . 'filters.conjunction.description',
                                             'config' => [
-                                                'type' => 'select',
-                                                'renderType' => 'selectSingle',
-                                                'size' => '1',
-                                                'minitems' => '1',
-                                                'maxitems' => '1',
-                                                'multiple' => '0',
                                                 'items' => [
                                                     [
                                                         'label' => self::LOCALLANG . 'filters.conjunction.items.or',
@@ -79,22 +44,60 @@ class PredefinedFilterSheets
                                                         'value' => Conjunction::AND->value,
                                                     ],
                                                 ],
+                                                'maxitems' => '1',
+                                                'minitems' => '1',
+                                                'multiple' => '0',
+                                                'renderType' => 'selectSingle',
+                                                'size' => '1',
+                                                'type' => 'select',
                                             ],
+                                            'description' => self::LOCALLANG . 'filters.conjunction.description',
+                                            'label' => self::LOCALLANG . 'filters.conjunction',
+                                        ],
+                                        self::DISABLED => [
+                                            'config' => [
+                                                'items' => [
+                                                    [
+                                                        'label' => '',
+                                                        'value' => 0,
+                                                    ],
+                                                ],
+                                                'type' => 'check',
+                                            ],
+                                            'label' => self::LOCALLANG . 'filters.disabled',
+                                            'onChange' => 'reload',
+                                        ],
+                                        self::FIELDS => [
+                                            'config' => [
+                                                'itemsProcFunc' => ItemsProc::class . '->getPredefinedFilterFields',
+                                                'multiple' => '0',
+                                                'renderType' => 'selectMultipleSideBySide',
+                                                'type' => 'select',
+                                            ],
+                                            'label' => self::LOCALLANG . 'filters.fields',
+                                            'onChange' => 'reload',
                                         ],
                                         self::VALUES => [
+                                            'config' => [
+                                                'itemsProcFunc' => ItemsProc::class . '->getPredefinedFilterValues',
+                                                'renderType' => 'selectMultipleSideBySideJson',
+                                                'type' => 'user',
+                                            ],
                                             'label' => self::LOCALLANG . 'filters.values',
                                             'onChange' => 'reload',
-                                            'config' => [
-                                                'type' => 'user',
-                                                'renderType' => 'selectMultipleSideBySideJson',
-                                                'itemsProcFunc' => ItemsProc::class . '->getPredefinedFilterValues',
-                                            ],
                                         ],
                                     ],
+                                    'title' => self::LOCALLANG . 'filters.filter',
+                                    'titleField' => self::FIELDS,
+                                    'type' => 'array',
                                 ],
                             ],
+                            'section' => 1,
+                            'type' => 'array',
                         ],
                     ],
+                    'sheetTitle' => self::LOCALLANG . 'filters.predefined',
+                    'type' => 'array',
                 ],
             ],
         ];

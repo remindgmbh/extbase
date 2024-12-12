@@ -6,7 +6,6 @@ namespace Remind\Extbase\Controller;
 
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
-use TYPO3\CMS\Backend\Template\ModuleTemplateFactory;
 use TYPO3\CMS\Core\Http\HtmlResponse;
 use TYPO3\CMS\Core\Page\PageRenderer;
 use TYPO3\CMS\Core\Utility\GeneralUtility;
@@ -18,7 +17,6 @@ class CustomValueEditorController
 
     public function __construct(
         private readonly PageRenderer $pageRenderer,
-        private readonly ModuleTemplateFactory $moduleTemplateFactory,
     ) {
     }
 
@@ -32,7 +30,7 @@ class CustomValueEditorController
         $this->pageRenderer->setTitle(
             LocalizationUtility::translate(
                 'LLL:EXT:rmnd_extbase/Resources/Private/Language/locallang.xlf:customValueEditor'
-            )
+            ) ?? ''
         );
         $this->pageRenderer->addCssFile('EXT:backend/Resources/Public/Css/backend.css');
         $this->pageRenderer->loadJavaScriptModule('@remind/extbase/backend/helper/custom-value-editor.js');
@@ -41,8 +39,8 @@ class CustomValueEditorController
                 '<typo3-backend-custom-value-editor %s></typo3-backend-custom-value-editor>',
                 GeneralUtility::implodeAttributes([
                     'dataId' => $dataId,
-                    'props' => $props,
                     'index' => $index,
+                    'props' => $props,
                     'value' => $value,
                 ], true),
             )

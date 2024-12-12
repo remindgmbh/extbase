@@ -9,6 +9,7 @@ use TYPO3\CMS\Extbase\DomainObject\AbstractEntity;
 final class ModifyDetailPageTitleEvent extends AbstractExtbaseEvent
 {
     private AbstractEntity $entity;
+
     private string $title = '';
 
     public function __construct(string $extensionName, AbstractEntity $entity)

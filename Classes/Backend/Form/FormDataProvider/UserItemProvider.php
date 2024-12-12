@@ -10,12 +10,10 @@ use TYPO3\CMS\Backend\Form\FormDataProviderInterface;
 class UserItemProvider extends AbstractItemProvider implements FormDataProviderInterface
 {
     /**
-     * Add form data to result array
-     *
-     * @param array $result Initialized result array
-     * @return array Result filled with more data
+     * @param mixed[] $result
+     * @return mixed[]
      */
-    public function addData(array $result)
+    public function addData(array $result): array
     {
         $table = $result['tableName'];
 
@@ -64,12 +62,7 @@ class UserItemProvider extends AbstractItemProvider implements FormDataProviderI
             // Resolve "itemPropsProcFunc"
             if (!empty($fieldConfig['config']['itemPropsProcFunc'])) {
                 $resultCopy = $result;
-                $resultCopy
-                    ['processedTca']
-                    ['columns']
-                    [$fieldName]
-                    ['config']
-                    ['itemsProcFunc'] = $fieldConfig['config']['itemPropsProcFunc'];
+                $resultCopy['processedTca']['columns'][$fieldName]['config']['itemsProcFunc'] = $fieldConfig['config']['itemPropsProcFunc'];
                 $fieldConfig['config']['itemProps'] = $this->resolveItemProcessorFunction(
                     $resultCopy,
                     $fieldName,

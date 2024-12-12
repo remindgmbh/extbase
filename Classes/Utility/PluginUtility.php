@@ -34,12 +34,11 @@ class PluginUtility
      *                ExtensionUtility::registerPlugin('Contacts', 'FilterableList',...) the type
      *                would be 'contacts_filterablelist'
      *  @param PluginType $pluginType Type of plugin to determine flex form sheets to be added
-     *  @param string|null $tableName required for some flex form sheets as parameter
+     *  @param string $tableName required for some flex form sheets as parameter
      *                e.g. for contacts_detail to display available contacts the value
      *                would be tx_contacts_model_domain_contact
-     *  @return void
      */
-    public static function addTcaType(string $type, PluginType $pluginType, string $tableName)
+    public static function addTcaType(string $type, PluginType $pluginType, string $tableName): void
     {
         $flexForm = self::getFlexFormByPluginType($pluginType);
 
@@ -70,6 +69,7 @@ class PluginUtility
         }
 
         $GLOBALS['TCA']['tt_content']['types'][$type] = [
+            'columnsOverrides' => $columnOverrides,
             'showitem' => '
                 --div--;LLL:EXT:core/Resources/Private/Language/Form/locallang_tabs.xlf:general,
                     --palette--;;general,
@@ -93,7 +93,6 @@ class PluginUtility
                     tx_headless_cookie_category,
                     tx_headless_cookie_message,
             ',
-            'columnsOverrides' => $columnOverrides,
         ];
     }
 
@@ -109,7 +108,6 @@ class PluginUtility
      *  @param string $type CType the detail source is added to
      *  @param string $value Value of the detail source, can be used in Remind\Extbase\Event\DetailEntityModifierEvent
      *  @param string $label Label of the detail source, visible in Backend
-     *  @return void
      */
     public static function addDetailSource(
         string $type,
@@ -122,6 +120,9 @@ class PluginUtility
         ];
     }
 
+    /**
+     * @return mixed[]
+     */
     public static function getDetailSources(string $type): array
     {
         return $GLOBALS['TCA']['tt_content']['ctrl']['EXT']['rmnd_extbase'][$type][self::DETAIL_SOURCES] ?? [];
@@ -138,6 +139,9 @@ class PluginUtility
         ];
     }
 
+    /**
+     * @return mixed[]
+     */
     public static function getListOrderBy(string $type): array
     {
         return $GLOBALS['TCA']['tt_content']['ctrl']['EXT']['rmnd_extbase'][$type][self::LIST_ORDER_BY] ?? [];
@@ -155,7 +159,7 @@ class PluginUtility
 
     /**
      * @param string $type plugin CType
-     * @param array|string $dataStructure either a xml flexform file path, a xml flexform string or a flexform array
+     * @param mixed[]|string $dataStructure either a xml flexform file path, a xml flexform string or a flexform array
      */
     public static function addFlexForm(string $type, array|string $dataStructure): void
     {
@@ -163,7 +167,10 @@ class PluginUtility
             // Taken from TYPO3\CMS\Core\Configuration\FlexForm\FlexFormTools
             if (strpos(trim($dataStructure), 'FILE:') === 0) {
                 $file = GeneralUtility::getFileAbsFileName(substr(trim($dataStructure), 5));
-                if (empty($file) || !@is_file($file)) {
+                if (
+                    empty($file) ||
+                    !@is_file($file)
+                ) {
                     throw new RuntimeException(
                         'Data structure file ' . $file . ' could not be resolved to an existing file',
                         1478105826
@@ -177,13 +184,19 @@ class PluginUtility
         self::mergeWithCurrentFlexForm($type, $dataStructure);
     }
 
-    private static function getCurrentFlexForm($type): array
+    /**
+     * @return mixed[]
+     */
+    private static function getCurrentFlexForm(string $type): array
     {
         $type = '*,' . $type;
         $flexFormString = $GLOBALS['TCA']['tt_content']['columns']['pi_flexform']['config']['ds'][$type];
         return GeneralUtility::xml2arrayProcess($flexFormString);
     }
 
+    /**
+     * @param mixed[] $newFlexFormArray
+     */
     private static function mergeWithCurrentFlexForm(string $type, array $newFlexFormArray): void
     {
         $currentFlexFormArray = self::getCurrentFlexForm($type);
@@ -232,6 +245,9 @@ class PluginUtility
         return self::flexFormArrayToString($flexFormArray);
     }
 
+    /**
+     * @param mixed[] $flexForm
+     */
     private static function flexFormArrayToString(array $flexForm): string
     {
         $flexFormTools = new FlexFormTools();

@@ -11,6 +11,10 @@ use TYPO3\CMS\Backend\Utility\BackendUtility;
 
 class FilterUtility
 {
+    /**
+     * @param mixed[] $settings
+     * @return DatabaseFilter[]
+     */
     public static function getPredefinedDatabaseFilters(array $settings, string $table): array
     {
         $result = [];
@@ -30,7 +34,11 @@ class FilterUtility
 
             $filterName = self::getFilterName($filterSetting);
 
-            if (!$filterName || $disabled || empty($values)) {
+            if (
+                !$filterName ||
+                $disabled ||
+                empty($values)
+            ) {
                 continue;
             }
 
@@ -39,6 +47,10 @@ class FilterUtility
         return $result;
     }
 
+    /**
+     * @param mixed[] $filterSetting
+     * @param mixed[] $values
+     */
     public static function getDatabaseFilter(
         array $filterSetting,
         string $filterName,
@@ -56,11 +68,19 @@ class FilterUtility
         );
     }
 
+    /**
+     * @param mixed[] $filterSetting
+     */
     public static function getFilterName(array $filterSetting): ?string
     {
         $filterName = $filterSetting[PredefinedFilterSheets::FIELDS] ?? null;
         return is_array($filterName) ? (empty($filterName) ? null : $filterName[0]) : $filterName;
     }
+
+    /**
+     * @param mixed[] $filters
+     * @return mixed[]
+     */
     public static function normalizeQueryParameters(array $filters): array
     {
         $result = [];
@@ -70,6 +90,10 @@ class FilterUtility
         return $result;
     }
 
+    /**
+     * @param mixed[] $filters
+     * @return mixed[]
+     */
     public static function simplifyQueryParameters(array $filters): array
     {
         // if only one argument is defined remove [0] from query parameter

@@ -34,6 +34,7 @@ class ItemsProc
     ];
 
     private ?FlexFormService $flexFormService = null;
+
     private ?DatabaseService $databaseService = null;
 
     public function __construct()
@@ -42,6 +43,9 @@ class ItemsProc
         $this->databaseService = GeneralUtility::makeInstance(DatabaseService::class);
     }
 
+    /**
+     * @param mixed[] $params
+     */
     public function getListOrderByItems(array &$params): void
     {
         $flexParentDatabaseRow = $params['flexParentDatabaseRow'];
@@ -51,6 +55,9 @@ class ItemsProc
         }
     }
 
+    /**
+     * @param mixed[] $params
+     */
     public function getListProperties(array $params): void
     {
         $flexParentDatabaseRow = $params['flexParentDatabaseRow'];
@@ -63,6 +70,9 @@ class ItemsProc
         array_push($params['items'], ...$properties);
     }
 
+    /**
+     * @param mixed[] $params
+     */
     public function getDetailSources(array &$params): void
     {
         $flexParentDatabaseRow = $params['flexParentDatabaseRow'];
@@ -72,11 +82,17 @@ class ItemsProc
         }
     }
 
+    /**
+     * @param mixed[] $params
+     */
     public function getDetailRecords(array &$params): void
     {
         array_push($params['items'], ...$this->getRecordsInPages($params));
     }
 
+    /**
+     * @param mixed[] $params
+     */
     public function getDetailProperties(array $params): void
     {
         $flexParentDatabaseRow = $params['flexParentDatabaseRow'];
@@ -89,11 +105,17 @@ class ItemsProc
         array_push($params['items'], ...$properties);
     }
 
+    /**
+     * @param mixed[] $params
+     */
     public function getSelectionRecords(array &$params): void
     {
         array_push($params['items'], ...$this->getRecordsInPages($params));
     }
 
+    /**
+     * @param mixed[] $params
+     */
     public function getPredefinedFilterFields(array $params): void
     {
         array_push(
@@ -108,10 +130,13 @@ class ItemsProc
         );
     }
 
+    /**
+     * @param mixed[] $params
+     */
     public function getPredefinedFilterValues(array &$params): void
     {
         $currentValues = json_decode($params['row'][$params['field']], true) ?? [];
-        $items = $this->databaseService->getAvailableFieldValues(
+        $items = $this->databaseService?->getAvailableFieldValues(
             $this->getSysLanguageUid($params),
             $this->getTableName($params),
             $this->getFieldNames($params, PredefinedFilterSheets::FIELDS),
@@ -122,6 +147,9 @@ class ItemsProc
         array_push($params['items'], ...$items);
     }
 
+    /**
+     * @param mixed[] $params
+     */
     public function getFrontendFilterFields(array &$params): void
     {
         array_push(
@@ -136,6 +164,9 @@ class ItemsProc
         );
     }
 
+    /**
+     * @param mixed[] $params
+     */
     public function getFrontendFilterValues(array &$params): void
     {
         $tableName = $this->getTableName($params);
@@ -145,7 +176,7 @@ class ItemsProc
             $tableName,
         );
 
-        $items = $this->databaseService->getAvailableFieldValues(
+        $items = $this->databaseService?->getAvailableFieldValues(
             $this->getSysLanguageUid($params),
             $tableName,
             $this->getFieldNames($params, FrontendFilterSheets::FIELDS),
@@ -161,6 +192,9 @@ class ItemsProc
         array_push($params['items'], ...$items);
     }
 
+    /**
+     * @param mixed[] $params
+     */
     public function getPropertyFields(array &$params): void
     {
         array_push(
@@ -175,31 +209,42 @@ class ItemsProc
         );
     }
 
+    /**
+     * @param mixed[] $params
+     */
     public function getPropertyValues(array &$params): void
     {
         $tableName = $this->getTableName($params);
 
         if ($tableName) {
-            $items = $this->databaseService->getAvailableFieldValues(
+            $items = $this->databaseService?->getAvailableFieldValues(
                 $this->getSysLanguageUid($params),
                 $tableName,
                 $this->getFieldNames($params, PropertyOverrideSheets::FIELDS),
-            );
+            ) ?? [];
 
             array_push($params['items'], ...$items);
         }
     }
 
+    /**
+     * @param mixed[] $params
+     * @return mixed[]
+     */
     private function getRecordsInPages(array &$params): array
     {
-        return $this->databaseService->getRecords(
+        return $this->databaseService?->getRecords(
             $this->getSysLanguageUid($params),
             $this->getTableName($params),
             $this->getPages($params),
             $this->getRecursive($params),
-        );
+        ) ?? [];
     }
 
+    /**
+     * @param mixed[] $params
+     * @return mixed[]
+     */
     private function getModelPropertiesForSection(
         array &$params,
         int $sheetId,
@@ -237,7 +282,12 @@ class ItemsProc
         return $this->getModelProperties($cType, $currentValues, $usedFields);
     }
 
-    private function getModelProperties(string $cType, ?array $currentValues = [], ?array $excludedValues = []): array
+    /**
+     * @param mixed[] $currentValues
+     * @param mixed[] $excludedValues
+     * @return mixed[]
+     */
+    private function getModelProperties(string $cType, array $currentValues = [], array $excludedValues = []): array
     {
         $tableName = PluginUtility::getTableName($cType);
         $values = BackendUtility::getAllowedFieldsForTable($tableName);
@@ -264,6 +314,10 @@ class ItemsProc
         return array_merge($notMatchingValues, $properties);
     }
 
+    /**
+     * @param mixed[] $result
+     * @param mixed[] $currentValues
+     */
     private function addInvalidValues(array &$result, array $currentValues): void
     {
         $values = array_map(function (array $value) {
@@ -292,32 +346,52 @@ class ItemsProc
         );
     }
 
+    /**
+     * @param mixed[] $params
+     * @return mixed[]
+     */
     private function getSettings(array $params, int $sheetId): array
     {
-        $flexForm = $this->flexFormService->walkFlexFormNode($params['flexParentDatabaseRow']['pi_flexform']);
-        return $flexForm['data'][$sheetId]['lDEF']['settings'];
+        $flexForm = $this->flexFormService?->walkFlexFormNode($params['flexParentDatabaseRow']['pi_flexform']) ?? [];
+        return $flexForm['data'][$sheetId]['lDEF']['settings'] ?? [];
     }
 
+    /**
+     * @param mixed[] $params
+     */
     private function getPages(array $params): string
     {
         return $params['flexParentDatabaseRow']['pages'];
     }
 
+    /**
+     * @param mixed[] $params
+     */
     private function getRecursive(array $params): int
     {
         return intval($params['flexParentDatabaseRow']['recursive'] ?? 0);
     }
 
+    /**
+     * @param mixed[] $params
+     */
     private function getSysLanguageUid(array $params): int
     {
         return (int) $params['flexParentDatabaseRow']['sys_language_uid'];
     }
 
+    /**
+     * @param mixed[] $params
+     */
     private function getTableName(array $params): string
     {
         return PluginUtility::getTableName($params['flexParentDatabaseRow']['CType']);
     }
 
+    /**
+     * @param mixed[] $params
+     * @return mixed[]
+     */
     private function getFieldNames(array $params, string $fieldsElementName): array
     {
         $fieldNames = $params['row'][$fieldsElementName];

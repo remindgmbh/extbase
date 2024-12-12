@@ -8,6 +8,7 @@ class FilterableListResult extends ListResult
 {
     /** @var FrontendFilter[] */
     protected array $frontendFilters = [];
+
     protected FilterValue $resetFilters;
 
     public function __construct(ListResult $listResult)

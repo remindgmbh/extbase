@@ -6,13 +6,17 @@ namespace Remind\Extbase\Backend;
 
 class DisplayCond
 {
-    public function equalsFlexFormValue(array $args)
+    /**
+     * @param mixed[] $args
+     */
+    public function equalsFlexFormValue(array $args): bool
     {
         $record = $args['record'];
         $conditionParameters = $args['conditionParameters'];
         if (count($conditionParameters) > 1) {
             [$fieldName, $value] = $conditionParameters;
             $piFlexform = $record['pi_flexform'];
+            $fieldValue = null;
             foreach ($piFlexform['data'] as $sheet) {
                 $sheetSettings = $sheet['lDEF'];
                 if (array_key_exists($fieldName, $sheetSettings)) {

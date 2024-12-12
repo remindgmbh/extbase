@@ -26,63 +26,22 @@ class FrontendFilterSheets
     public const VALUE_SUFFIX = 'valueSuffix';
     private const LOCALLANG = 'LLL:EXT:rmnd_extbase/Resources/Private/Language/locallang.xlf:';
 
+    /**
+     * @return mixed[]
+     */
     public static function getSheets(): array
     {
         return [
             self::SHEET_ID => [
                 'ROOT' => [
-                    'sheetTitle' => self::LOCALLANG . 'filters.frontend',
-                    'type' => 'array',
                     'el' => [
-                        'settings.' . self::RESET_FILTERS_LABEL => [
-                            'label' => self::LOCALLANG . 'filters.resetFiltersLabel',
-                            'config' => [
-                                'type' => 'input',
-                            ],
-                        ],
                         'settings.' . self::FILTERS => [
-                            'type' => 'array',
-                            'section' => 1,
                             'el' => [
                                 self::FILTER => [
-                                    'type' => 'array',
-                                    'title' => self::LOCALLANG . 'filters.filter',
-                                    'titleField' => self::FIELDS,
                                     'disabledField' => self::DISABLED,
                                     'el' => [
-                                        self::DISABLED => [
-                                            'label' => self::LOCALLANG . 'filters.disabled',
-                                            'onChange' => 'reload',
-                                            'config' => [
-                                                'type' => 'check',
-                                                'items' => [
-                                                    [
-                                                        'label' => '',
-                                                        'value' => 0,
-                                                    ],
-                                                ],
-                                            ],
-                                        ],
-                                        self::FIELDS => [
-                                            'label' => self::LOCALLANG . 'filters.fields',
-                                            'onChange' => 'reload',
-                                            'config' => [
-                                                'type' => 'select',
-                                                'renderType' => 'selectMultipleSideBySide',
-                                                'multiple' => '0',
-                                                'itemsProcFunc' => ItemsProc::class . '->getFrontendFilterFields',
-                                            ],
-                                        ],
                                         self::CONJUNCTION => [
-                                            'label' => self::LOCALLANG . 'filters.conjunction',
-                                            'description' => self::LOCALLANG . 'filters.conjunction.description',
                                             'config' => [
-                                                'type' => 'select',
-                                                'renderType' => 'selectSingle',
-                                                'size' => '1',
-                                                'minitems' => '1',
-                                                'maxitems' => '1',
-                                                'multiple' => '0',
                                                 'items' => [
                                                     [
                                                         'label' => self::LOCALLANG . 'filters.conjunction.items.or',
@@ -93,13 +52,31 @@ class FrontendFilterSheets
                                                         'value' => Conjunction::AND->value,
                                                     ],
                                                 ],
+                                                'maxitems' => '1',
+                                                'minitems' => '1',
+                                                'multiple' => '0',
+                                                'renderType' => 'selectSingle',
+                                                'size' => '1',
+                                                'type' => 'select',
                                             ],
+                                            'description' => self::LOCALLANG . 'filters.conjunction.description',
+                                            'label' => self::LOCALLANG . 'filters.conjunction',
                                         ],
-                                        self::EXCLUSIVE => [
-                                            'label' => self::LOCALLANG . 'filters.exclusive',
-                                            'description' => self::LOCALLANG . 'filters.exclusive.description',
+                                        self::DISABLED => [
                                             'config' => [
+                                                'items' => [
+                                                    [
+                                                        'label' => '',
+                                                        'value' => 0,
+                                                    ],
+                                                ],
                                                 'type' => 'check',
+                                            ],
+                                            'label' => self::LOCALLANG . 'filters.disabled',
+                                            'onChange' => 'reload',
+                                        ],
+                                        self::DYNAMIC_VALUES => [
+                                            'config' => [
                                                 'default' => 1,
                                                 'items' => [
                                                     [
@@ -107,54 +84,80 @@ class FrontendFilterSheets
                                                         'value' => 0,
                                                     ],
                                                 ],
+                                                'type' => 'check',
                                             ],
+                                            'description' => self::LOCALLANG . 'filters.dynamicValues.description',
+                                            'label' => self::LOCALLANG . 'filters.dynamicValues',
+                                            'onChange' => 'reload',
+                                        ],
+                                        self::EXCLUDED_VALUES => [
+                                            'config' => [
+                                                'itemsProcFunc' => ItemsProc::class . '->getFrontendFilterValues',
+                                                'renderType' => 'selectMultipleSideBySideJson',
+                                                'type' => 'user',
+                                            ],
+                                            'description' => self::LOCALLANG . 'filters.excludedValues.description',
+                                            'displayCond' => 'FIELD:' . self::DYNAMIC_VALUES . ':REQ:true',
+                                            'label' => self::LOCALLANG . 'filters.excludedValues',
+                                        ],
+                                        self::EXCLUSIVE => [
+                                            'config' => [
+                                                'default' => 1,
+                                                'items' => [
+                                                    [
+                                                        'label' => '',
+                                                        'value' => 0,
+                                                    ],
+                                                ],
+                                                'type' => 'check',
+                                            ],
+                                            'description' => self::LOCALLANG . 'filters.exclusive.description',
+                                            'label' => self::LOCALLANG . 'filters.exclusive',
+                                        ],
+                                        self::FIELDS => [
+                                            'config' => [
+                                                'itemsProcFunc' => ItemsProc::class . '->getFrontendFilterFields',
+                                                'multiple' => '0',
+                                                'renderType' => 'selectMultipleSideBySide',
+                                                'type' => 'select',
+                                            ],
+                                            'label' => self::LOCALLANG . 'filters.fields',
+                                            'onChange' => 'reload',
                                         ],
                                         self::RESET_FILTER_LABEL => [
-                                            'label' => self::LOCALLANG . 'filters.resetFilterLabel',
-                                            'description' => self::LOCALLANG . 'filters.resetFilterLabel.description',
                                             'config' => [
                                                 'type' => 'input',
                                             ],
-                                        ],
-                                        self::DYNAMIC_VALUES => [
-                                            'label' => self::LOCALLANG . 'filters.dynamicValues',
-                                            'description' => self::LOCALLANG . 'filters.dynamicValues.description',
-                                            'onChange' => 'reload',
-                                            'config' => [
-                                                'type' => 'check',
-                                                'default' => 1,
-                                                'items' => [
-                                                    [
-                                                        'label' => '',
-                                                        'value' => 0,
-                                                    ],
-                                                ],
-                                            ],
-                                        ],
-                                        self::EXCLUDED_VALUES => [
-                                            'label' => self::LOCALLANG . 'filters.excludedValues',
-                                            'description' => self::LOCALLANG . 'filters.excludedValues.description',
-                                            'displayCond' => 'FIELD:' . self::DYNAMIC_VALUES . ':REQ:true',
-                                            'config' => [
-                                                'type' => 'user',
-                                                'renderType' => 'selectMultipleSideBySideJson',
-                                                'itemsProcFunc' => ItemsProc::class . '->getFrontendFilterValues',
-                                            ],
+                                            'description' => self::LOCALLANG . 'filters.resetFilterLabel.description',
+                                            'label' => self::LOCALLANG . 'filters.resetFilterLabel',
                                         ],
                                         self::VALUES => [
-                                            'label' => self::LOCALLANG . 'filters.values',
-                                            'displayCond' => 'FIELD:' . self::DYNAMIC_VALUES . ':REQ:false',
                                             'config' => [
-                                                'type' => 'user',
-                                                'renderType' => 'selectMultipleSideBySideJson',
                                                 'itemsProcFunc' => ItemsProc::class . '->getFrontendFilterValues',
+                                                'renderType' => 'selectMultipleSideBySideJson',
+                                                'type' => 'user',
                                             ],
+                                            'displayCond' => 'FIELD:' . self::DYNAMIC_VALUES . ':REQ:false',
+                                            'label' => self::LOCALLANG . 'filters.values',
                                         ],
                                     ],
+                                    'title' => self::LOCALLANG . 'filters.filter',
+                                    'titleField' => self::FIELDS,
+                                    'type' => 'array',
                                 ],
                             ],
+                            'section' => 1,
+                            'type' => 'array',
+                        ],
+                        'settings.' . self::RESET_FILTERS_LABEL => [
+                            'config' => [
+                                'type' => 'input',
+                            ],
+                            'label' => self::LOCALLANG . 'filters.resetFiltersLabel',
                         ],
                     ],
+                    'sheetTitle' => self::LOCALLANG . 'filters.frontend',
+                    'type' => 'array',
                 ],
             ],
         ];

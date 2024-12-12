@@ -36,11 +36,24 @@ class FilterValueMapper implements
     use SiteAccessorTrait;
 
     private string $tableName;
+
+    /**
+     * @var mixed[]
+     */
     private array $parameters;
+
+    /**
+     * @var mixed[]
+     */
     private array $aspects;
+
     private AspectFactory $aspectFactory;
+
     private FlexFormService $flexFormService;
 
+    /**
+     * @param mixed[] $settings
+     */
     public function __construct(array $settings)
     {
         $tableName = $settings['tableName'] ?? null;
@@ -89,7 +102,7 @@ class FilterValueMapper implements
             return null;
         }
 
-        return json_encode($result);
+        return json_encode($result) ?: null;
     }
 
     public function resolve(string $originalValue): ?string
@@ -107,9 +120,12 @@ class FilterValueMapper implements
             return null;
         }
 
-        return json_encode($result);
+        return json_encode($result) ?: null;
     }
 
+    /**
+     * @param mixed[] $values
+     */
     private function isValid(array $values): bool
     {
         $filters = $this->getFilters();
@@ -195,6 +211,9 @@ class FilterValueMapper implements
         }
     }
 
+    /**
+     * @return string[]
+     */
     private function getParameterKeys(): array
     {
         $result = [];
@@ -223,11 +242,14 @@ class FilterValueMapper implements
         return $result;
     }
 
+    /**
+     * @param mixed[] $valueToCheck
+     */
     private function isValueInJsonValues(string $jsonValues, array $valueToCheck): bool
     {
         $values = array_map(function (string $jsonValue) {
             return json_decode($jsonValue, true);
-        }, json_decode($jsonValues ?? '', true) ?? []);
+        }, json_decode($jsonValues ?: '', true) ?: []);
 
         foreach ($values as $value) {
             $diff = array_diff_assoc($value, $valueToCheck);
@@ -239,6 +261,9 @@ class FilterValueMapper implements
         return false;
     }
 
+    /**
+     * @param mixed[] $values
+     */
     private function recordExists(array $values): bool
     {
         $queryBuilder = GeneralUtility::makeInstance(ConnectionPool::class)
@@ -270,16 +295,12 @@ class FilterValueMapper implements
                     );
                 }
             } else {
-                if (!$value) {
-                    // if $value is empty (should be '' because query param cannot be null) either
-                    // an empty string or null is allowed
-                    $constraints[] = $queryBuilder->expr()->or(
-                        $queryBuilder->expr()->isNull($field),
-                        $queryBuilder->expr()->eq($field, $queryBuilder->createNamedParameter(''))
-                    );
-                } else {
-                    $constraints[] = $queryBuilder->expr()->eq($field, $queryBuilder->createNamedParameter($value));
-                }
+                // if $value is empty (should be '' because query param cannot be null) either
+                // an empty string or null is allowed
+                $constraints[] = !$value ? $queryBuilder->expr()->or(
+                    $queryBuilder->expr()->isNull($field),
+                    $queryBuilder->expr()->eq($field, $queryBuilder->createNamedParameter(''))
+                ) : $queryBuilder->expr()->eq($field, $queryBuilder->createNamedParameter($value));
             }
         }
 
@@ -291,6 +312,9 @@ class FilterValueMapper implements
         return $queryResult->rowCount() > 0;
     }
 
+    /**
+     * @return mixed[]
+     */
     private function getFilters(): array
     {
         $l10nParent = $this->context->getPropertyFromAspect('extbase', 'page.l10n_parent');

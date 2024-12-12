@@ -17,18 +17,17 @@ class ListSheets
     public const PROPERTIES = 'properties';
     private const LOCALLANG = 'LLL:EXT:rmnd_extbase/Resources/Private/Language/locallang.xlf:';
 
+    /**
+     * @return mixed[]
+     */
     public static function getSheets(): array
     {
         return [
             self::SHEET_ID => [
                 'ROOT' => [
-                    'sheetTitle' => self::LOCALLANG . 'list',
-                    'type' => 'array',
                     'el' => [
                         'settings.' . self::DETAIL_PAGE => [
-                            'label' => self::LOCALLANG . 'list.detailPage',
                             'config' => [
-                                'type' => 'group',
                                 'allowed' => 'pages',
                                 'maxitems' => '1',
                                 'minitems' => '0',
@@ -39,18 +38,26 @@ class ListSheets
                                         'addWhere' => 'AND pages.doktype = 1',
                                     ],
                                 ],
+                                'type' => 'group',
                             ],
+                            'label' => self::LOCALLANG . 'list.detailPage',
+                        ],
+                        'settings.' . self::ITEMS_PER_PAGE => [
+                            'config' => [
+                                'size' => '2',
+                                'type' => 'input',
+                            ],
+                            'label' => self::LOCALLANG . 'list.pagination.itemsPerPage',
+                        ],
+                        'settings.' . self::LIMIT => [
+                            'config' => [
+                                'size' => '2',
+                                'type' => 'input',
+                            ],
+                            'label' => self::LOCALLANG . 'list.pagination.limit',
                         ],
                         'settings.' . self::ORDER_BY => [
-                            'label' => self::LOCALLANG . 'list.orderBy',
-                            'exclude' => '0',
                             'config' => [
-                                'type' => 'select',
-                                'renderType' => 'selectSingle',
-                                'size' => '1',
-                                'minitems' => '0',
-                                'maxitems' => '1',
-                                'multiple' => '0',
                                 'items' => [
                                     [
                                         'label' => self::LOCALLANG . 'list.orderBy.sorting',
@@ -58,18 +65,18 @@ class ListSheets
                                     ],
                                 ],
                                 'itemsProcFunc' => ItemsProc::class . '->getListOrderByItems',
-                            ],
-                        ],
-                        'settings.' . self::ORDER_DIRECTION => [
-                            'label' => self::LOCALLANG . 'list.orderDirection',
-                            'exclude' => '0',
-                            'config' => [
-                                'type' => 'select',
+                                'maxitems' => '1',
+                                'minitems' => '0',
+                                'multiple' => '0',
                                 'renderType' => 'selectSingle',
                                 'size' => '1',
-                                'minitems' => '0',
-                                'maxitems' => '1',
-                                'multiple' => '0',
+                                'type' => 'select',
+                            ],
+                            'exclude' => '0',
+                            'label' => self::LOCALLANG . 'list.orderBy',
+                        ],
+                        'settings.' . self::ORDER_DIRECTION => [
+                            'config' => [
                                 'items' => [
                                     [
                                         'label' => self::LOCALLANG . 'list.orderDirection.asc',
@@ -80,33 +87,29 @@ class ListSheets
                                         'value' => 'DESC',
                                     ],
                                 ],
+                                'maxitems' => '1',
+                                'minitems' => '0',
+                                'multiple' => '0',
+                                'renderType' => 'selectSingle',
+                                'size' => '1',
+                                'type' => 'select',
                             ],
-                        ],
-                        'settings.' . self::ITEMS_PER_PAGE => [
-                            'label' => self::LOCALLANG . 'list.pagination.itemsPerPage',
-                            'config' => [
-                                'type' => 'input',
-                                'size' => '2',
-                            ],
-                        ],
-                        'settings.' . self::LIMIT => [
-                            'label' => self::LOCALLANG . 'list.pagination.limit',
-                            'config' => [
-                                'type' => 'input',
-                                'size' => '2',
-                            ],
+                            'exclude' => '0',
+                            'label' => self::LOCALLANG . 'list.orderDirection',
                         ],
                         'settings.' . self::PROPERTIES => [
-                            'label' => self::LOCALLANG . 'list.properties',
-                            'description' => self::LOCALLANG . 'list.properties.description',
                             'config' => [
-                                'type' => 'select',
-                                'renderType' => 'selectMultipleSideBySide',
-                                'multiple' => '0',
                                 'itemsProcFunc' => ItemsProc::class . '->getListProperties',
+                                'multiple' => '0',
+                                'renderType' => 'selectMultipleSideBySide',
+                                'type' => 'select',
                             ],
+                            'description' => self::LOCALLANG . 'list.properties.description',
+                            'label' => self::LOCALLANG . 'list.properties',
                         ],
                     ],
+                    'sheetTitle' => self::LOCALLANG . 'list',
+                    'type' => 'array',
                 ],
             ],
         ];

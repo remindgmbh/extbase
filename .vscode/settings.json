@@ -1,4 +1,6 @@
 {
-    "phpcs.standard": ".build/phpcs.xml",
-    "phpcs.executablePath": ".build/bin/phpcs",
+    "phpCodeSniffer.exec.linux": "./vendor/bin/phpcs",
+    "phpCodeSniffer.standard": "Custom",
+    "phpCodeSniffer.standardCustom": "./phpcs.xml",
+    "phpCodeSniffer.exclude": []
 }

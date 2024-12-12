@@ -15,6 +15,9 @@ use TYPO3\CMS\Extbase\Persistence\ObjectStorage;
 
 abstract class AbstractJsonSerializableEntity extends AbstractEntity implements JsonSerializable
 {
+    /**
+     * @return mixed[]
+     */
     public function jsonSerialize(): array
     {
         $classNames = [
@@ -26,30 +29,25 @@ abstract class AbstractJsonSerializableEntity extends AbstractEntity implements 
         $settings = $configurationManager->getConfiguration(ConfigurationManagerInterface::CONFIGURATION_TYPE_SETTINGS);
         $fileUtility = GeneralUtility::makeInstance(FileUtility::class);
         $result = [
-            'uid' => $this->uid,
             'pid' => $this->pid,
+            'uid' => $this->uid,
         ];
 
         foreach ($classNames as $className) {
             if (isset($settings['jsonFields'][$className])) {
                 $fields = $settings['jsonFields'][$className];
                 foreach (GeneralUtility::trimExplode(',', $fields, true) as $field) {
-                    if ($this->_hasProperty($field) || method_exists($this, 'get' . ucfirst($field))) {
-                        if ($this->_hasProperty($field)) {
-                            $value = $this->_getProperty($field);
-                        } else {
-                            $value = $this->{'get' . ucfirst($field)}();
-                        }
+                    if (
+                        $this->_hasProperty($field) ||
+                        method_exists($this, 'get' . ucfirst($field))
+                    ) {
+                        $value = $this->_hasProperty($field) ? $this->_getProperty($field) : $this->{'get' . ucfirst($field)}();
                         if ($value instanceof FileReference) {
                             $value = $fileUtility->processFile($value->getOriginalResource());
                         }
                         if ($value instanceof ObjectStorage) {
                             $value = array_map(function (mixed $object) use ($fileUtility) {
-                                if ($object instanceof FileReference) {
-                                    return $fileUtility->processFile($object->getOriginalResource());
-                                } else {
-                                    return $object;
-                                }
+                                return $object instanceof FileReference ? $fileUtility->processFile($object->getOriginalResource()) : $object;
                             }, $value->toArray());
                         }
                         $result[$field] = $value;
@@ -63,12 +61,13 @@ abstract class AbstractJsonSerializableEntity extends AbstractEntity implements 
 
     /**
      * @param Property[] $properties
+     * @return mixed[]
      */
     public function getProcessedProperties(array $properties): array
     {
         return array_reduce($properties, function (array $result, Property $property) {
             $propertyName = $property->getName();
-            $value = $this->_getProperty($propertyName);
+            $value = !empty($propertyName) ? $this->_getProperty($propertyName) : null;
             $field = GeneralUtility::camelCaseToLowerCaseUnderscored($propertyName);
 
             $valueOverrides = $property->getOverrides();

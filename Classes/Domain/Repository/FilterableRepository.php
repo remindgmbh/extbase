@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Remind\Extbase\Domain\Repository;
 
 use Remind\Extbase\Utility\Dto\Conjunction;
@@ -8,10 +10,14 @@ use TYPO3\CMS\Extbase\Persistence\QueryInterface;
 use TYPO3\CMS\Extbase\Persistence\QueryResultInterface;
 use TYPO3\CMS\Extbase\Persistence\Repository;
 
+/**
+ * @template-extends Repository<\TYPO3\CMS\Extbase\DomainObject\AbstractEntity>
+ */
 class FilterableRepository extends Repository
 {
     /**
      * @param \Remind\Extbase\Utility\Dto\DatabaseFilter[] $filters
+     * @return QueryResultInterface<\TYPO3\CMS\Extbase\DomainObject\AbstractEntity>
      */
     public function findByFilters(
         array $filters,
@@ -32,23 +38,15 @@ class FilterableRepository extends Repository
                 foreach ($fields as $field) {
                     $fieldValue = $value[$field];
                     if ($filter->isMm()) {
-                        if (!$fieldValue) {
-                            // $field contains the number of relations, so if $fieldValue is "" it should be 0
-                            $fieldConstraints[] = $query->equals($field, 0);
-                        } else {
-                            $fieldConstraints[] = $query->contains($field, $fieldValue);
-                        }
+                        // $field contains the number of relations, so if $fieldValue is "" it should be 0
+                        $fieldConstraints[] = !$fieldValue ? $query->equals($field, 0) : $query->contains($field, $fieldValue);
                     } else {
-                        if (!$fieldValue) {
-                            // if $value is empty (should be '' because query param cannot be null) either
-                            // an empty string or null is allowed
-                            $fieldConstraints[] = $query->logicalOr(
-                                $query->equals($field, null),
-                                $query->equals($field, ''),
-                            );
-                        } else {
-                            $fieldConstraints[] = $query->equals($field, $fieldValue);
-                        }
+                        // if $value is empty (should be '' because query param cannot be null) either
+                        // an empty string or null is allowed
+                        $fieldConstraints[] = !$fieldValue ? $query->logicalOr(
+                            $query->equals($field, null),
+                            $query->equals($field, ''),
+                        ) : $query->equals($field, $fieldValue);
                     }
                 }
                 if (!empty($fieldConstraints)) {

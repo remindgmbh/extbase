@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Remind\Extbase\Utility\Dto;
 
 class DatabaseFilter
@@ -16,6 +18,9 @@ class DatabaseFilter
 
     private Conjunction $conjunction;
 
+    /**
+     * @param array<array<string|int>> $values
+     */
     public function __construct(string $filterName, array $values, bool $mm, Conjunction $conjunction)
     {
         $this->filterName = $filterName;
@@ -36,6 +41,9 @@ class DatabaseFilter
         return $this;
     }
 
+    /**
+     * @param array<string|int> $value
+     */
     public function addValue(array $value): self
     {
         $this->values[] = $value;
@@ -51,6 +59,9 @@ class DatabaseFilter
         return $this->values;
     }
 
+    /**
+     * @param array<array<string|int>> $values
+     */
     public function setValues(array $values): self
     {
         $this->values = $values;

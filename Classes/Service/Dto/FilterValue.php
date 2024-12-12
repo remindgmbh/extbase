@@ -8,35 +8,53 @@ use JsonSerializable;
 
 class FilterValue implements JsonSerializable
 {
+    /**
+     * @var mixed[]
+     */
     protected array $value = [];
+
     protected string $label = '';
+
     protected bool $active = false;
+
     protected int $count = 0;
+
     protected string $link = '';
 
+    /**
+     * @param mixed[] $value
+     */
     public function __construct(array $value, string $label)
     {
         $this->value = $value;
         $this->label = $label;
     }
 
+    /**
+     * @return mixed[]
+     */
     public function jsonSerialize(): array
     {
         return [
-            'value' => $this->value,
-            'label' => $this->label,
             'active' => $this->active,
             'count' => $this->count,
+            'label' => $this->label,
             'link' => $this->link,
+            'value' => $this->value,
         ];
     }
 
-
+    /**
+     * @return mixed[]
+     */
     public function getValue(): array
     {
         return $this->value;
     }
 
+    /**
+     * @param mixed[] $value
+     */
     public function setValue(array $value): self
     {
         $this->value = $value;

@@ -11,12 +11,14 @@ use TYPO3\CMS\Core\Utility\GeneralUtility;
 class FlexFormSheetsService
 {
     private DatabaseService $databaseService;
+
     public function __construct()
     {
         $this->databaseService = GeneralUtility::makeInstance(DatabaseService::class);
     }
 
     /**
+     * @param mixed[] $settings
      * @return Property[]
      */
     public function getPropertyOverrides(array $settings, int $sysLanguageUid): array

@@ -9,7 +9,9 @@ use JsonSerializable;
 class FrontendFilter implements JsonSerializable
 {
     private string $name = '';
+
     private string $label = '';
+
     private FilterValue $resetFilter;
 
     /**
@@ -27,11 +29,14 @@ class FrontendFilter implements JsonSerializable
         $this->resetFilter = $resetFilter;
     }
 
+    /**
+     * @return mixed[]
+     */
     public function jsonSerialize(): array
     {
         return [
-            'name' => $this->name,
             'label' => $this->label,
+            'name' => $this->name,
             'resetFilter' => $this->resetFilter,
             'values' => $this->values,
         ];

@@ -1,0 +1,9 @@
+{
+    "recommendations": [
+        "benjaminkott.typo3-typoscript",
+        "devsense.phptools-vscode",
+        "obliviousharmony.vscode-php-codesniffer",
+        "sanderronde.phpstan-vscode"
+    ],
+    "unwantedRecommendations": []
+}

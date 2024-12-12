@@ -9,11 +9,21 @@ use JsonSerializable;
 class Property implements JsonSerializable
 {
     private string $name = '';
+
     private string $label = '';
+
     private string $prefix = '';
+
     private string $suffix = '';
+
+    /**
+     * @var mixed[]
+     */
     private array $overrides = [];
 
+    /**
+     * @param mixed[] $overrides
+     */
     public function __construct(
         string $name,
         string $label,
@@ -28,14 +38,17 @@ class Property implements JsonSerializable
         $this->overrides = $overrides;
     }
 
+    /**
+     * @return mixed[]
+     */
     public function jsonSerialize(): array
     {
         return [
-            'name' => $this->name,
             'label' => $this->label,
+            'name' => $this->name,
+            'overrides' => $this->overrides,
             'prefix' => $this->prefix,
             'suffix' => $this->suffix,
-            'overrides' => $this->overrides,
         ];
     }
 
@@ -87,11 +100,17 @@ class Property implements JsonSerializable
         return $this;
     }
 
+    /**
+     * @return mixed[]
+     */
     public function getOverrides(): array
     {
         return $this->overrides;
     }
 
+    /**
+     * @param mixed[] $override
+     */
     public function addOverride(array $override): self
     {
         $this->overrides[] = $override;

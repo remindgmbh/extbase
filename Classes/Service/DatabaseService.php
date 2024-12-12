@@ -20,6 +20,7 @@ use TYPO3\CMS\Core\Utility\GeneralUtility;
 class DatabaseService
 {
     private PageRepository $pageRepository;
+
     private FlexFormService $flexFormService;
 
     public function __construct()
@@ -41,6 +42,9 @@ class DatabaseService
         return $queryBuilder;
     }
 
+    /**
+     * @return mixed[]
+     */
     public function getFlexFormByContentElementUid(int $uid, int $sysLanguageUid): array
     {
         $queryBuilder = $this->getQueryBuilder('tt_content');
@@ -82,6 +86,9 @@ class DatabaseService
         );
     }
 
+    /**
+     * @return mixed[]
+     */
     public function getFlexFormByPageUidAndCType(int $pageUid, string $cType, int $sysLanguageUid): array
     {
         $queryBuilder = $this->getQueryBuilder('tt_content');
@@ -101,11 +108,14 @@ class DatabaseService
         );
     }
 
+    /**
+     * @return mixed[]
+     */
     public function getRecords(
         int $sysLanguageUid,
         string $tableName,
         string $pages,
-        ?int $recursive = 0
+        int $recursive = 0
     ): array {
         $result = [];
 
@@ -140,15 +150,17 @@ class DatabaseService
     }
 
     /**
+     * @param string[] $fieldNames
      * @param \Remind\Extbase\Utility\Dto\DatabaseFilter[] $filters
+     * @return mixed[]
      */
     public function getAvailableFieldValues(
         int $sysLanguageUid,
         string $tableName,
         array $fieldNames,
-        ?string $pages = null,
-        ?int $recursive = 0,
-        ?array $filters = [],
+        string|null $pages = null,
+        int $recursive = 0,
+        array $filters = [],
     ): array {
         $queryBuilder = $this->getQueryBuilder($tableName);
         $result = [];
@@ -249,6 +261,9 @@ class DatabaseService
         return $result;
     }
 
+    /**
+     * @return mixed[]
+     */
     private function getFlexForm(QueryBuilder $queryBuilder, CompositeExpression|string ...$predicates): array
     {
         $row = $this->getField('pi_flexform', $queryBuilder, ...$predicates);
@@ -266,6 +281,9 @@ class DatabaseService
         return $result->fetchOne();
     }
 
+    /**
+     * @param int[] $pageIds
+     */
     private function getPageConstraint(QueryBuilder $queryBuilder, string $tableName, array $pageIds): string
     {
         return $queryBuilder->expr()->in(
@@ -289,7 +307,7 @@ class DatabaseService
         QueryBuilder $queryBuilder,
         string $tableName,
         array $filters,
-    ): ?CompositeExpression {
+    ): CompositeExpression {
         $constraints = [];
 
         foreach ($filters as $filter) {
@@ -324,16 +342,22 @@ class DatabaseService
                 $filterConstraints[] = $queryBuilder->expr()->and(...$valueConstraints);
             }
 
-            $constraints[] = ($filter->getConjunction() === Conjunction::AND->value)
+            $constraints[] = $filter->getConjunction() === Conjunction::AND
                 ? $queryBuilder->expr()->and(...$filterConstraints)
                 : $queryBuilder->expr()->or(...$filterConstraints);
         }
         return $queryBuilder->expr()->and(...$constraints);
     }
 
+    /**
+     * @param mixed[] $rows
+     * @param mixed[] $foreignTables
+     * @return mixed[]
+     */
     private function formatFilterValues(array $rows, string $tableName, array $foreignTables): array
     {
         return array_map(function (array $row) use ($tableName, $foreignTables) {
+            /** @var mixed[] $data */
             $data = [];
             foreach ([$tableName, ...array_keys($foreignTables)] as $table) {
                 foreach ($row as $key => $value) {
@@ -373,6 +397,9 @@ class DatabaseService
         return sprintf('%s.%s AS %s_%s', $tableName, $fieldName, $tableName, $fieldName);
     }
 
+    /**
+     * @return int[]
+     */
     private function getPageIds(string $pages, int $recursive): array
     {
         $pageIds = GeneralUtility::intExplode(',', $pages, true);
@@ -423,6 +450,9 @@ class DatabaseService
         return $queryBuilder;
     }
 
+    /**
+     * @param mixed[] $row
+     */
     private function getRecordTitle(string $tableName, array $row): string
     {
         $labelField = $GLOBALS['TCA'][$tableName]['ctrl']['label'];

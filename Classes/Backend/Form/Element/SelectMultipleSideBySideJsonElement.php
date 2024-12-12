@@ -13,17 +13,19 @@ use TYPO3\CMS\Extbase\Utility\LocalizationUtility;
 class SelectMultipleSideBySideJsonElement extends AbstractFormElement
 {
     /**
-     * Default field information enabled for this element.
-     *
-     * @var array
+     * @var mixed[]
      */
+    // phpcs:ignore SlevomatCodingStandard.TypeHints.PropertyTypeHint.MissingNativeTypeHint
     protected $defaultFieldInformation = [
         'tcaDescription' => [
             'renderType' => 'tcaDescription',
         ],
     ];
 
-    public function render()
+    /**
+     * @return mixed[]
+     */
+    public function render(): array
     {
         $parameterArray = $this->data['parameterArray'];
         $resultArray = $this->initializeResultArray();
@@ -36,17 +38,17 @@ class SelectMultipleSideBySideJsonElement extends AbstractFormElement
 
         $attributes = array_merge(
             [
-                'id' => $fieldId,
-                'name' => htmlspecialchars($parameterArray['itemFormElName']),
-                'data-formengine-validation-rules' => $this->getValidationDataAsJsonString($config),
-                'data-formengine-input-name' => htmlspecialchars($parameterArray['itemFormElName']),
-                'wrap' => (string)(($config['wrap'] ?? 'virtual') ?: 'virtual'),
-                'hidden' => 'true',
                 'class' => implode(' ', [
                     'form-control',
                     't3js-formengine-textarea',
                     'formengine-textarea',
                 ]),
+                'data-formengine-input-name' => htmlspecialchars($parameterArray['itemFormElName']),
+                'data-formengine-validation-rules' => $this->getValidationDataAsJsonString($config),
+                'hidden' => 'true',
+                'id' => $fieldId,
+                'name' => htmlspecialchars($parameterArray['itemFormElName']),
+                'wrap' => (string)($config['wrap'] ?? 'virtual' ?: 'virtual'),
             ],
             $this->getOnFieldChangeAttrs('change', $parameterArray['fieldChangeFunc'] ?? [])
         );
@@ -56,13 +58,13 @@ class SelectMultipleSideBySideJsonElement extends AbstractFormElement
             $label = $item['label'];
             $value = $item['value'];
             return [
-                'value' => $value,
                 'label' => $this->appendValueToLabelInDebugMode(
                     $label
                         ? $label
                         : LocalizationUtility::translate('emptyValue', 'rmnd_extbase'),
                     $value
                 ),
+                'value' => $value,
             ];
         }, $possibleItems);
 
@@ -78,9 +80,9 @@ class SelectMultipleSideBySideJsonElement extends AbstractFormElement
             sprintf(
                 '<typo3-backend-select-multiple-side-by-side-json-element %s></typo3-backend-select-multiple-side-by-side-json-element>',
                 GeneralUtility::implodeAttributes([
-                    'dataId' => $attributes['id'],
                     'availableOptionsId' => $availableOptionsFieldId,
-                    'possibleItems' => json_encode($possibleItems ?? []),
+                    'dataId' => $attributes['id'],
+                    'possibleItems' => json_encode($possibleItems) ?: '[]',
                 ], true),
             ),
             sprintf(
@@ -96,8 +98,7 @@ class SelectMultipleSideBySideJsonElement extends AbstractFormElement
         $resultArray['javaScriptModules'][] = JavaScriptModuleInstruction::create(
             '@remind/extbase/backend/element/select-multiple-side-by-side-json-element.js'
         );
-        $resultArray
-            ['additionalInlineLanguageLabelFiles'][] = 'EXT:core/Resources/Private/Language/locallang_core.xlf';
+        $resultArray['additionalInlineLanguageLabelFiles'][] = 'EXT:core/Resources/Private/Language/locallang_core.xlf';
 
         $resultArray['html'] = implode(LF, $html);
         return $resultArray;
@@ -105,7 +106,11 @@ class SelectMultipleSideBySideJsonElement extends AbstractFormElement
 
     protected function appendValueToLabelInDebugMode(string|int $label, string|int $value): string
     {
-        if ($value !== '' && $this->getBackendUser()->shallDisplayDebugInformation() && $value !== $label) {
+        if (
+            $value !== '' &&
+            $this->getBackendUser()->shallDisplayDebugInformation() &&
+            $value !== $label
+        ) {
             return trim($label . ' [' . $value . ']');
         }
 
