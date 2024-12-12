@@ -6,6 +6,7 @@ use Remind\Extbase\Backend\Form\Container\FlexFormContainerContainer;
 use Remind\Extbase\Backend\Form\Element\SelectMultipleSideBySideJsonElement;
 use Remind\Extbase\Backend\Form\Element\ValueLabelPairsElement;
 use Remind\Extbase\Backend\Form\FormDataProvider\UserItemProvider;
+use Remind\Extbase\Routing\Aspect\DynamicValueMapper;
 use Remind\Extbase\Routing\Aspect\FilterValueMapper;
 use Remind\Extbase\Routing\Aspect\PersistedValueMapper;
 use Remind\Extbase\Routing\Enhancer\ExtbasePluginQueryEnhancer;
@@ -75,6 +76,13 @@ defined('TYPO3') || die('Access denied.');
         ['routing']
         ['aspects']
         ['FilterValueMapper'] = FilterValueMapper::class;
+
+    $GLOBALS
+        ['TYPO3_CONF_VARS']
+        ['SYS']
+        ['routing']
+        ['aspects']
+        ['DynamicValueMapper'] = DynamicValueMapper::class;
 
     $GLOBALS
         ['TYPO3_CONF_VARS']
