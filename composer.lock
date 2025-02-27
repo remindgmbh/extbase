@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "3c7507b7795b8be97f8f9b61005e91c9",
+    "content-hash": "60bb6c63b7c1c57b1c08246f7df2bf56",
     "packages": [
         {
             "name": "bacon/bacon-qr-code",
@@ -6124,16 +6124,16 @@
         },
         {
             "name": "remind/headless",
-            "version": "v4.0.0",
+            "version": "dev-develop",
             "source": {
                 "type": "git",
                 "url": "https://github.com/remindgmbh/headless.git",
-                "reference": "f5db9b3472c8254f5c1e43869e870813e9a9fabd"
+                "reference": "5da36fa8e825364ebe65a2b281e2388e27e8de9f"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/remindgmbh/headless/zipball/f5db9b3472c8254f5c1e43869e870813e9a9fabd",
-                "reference": "f5db9b3472c8254f5c1e43869e870813e9a9fabd",
+                "url": "https://api.github.com/repos/remindgmbh/headless/zipball/5da36fa8e825364ebe65a2b281e2388e27e8de9f",
+                "reference": "5da36fa8e825364ebe65a2b281e2388e27e8de9f",
                 "shasum": ""
             },
             "require": {
@@ -6179,9 +6179,9 @@
             "description": "REMIND - Headless",
             "support": {
                 "issues": "https://github.com/remindgmbh/headless/issues",
-                "source": "https://github.com/remindgmbh/headless/tree/v4.0.0"
+                "source": "https://github.com/remindgmbh/headless/tree/develop"
             },
-            "time": "2024-11-13T12:02:18+00:00"
+            "time": "2025-02-27T13:47:26+00:00"
         },
         {
             "name": "saschaegerer/phpstan-typo3",
@@ -6593,12 +6593,15 @@
     ],
     "aliases": [],
     "minimum-stability": "dev",
-    "stability-flags": {},
+    "stability-flags": {
+        "remind/routing": 20,
+        "remind/headless": 20
+    },
     "prefer-stable": true,
     "prefer-lowest": false,
     "platform": {
         "php": "^8.2"
     },
-    "platform-dev": {},
+    "platform-dev": [],
     "plugin-api-version": "2.6.0"
 }

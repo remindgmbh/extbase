@@ -4,9 +4,9 @@ declare(strict_types=1);
 
 namespace Remind\Extbase\Domain\Model;
 
-use FriendsOfTYPO3\Headless\Utility\FileUtility;
 use JsonSerializable;
 use Remind\Extbase\Service\Dto\Property;
+use Remind\Headless\Service\FilesService;
 use TYPO3\CMS\Core\Utility\GeneralUtility;
 use TYPO3\CMS\Extbase\Configuration\ConfigurationManagerInterface;
 use TYPO3\CMS\Extbase\Domain\Model\FileReference;
@@ -27,7 +27,7 @@ abstract class AbstractJsonSerializableEntity extends AbstractEntity implements 
 
         $configurationManager = GeneralUtility::makeInstance(ConfigurationManagerInterface::class);
         $settings = $configurationManager->getConfiguration(ConfigurationManagerInterface::CONFIGURATION_TYPE_SETTINGS);
-        $fileUtility = GeneralUtility::makeInstance(FileUtility::class);
+        $filesService = GeneralUtility::makeInstance(FilesService::class);
         $result = [
             'pid' => $this->pid,
             'uid' => $this->uid,
@@ -43,11 +43,11 @@ abstract class AbstractJsonSerializableEntity extends AbstractEntity implements 
                     ) {
                         $value = $this->_hasProperty($field) ? $this->_getProperty($field) : $this->{'get' . ucfirst($field)}();
                         if ($value instanceof FileReference) {
-                            $value = $fileUtility->processFile($value->getOriginalResource());
+                            $value = $filesService->processImage($value->getOriginalResource());
                         }
                         if ($value instanceof ObjectStorage) {
-                            $value = array_map(function (mixed $object) use ($fileUtility) {
-                                return $object instanceof FileReference ? $fileUtility->processFile($object->getOriginalResource()) : $object;
+                            $value = array_map(function (mixed $object) use ($filesService) {
+                                return $object instanceof FileReference ? $filesService->processImage($object->getOriginalResource()) : $object;
                             }, $value->toArray());
                         }
                         $result[$field] = $value;

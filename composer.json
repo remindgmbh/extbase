@@ -54,7 +54,7 @@
         "phpstan/extension-installer": "^1.4",
         "phpstan/phpstan": "^1.12",
         "remind/coding-standard": "^1.0",
-        "remind/headless": "^4.0",
+        "remind/headless": "^4.0 | dev-develop",
         "saschaegerer/phpstan-typo3": "^1.10",
         "slevomat/coding-standard": "^8.15",
         "squizlabs/php_codesniffer": "^3.11"
