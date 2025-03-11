@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace Remind\Extbase\Utility;
 
-use Remind\Extbase\Service\Dto\Property;
+use Remind\Extbase\Controller\Dto\Property;
 use TYPO3\CMS\Backend\Utility\BackendUtility;
 use TYPO3\CMS\Core\Utility\GeneralUtility;
 use TYPO3\CMS\Extbase\Utility\LocalizationUtility;

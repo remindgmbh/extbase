@@ -6,7 +6,3 @@ services:
   Remind\Extbase\:
     resource: '../Classes/*'
     exclude: '../Classes/Domain/Model/*'
-  Remind\Extbase\Service\ControllerService:
-    shared: false
-  Remind\Extbase\Controller\CustomValueEditorController:
-    tags: ['backend.controller']

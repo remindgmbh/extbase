@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace Remind\Extbase\Service\Dto;
+namespace Remind\Extbase\Controller\Dto;
 
 use TYPO3\CMS\Core\Pagination\PaginationInterface;
 

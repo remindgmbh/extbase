@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace Remind\Extbase\Event;
 
-use Remind\Extbase\Service\Dto\FilterableListResult;
+use Remind\Extbase\Controller\Dto\FilterableListResult;
 
 final class ModifyFilterableListResultEvent extends AbstractExtbaseEvent
 {

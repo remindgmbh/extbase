@@ -11,13 +11,14 @@ use TYPO3\CMS\Extbase\Persistence\QueryResultInterface;
 use TYPO3\CMS\Extbase\Persistence\Repository;
 
 /**
- * @template-extends Repository<\TYPO3\CMS\Extbase\DomainObject\AbstractEntity>
+ * @template T of \TYPO3\CMS\Extbase\DomainObject\AbstractEntity
+ * @template-extends Repository<T>
  */
 class FilterableRepository extends Repository
 {
     /**
      * @param \Remind\Extbase\Utility\Dto\DatabaseFilter[] $filters
-     * @return QueryResultInterface<\TYPO3\CMS\Extbase\DomainObject\AbstractEntity>
+     * @return QueryResultInterface<int, T>
      */
     public function findByFilters(
         array $filters,
@@ -41,7 +42,9 @@ class FilterableRepository extends Repository
                     $field = GeneralUtility::underscoredToLowerCamelCase($field);
                     if ($filter->isMm()) {
                         // $field contains the number of relations, so if $fieldValue is "" it should be 0
-                        $fieldConstraints[] = !$fieldValue ? $query->equals($field, 0) : $query->contains($field, $fieldValue);
+                        $fieldConstraints[] = !$fieldValue
+                            ? $query->equals($field, 0)
+                            : $query->contains($field, $fieldValue);
                     } else {
                         // if $value is empty (should be '' because query param cannot be null) either
                         // an empty string or null is allowed

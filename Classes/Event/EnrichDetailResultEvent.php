@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace Remind\Extbase\Event;
 
-use Remind\Extbase\Service\Dto\DetailResult;
+use Remind\Extbase\Controller\Dto\DetailResult;
 
 final class EnrichDetailResultEvent extends AbstractExtbaseEvent
 {

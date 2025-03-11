@@ -44,18 +44,18 @@
     },
     "require": {
         "php": "^8.2",
-        "remind/routing": "^1.0 | dev-develop",
-        "typo3/cms-backend": "^12.4",
-        "typo3/cms-core": "^12.4",
-        "typo3/cms-frontend": "^12.4"
+        "remind/routing": "^1.0 | dev-develop | 13.x-dev",
+        "typo3/cms-backend": "^13.4",
+        "typo3/cms-core": "^13.4",
+        "typo3/cms-frontend": "^13.4"
     },
     "require-dev": {
         "dealerdirect/phpcodesniffer-composer-installer": "^1.0",
         "phpstan/extension-installer": "^1.4",
-        "phpstan/phpstan": "^1.12",
+        "phpstan/phpstan": "^2.1",
         "remind/coding-standard": "^1.0",
-        "remind/headless": "^4.0 | dev-develop",
-        "saschaegerer/phpstan-typo3": "^1.10",
+        "remind/headless": "^6.0 | dev-develop | 13.x-dev",
+        "saschaegerer/phpstan-typo3": "^2.0",
         "slevomat/coding-standard": "^8.15",
         "squizlabs/php_codesniffer": "^3.11"
     },
