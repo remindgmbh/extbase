@@ -179,6 +179,10 @@ class PluginUtility
                 $dataStructure = (string) file_get_contents($file);
             }
             $dataStructure = GeneralUtility::xml2arrayProcess($dataStructure);
+
+            if (is_string($dataStructure)) {
+                throw new RuntimeException($dataStructure, 1741693533);
+            }
         }
 
         self::mergeWithCurrentFlexForm($type, $dataStructure);
@@ -191,7 +195,13 @@ class PluginUtility
     {
         $type = '*,' . $type;
         $flexFormString = $GLOBALS['TCA']['tt_content']['columns']['pi_flexform']['config']['ds'][$type];
-        return GeneralUtility::xml2arrayProcess($flexFormString);
+        $result = GeneralUtility::xml2arrayProcess($flexFormString);
+
+        if (is_string($result)) {
+            throw new RuntimeException($result, 1741693611);
+        }
+
+        return $result;
     }
 
     /**
@@ -250,7 +260,7 @@ class PluginUtility
      */
     private static function flexFormArrayToString(array $flexForm): string
     {
-        $flexFormTools = new FlexFormTools();
-        return $flexFormTools->flexArray2Xml($flexForm, addPrologue: true);
+        $flexFormTools = GeneralUtility::makeInstance(FlexFormTools::class);
+        return $flexFormTools->flexArray2Xml($flexForm);
     }
 }

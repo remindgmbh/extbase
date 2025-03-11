@@ -4,12 +4,12 @@ declare(strict_types=1);
 
 namespace Remind\Extbase\Routing\Aspect;
 
+use Doctrine\DBAL\ParameterType;
 use InvalidArgumentException;
-use PDO;
 use Remind\Extbase\FlexForms\FrontendFilterSheets;
-use TYPO3\CMS\Backend\Utility\BackendUtility;
-use TYPO3\CMS\Core\Context\ContextAwareInterface;
-use TYPO3\CMS\Core\Context\ContextAwareTrait;
+use Remind\Routing\Aspect\CTypeAwareInterface;
+use Remind\Routing\Aspect\PageAwareInterface;
+use TYPO3\CMS\Core\Context\Context;
 use TYPO3\CMS\Core\Database\ConnectionPool;
 use TYPO3\CMS\Core\Database\Query\Restriction\FrontendGroupRestriction;
 use TYPO3\CMS\Core\Database\Query\Restriction\FrontendRestrictionContainer;
@@ -18,6 +18,7 @@ use TYPO3\CMS\Core\Routing\Aspect\ModifiableAspectInterface;
 use TYPO3\CMS\Core\Routing\Aspect\PersistedMappableAspectInterface;
 use TYPO3\CMS\Core\Routing\Aspect\SiteAccessorTrait;
 use TYPO3\CMS\Core\Routing\Aspect\StaticMappableAspectInterface;
+use TYPO3\CMS\Core\Schema\TcaSchemaFactory;
 use TYPO3\CMS\Core\Service\FlexFormService;
 use TYPO3\CMS\Core\Site\SiteAwareInterface;
 use TYPO3\CMS\Core\Site\SiteLanguageAwareInterface;
@@ -27,11 +28,11 @@ use TYPO3\CMS\Core\Utility\GeneralUtility;
 class FilterValueMapper implements
     PersistedMappableAspectInterface,
     StaticMappableAspectInterface,
-    ContextAwareInterface,
+    PageAwareInterface,
+    CTypeAwareInterface,
     SiteLanguageAwareInterface,
     SiteAwareInterface
 {
-    use ContextAwareTrait;
     use SiteLanguageAwareTrait;
     use SiteAccessorTrait;
 
@@ -47,9 +48,18 @@ class FilterValueMapper implements
      */
     private array $aspects;
 
+    /**
+     * @var mixed[]
+     */
+    private array $page;
+
+    private string $cType;
+
     private AspectFactory $aspectFactory;
 
     private FlexFormService $flexFormService;
+
+    private TcaSchemaFactory $tcaSchemaFactory;
 
     /**
      * @param mixed[] $settings
@@ -86,6 +96,7 @@ class FilterValueMapper implements
         $this->aspects = $aspects;
         $this->aspectFactory = GeneralUtility::makeInstance(AspectFactory::class);
         $this->flexFormService = GeneralUtility::makeInstance(FlexFormService::class);
+        $this->tcaSchemaFactory = GeneralUtility::makeInstance(TcaSchemaFactory::class);
     }
 
     public function generate(string $originalValue): ?string
@@ -121,6 +132,32 @@ class FilterValueMapper implements
         }
 
         return json_encode($result) ?: null;
+    }
+
+    /**
+     * @return mixed[]
+     */
+    public function getPage(): array
+    {
+        return $this->page;
+    }
+
+    /**
+     * @param mixed[] $page
+     */
+    public function setPage(array $page): void
+    {
+        $this->page = $page;
+    }
+
+    public function getCType(): string
+    {
+        return $this->cType;
+    }
+
+    public function setCType(string $cType): void
+    {
+        $this->cType = $cType;
     }
 
     /**
@@ -272,7 +309,7 @@ class FilterValueMapper implements
 
         $constraints = [];
         foreach ($values as $field => $value) {
-            $fieldTca = BackendUtility::getTcaFieldConfiguration($this->tableName, $field);
+            $fieldTca = $this->tcaSchemaFactory->get($this->tableName)->getField($field)->getConfiguration();
             $mmTable = $fieldTca['MM'] ?? null;
 
             if ($mmTable) {
@@ -317,15 +354,15 @@ class FilterValueMapper implements
      */
     private function getFilters(): array
     {
-        $l10nParent = $this->context->getPropertyFromAspect('extbase', 'page.l10n_parent');
-        $pageUid = $l10nParent ? $l10nParent : $this->context->getPropertyFromAspect('extbase', 'page.uid');
-        $cType = $this->context->getPropertyFromAspect('extbase', 'CType');
+        $l10nParent = $this->page['l10n_parent'];
+        $pageUid = $l10nParent ? $l10nParent : $this->page['uid'];
         $queryBuilder = GeneralUtility::makeInstance(ConnectionPool::class)
             ->getQueryBuilderForTable('tt_content')
             ->from('tt_content');
-        $queryBuilder->setRestrictions(
-            GeneralUtility::makeInstance(FrontendRestrictionContainer::class, $this->context)
-        );
+        $queryBuilder->setRestrictions(GeneralUtility::makeInstance(
+            FrontendRestrictionContainer::class,
+            GeneralUtility::makeInstance(Context::class)
+        ));
         $queryBuilder->getRestrictions()->removeByType(FrontendGroupRestriction::class);
         $queryBuilder
             ->select('pi_flexform')
@@ -333,11 +370,11 @@ class FilterValueMapper implements
                 $queryBuilder->expr()->and(
                     $queryBuilder->expr()->eq(
                         'pid',
-                        $queryBuilder->createNamedParameter($pageUid, PDO::PARAM_INT)
+                        $queryBuilder->createNamedParameter($pageUid, ParameterType::INTEGER)
                     ),
                     $queryBuilder->expr()->eq(
                         'CType',
-                        $queryBuilder->createNamedParameter($cType, PDO::PARAM_STR)
+                        $queryBuilder->createNamedParameter($this->cType, ParameterType::STRING)
                     ),
                     $queryBuilder->expr()->eq(
                         'sys_language_uid',

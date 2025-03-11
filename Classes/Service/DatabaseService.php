@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Remind\Extbase\Service;
 
 use Remind\Extbase\Utility\Dto\Conjunction;
+use Symfony\Component\DependencyInjection\Attribute\Autoconfigure;
 use TYPO3\CMS\Backend\Utility\BackendUtility;
 use TYPO3\CMS\Core\Authentication\BackendUserAuthentication;
 use TYPO3\CMS\Core\Database\Connection;
@@ -14,19 +15,18 @@ use TYPO3\CMS\Core\Database\Query\QueryBuilder;
 use TYPO3\CMS\Core\Database\Query\Restriction\DeletedRestriction;
 use TYPO3\CMS\Core\Database\Query\Restriction\WorkspaceRestriction;
 use TYPO3\CMS\Core\Domain\Repository\PageRepository;
+use TYPO3\CMS\Core\Schema\TcaSchemaFactory;
 use TYPO3\CMS\Core\Service\FlexFormService;
 use TYPO3\CMS\Core\Utility\GeneralUtility;
 
+#[Autoconfigure(public: true)]
 class DatabaseService
 {
-    private PageRepository $pageRepository;
-
-    private FlexFormService $flexFormService;
-
-    public function __construct()
-    {
-        $this->pageRepository = GeneralUtility::makeInstance(PageRepository::class);
-        $this->flexFormService = GeneralUtility::makeInstance(FlexFormService::class);
+    public function __construct(
+        private readonly TcaSchemaFactory $tcaSchemaFactory,
+        private readonly PageRepository $pageRepository,
+        private readonly FlexFormService $flexFormService,
+    ) {
     }
 
     public function getQueryBuilder(string $tableName): QueryBuilder
@@ -37,7 +37,7 @@ class DatabaseService
         $queryBuilder->getRestrictions()
             ->removeAll()
             ->add(GeneralUtility::makeInstance(DeletedRestriction::class))
-            ->add(GeneralUtility::makeInstance(WorkspaceRestriction::class, $this->getBackendUser()?->workspace ?? 0));
+            ->add(GeneralUtility::makeInstance(WorkspaceRestriction::class, $this->getBackendUser()->workspace ?? 0));
 
         return $queryBuilder;
     }
@@ -179,7 +179,7 @@ class DatabaseService
         $foreignTables = [];
 
         foreach ($fieldNames as $fieldName) {
-            $fieldTca = BackendUtility::getTcaFieldConfiguration($tableName, $fieldName);
+            $fieldTca = $this->tcaSchemaFactory->get($tableName)->getField($fieldName)->getConfiguration();
             $mmTable = $fieldTca['MM'] ?? null;
             $foreignTable = $fieldTca['foreign_table'] ?? null;
 
@@ -270,8 +270,11 @@ class DatabaseService
         return $row ? $this->flexFormService->convertFlexFormContentToArray($row) : [];
     }
 
-    private function getField(string $field, QueryBuilder $queryBuilder, CompositeExpression|string ...$predicates): mixed
-    {
+    private function getField(
+        string $field,
+        QueryBuilder $queryBuilder,
+        CompositeExpression|string ...$predicates
+    ): mixed {
         $result = $queryBuilder
             ->select($field)
             ->from('tt_content')
@@ -315,7 +318,7 @@ class DatabaseService
             foreach ($filter->getValues() as $key => $filterValue) {
                 $valueConstraints = [];
                 foreach ($filterValue as $fieldName => $value) {
-                    $fieldTca = BackendUtility::getTcaFieldConfiguration($tableName, $fieldName);
+                    $fieldTca = $this->tcaSchemaFactory->get($tableName)->getField($fieldName)->getConfiguration();
                     $mmTable = $fieldTca['MM'] ?? null;
                     $foreignTable = $fieldTca['foreign_table'] ?? null;
 

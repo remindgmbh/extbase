@@ -4,17 +4,14 @@ declare(strict_types=1);
 
 namespace Remind\Extbase\Service;
 
+use Remind\Extbase\Controller\Dto\Property;
 use Remind\Extbase\FlexForms\PropertyOverrideSheets;
-use Remind\Extbase\Service\Dto\Property;
-use TYPO3\CMS\Core\Utility\GeneralUtility;
 
 class FlexFormSheetsService
 {
-    private DatabaseService $databaseService;
-
-    public function __construct()
-    {
-        $this->databaseService = GeneralUtility::makeInstance(DatabaseService::class);
+    public function __construct(
+        private readonly DatabaseService $databaseService,
+    ) {
     }
 
     /**
@@ -30,7 +27,10 @@ class FlexFormSheetsService
         if ($contentElementId) {
             $propertyOverrides = [];
 
-            $flexForm = $this->databaseService->getFlexFormByContentElementUid((int) $contentElementId, $sysLanguageUid);
+            $flexForm = $this->databaseService->getFlexFormByContentElementUid(
+                (int) $contentElementId,
+                $sysLanguageUid
+            );
 
             if (!empty($flexForm)) {
                 $propertyOverrides = $flexForm['settings'][PropertyOverrideSheets::OVERRIDES] ?? [];

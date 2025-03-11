@@ -7,7 +7,8 @@ namespace Remind\Extbase\Utility;
 use Remind\Extbase\FlexForms\PredefinedFilterSheets;
 use Remind\Extbase\Utility\Dto\Conjunction;
 use Remind\Extbase\Utility\Dto\DatabaseFilter;
-use TYPO3\CMS\Backend\Utility\BackendUtility;
+use TYPO3\CMS\Core\Schema\TcaSchemaFactory;
+use TYPO3\CMS\Core\Utility\GeneralUtility;
 
 class FilterUtility
 {
@@ -59,7 +60,8 @@ class FilterUtility
     ): DatabaseFilter {
         $conjunction = $filterSetting[PredefinedFilterSheets::CONJUNCTION] ?? Conjunction::OR->value;
         $conjunction = Conjunction::from(is_array($conjunction) ? $conjunction[0] : $conjunction);
-        $fieldTca = BackendUtility::getTcaFieldConfiguration($table, $filterName);
+        $tcaSchemaFactory = GeneralUtility::makeInstance(TcaSchemaFactory::class);
+        $fieldTca = $tcaSchemaFactory->get($table)->getField($filterName)->getConfiguration();
         return new DatabaseFilter(
             $filterName,
             $values,

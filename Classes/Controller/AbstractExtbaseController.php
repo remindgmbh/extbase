@@ -2,51 +2,46 @@
 
 declare(strict_types=1);
 
-namespace Remind\Extbase\Service;
+namespace Remind\Extbase\Controller;
 
-use Psr\EventDispatcher\EventDispatcherInterface;
-use Psr\Http\Message\ServerRequestInterface;
+use Remind\Extbase\Controller\Dto\DetailResult;
+use Remind\Extbase\Controller\Dto\FilterableListResult;
+use Remind\Extbase\Controller\Dto\FilterValue;
+use Remind\Extbase\Controller\Dto\FrontendFilter;
+use Remind\Extbase\Controller\Dto\ListResult;
 use Remind\Extbase\Domain\Repository\FilterableRepository;
 use Remind\Extbase\Event\EnrichDetailResultEvent;
+use Remind\Extbase\Event\Enum\SerializeEntityEventType;
 use Remind\Extbase\Event\ModifyDetailItemEvent;
 use Remind\Extbase\Event\ModifyDetailPageTitleEvent;
 use Remind\Extbase\Event\ModifyFilterableListResultEvent;
+use Remind\Extbase\Event\SerializeEntityEvent;
 use Remind\Extbase\FlexForms\DetailSheets;
 use Remind\Extbase\FlexForms\FrontendFilterSheets;
 use Remind\Extbase\FlexForms\ListSheets;
 use Remind\Extbase\FlexForms\SelectionSheets;
 use Remind\Extbase\PageTitle\ExtbasePageTitleProvider;
-use Remind\Extbase\Service\Dto\DetailResult;
-use Remind\Extbase\Service\Dto\FilterableListResult;
-use Remind\Extbase\Service\Dto\FilterValue;
-use Remind\Extbase\Service\Dto\FrontendFilter;
-use Remind\Extbase\Service\Dto\ListResult;
+use Remind\Extbase\Service\DatabaseService;
+use Remind\Extbase\Service\FlexFormSheetsService;
 use Remind\Extbase\Utility\ControllerUtility;
 use Remind\Extbase\Utility\Dto\Conjunction;
 use Remind\Extbase\Utility\Dto\DatabaseFilter;
 use Remind\Extbase\Utility\FilterUtility;
 use Remind\Extbase\Utility\PluginUtility;
+use Remind\Headless\Service\JsonService;
+use TYPO3\CMS\Core\Cache\CacheTag;
 use TYPO3\CMS\Core\Pagination\SimplePagination;
 use TYPO3\CMS\Core\Utility\ArrayUtility;
 use TYPO3\CMS\Core\Utility\GeneralUtility;
 use TYPO3\CMS\Extbase\Configuration\ConfigurationManagerInterface;
 use TYPO3\CMS\Extbase\DomainObject\AbstractEntity;
-use TYPO3\CMS\Extbase\Mvc\Request;
-use TYPO3\CMS\Extbase\Mvc\Web\RequestBuilder;
-use TYPO3\CMS\Extbase\Mvc\Web\Routing\UriBuilder;
+use TYPO3\CMS\Extbase\Mvc\Controller\ActionController;
 use TYPO3\CMS\Extbase\Pagination\QueryResultPaginator;
 use TYPO3\CMS\Extbase\Persistence\Generic\Query;
-use TYPO3\CMS\Extbase\Persistence\RepositoryInterface;
 use TYPO3\CMS\Frontend\ContentObject\ContentObjectRenderer;
-use TYPO3\CMS\Frontend\Controller\TypoScriptFrontendController;
 
-class ControllerService
+abstract class AbstractExtbaseController extends ActionController
 {
-    /**
-     * @var mixed[]
-     */
-    private array $settings;
-
     private string $extensionName;
 
     private string $pluginName;
@@ -57,53 +52,71 @@ class ControllerService
 
     private bool $disableFilterCount;
 
-    /** @var \Remind\Extbase\Service\Dto\Property[] $propertyOverrides */
+    /** @var \Remind\Extbase\Controller\Dto\Property[] $propertyOverrides */
     private array $propertyOverrides;
-
-    private Request $request;
-
-    private FilterableRepository $repository;
-
-    private ?TypoScriptFrontendController $frontendController;
 
     private ?ContentObjectRenderer $cObj;
 
+    private ?DatabaseService $databaseService = null;
+
+    private ?ExtbasePageTitleProvider $pageTitleProvider = null;
+
+    private ?FlexFormSheetsService $flexFormSheetsService = null;
+
+    private ?JsonService $jsonService = null;
+
     public function __construct(
-        private readonly UriBuilder $uriBuilder,
-        private readonly EventDispatcherInterface $eventDispatcher,
-        private readonly DatabaseService $databaseService,
-        private readonly ExtbasePageTitleProvider $pageTitleProvider,
-        private readonly FlexFormSheetsService $flexFormSheetsService,
-        ConfigurationManagerInterface $configurationManager,
-        RequestBuilder $requestBuilder,
+        private readonly FilterableRepository $repository,
     ) {
-        $configuration = $configurationManager->getConfiguration(
+    }
+
+    public function injectDatabaseService(DatabaseService $databaseService): void
+    {
+        $this->databaseService = $databaseService;
+    }
+
+    public function injectPageTitleProvider(ExtbasePageTitleProvider $pageTitleProvider): void
+    {
+        $this->pageTitleProvider = $pageTitleProvider;
+    }
+
+    public function injectFlexFormSheetsService(FlexFormSheetsService $flexFormSheetsService): void
+    {
+        $this->flexFormSheetsService = $flexFormSheetsService;
+    }
+
+    public function injectJsonService(JsonService $jsonService): void
+    {
+        $this->jsonService = $jsonService;
+    }
+
+    protected function initializeAction(): void
+    {
+        $configuration = $this->configurationManager->getConfiguration(
             ConfigurationManagerInterface::CONFIGURATION_TYPE_FRAMEWORK
         );
-        // TODO: replace deprecated function call
-        $this->cObj = $configurationManager->getContentObject();
-        $this->request = $requestBuilder->build($this->getRequest());
-        $this->uriBuilder->setRequest($this->request);
-        $this->frontendController = $this->request->getAttribute('frontend.controller');
-        $this->settings = $configuration['settings'] ?? [];
+
+        $this->cObj = $this->request->getAttribute('currentContentObject');
+
         $this->extensionName = $configuration['extensionName'];
         $this->pluginName = $configuration['pluginName'];
         $cType = strtolower($this->extensionName . '_' . $this->pluginName);
         $this->tableName = PluginUtility::getTableName($cType);
         $this->disableFilterCount = PluginUtility::getDisableFilterCount($cType);
-        $this->propertyOverrides = $this->flexFormSheetsService->getPropertyOverrides($this->settings, $this->cObj?->data['sys_language_uid']);
+        $this->propertyOverrides = $this->flexFormSheetsService?->getPropertyOverrides(
+            $this->settings,
+            $this->cObj?->data['sys_language_uid']
+        ) ?? [];
     }
 
     /**
      * @param mixed[] $filters
      */
-    public function getFilterableList(
-        FilterableRepository $repository,
+    protected function getFilterableList(
         int $currentPage,
         array $filters = [],
         string $filtersArgumentName = 'filter',
     ): FilterableListResult {
-        $this->repository = $repository;
         $this->filtersArgumentName = $filtersArgumentName;
         $queryDatabaseFilters = $this->getQueryDatabaseFilters($filters);
         $predefinedDatabaseFilters = FilterUtility::getPredefinedDatabaseFilters(
@@ -116,6 +129,7 @@ class ControllerService
         );
         $listResult = $this->getListResult($currentPage, $databaseFilters);
         $filterableListResult = new FilterableListResult($listResult);
+
         $frontendFilters = $this->getFrontendFilters($predefinedDatabaseFilters, $queryDatabaseFilters);
         $filterableListResult->setFrontendFilters($frontendFilters);
         $resetFilters = new FilterValue([], $this->settings[FrontendFilterSheets::RESET_FILTERS_LABEL] ?? '');
@@ -130,9 +144,8 @@ class ControllerService
         return $filterableListResult;
     }
 
-    public function getSelectionList(FilterableRepository $repository, int $currentPage): ListResult
+    protected function getSelectionList(int $currentPage): ListResult
     {
-        $this->repository = $repository;
         $recordUids = $this->settings[SelectionSheets::RECORDS];
         $recordUids = GeneralUtility::intExplode(',', $recordUids, true);
 
@@ -151,11 +164,7 @@ class ControllerService
         return $this->getListResult($currentPage, $filters);
     }
 
-    /**
-     * @param \TYPO3\CMS\Extbase\Persistence\RepositoryInterface<AbstractEntity> $repository
-     */
-    public function getDetailResult(
-        RepositoryInterface $repository,
+    protected function getDetailResult(
         ?AbstractEntity $entity
     ): ?DetailResult {
         $source = $this->settings[DetailSheets::SOURCE];
@@ -167,7 +176,7 @@ class ControllerService
                 break;
             case DetailSheets::SOURCE_RECORD:
                 $uid = (int) ($this->settings[DetailSheets::RECORD] ?? null);
-                $item = $repository->findByUid($uid);
+                $item = $this->repository->findByUid($uid);
                 break;
             default:
                 /** @var \TYPO3\CMS\Core\Routing\PageArguments $routing */
@@ -203,16 +212,108 @@ class ControllerService
                 new ModifyDetailPageTitleEvent($this->extensionName, $item)
             );
 
-            $this->pageTitleProvider->setTitle($modifyDetailPageTitleEvent->getTitle());
+            $this->pageTitleProvider?->setTitle($modifyDetailPageTitleEvent->getTitle());
 
             $this->addCacheTag($this->tableName . '_' . $item->getUid());
         }
         return $result;
     }
 
-    public function addCacheTag(string $cacheTag): void
+    protected function addCacheTag(string $cacheTag): void
     {
-        $this->frontendController?->addCacheTags([$cacheTag]);
+        /**
+         * @var ?\TYPO3\CMS\Core\Cache\CacheDataCollector $cacheDataCollector
+         */
+        $cacheDataCollector = $this->request->getAttribute('frontend.cache.collector');
+        $cacheDataCollector?->addCacheTags(new CacheTag($cacheTag, 3600));
+    }
+
+    /**
+     * @return mixed[]
+     */
+    protected function serializeDetailResult(DetailResult $detailResult): array
+    {
+        $item = [];
+        if ($detailResult->getItem()) {
+            /** @var SerializeEntityEvent $event */
+            $event = $this->eventDispatcher->dispatch(new SerializeEntityEvent(
+                $this->extensionName,
+                SerializeEntityEventType::Detail,
+                $this->request,
+                $detailResult->getItem(),
+                $this->uriBuilder,
+                $this->settings,
+            ));
+            $item = $event->getJson();
+        }
+        return [
+            'additionalData' => $detailResult->getAdditionalData(),
+            'item' => $item,
+            'properties' => $detailResult->getProperties(),
+        ];
+    }
+
+    /**
+     * @return mixed[]
+     */
+    protected function serializeList(
+        ListResult $listResult,
+        int $page,
+        string $detailActionName,
+        string $detailUidArgument,
+    ): array {
+        $pagination = $listResult->getPagination();
+        $serializedPagination = $pagination
+            ? $this->jsonService?->serializePagination($this->uriBuilder, $pagination, 'page', $page)
+            : null;
+
+        $items = iterator_to_array($listResult->getPaginatedItems() ?? []);
+        $serializedItems = $this->serializeListItems($items, $detailActionName, $detailUidArgument);
+
+        return [
+            'count' => $listResult->getCount(),
+            'countWithoutLimit' => $listResult->getCountWithoutLimit(),
+            'items' => $serializedItems,
+            'pagination' => $serializedPagination,
+            'properties' => $listResult->getProperties(),
+        ];
+    }
+
+    /**
+     * @return mixed[]
+     */
+    protected function serializeFilterableList(
+        FilterableListResult $listResult,
+        int $page,
+        string $detailActionName,
+        string $detailUidArgument
+    ): array {
+        $result = $this->serializeList($listResult, $page, $detailActionName, $detailUidArgument);
+        $result['filters'] = $listResult->getFrontendFilters();
+        $result['resetFilters'] = $listResult->getResetFilters();
+        return $result;
+    }
+
+    /**
+     * @param AbstractEntity[] $items
+     * @return mixed[]
+     */
+    private function serializeListItems(array $items, string $detailActionName, string $detailUidArgument): array
+    {
+        return array_map(function (AbstractEntity $item) use ($detailActionName, $detailUidArgument) {
+            /** @var SerializeEntityEvent $event */
+            $event = $this->eventDispatcher->dispatch(new SerializeEntityEvent(
+                $this->extensionName,
+                SerializeEntityEventType::List,
+                $this->request,
+                $item,
+                $this->uriBuilder,
+                $this->settings,
+                $detailActionName,
+                $detailUidArgument
+            ));
+            return $event->getJson();
+        }, $items);
     }
 
     /**
@@ -294,14 +395,14 @@ class ControllerService
 
             if ($dynamicValues) {
                 $fieldNames = GeneralUtility::trimExplode(',', $filterName, true);
-                $dynamicFilterValues = $this->cObj ? $this->databaseService->getAvailableFieldValues(
+                $dynamicFilterValues = $this->cObj ? $this->databaseService?->getAvailableFieldValues(
                     $this->cObj->data['sys_language_uid'],
                     $this->tableName,
                     $fieldNames,
                     $this->cObj->data['pages'],
                     $this->cObj->data['recursive'],
                     $predefinedDatabaseFilters,
-                ) : [];
+                ) ?? [] : [];
 
                 $excludedValues = json_decode($filterSetting[FrontendFilterSheets::EXCLUDED_VALUES], true) ?? [];
                 foreach ($excludedValues as $excludedValue) {
@@ -546,10 +647,5 @@ class ControllerService
         }
 
         return $result;
-    }
-
-    private function getRequest(): ServerRequestInterface
-    {
-        return $GLOBALS['TYPO3_REQUEST'];
     }
 }

@@ -33,9 +33,9 @@ class ItemsProc
         't3ver_oid',
     ];
 
-    private ?FlexFormService $flexFormService = null;
+    private FlexFormService $flexFormService;
 
-    private ?DatabaseService $databaseService = null;
+    private DatabaseService $databaseService;
 
     public function __construct()
     {
@@ -136,7 +136,7 @@ class ItemsProc
     public function getPredefinedFilterValues(array &$params): void
     {
         $currentValues = json_decode($params['row'][$params['field']], true) ?? [];
-        $items = $this->databaseService?->getAvailableFieldValues(
+        $items = $this->databaseService->getAvailableFieldValues(
             $this->getSysLanguageUid($params),
             $this->getTableName($params),
             $this->getFieldNames($params, PredefinedFilterSheets::FIELDS),
@@ -176,7 +176,7 @@ class ItemsProc
             $tableName,
         );
 
-        $items = $this->databaseService?->getAvailableFieldValues(
+        $items = $this->databaseService->getAvailableFieldValues(
             $this->getSysLanguageUid($params),
             $tableName,
             $this->getFieldNames($params, FrontendFilterSheets::FIELDS),
@@ -217,11 +217,11 @@ class ItemsProc
         $tableName = $this->getTableName($params);
 
         if ($tableName) {
-            $items = $this->databaseService?->getAvailableFieldValues(
+            $items = $this->databaseService->getAvailableFieldValues(
                 $this->getSysLanguageUid($params),
                 $tableName,
                 $this->getFieldNames($params, PropertyOverrideSheets::FIELDS),
-            ) ?? [];
+            );
 
             array_push($params['items'], ...$items);
         }
@@ -233,12 +233,12 @@ class ItemsProc
      */
     private function getRecordsInPages(array &$params): array
     {
-        return $this->databaseService?->getRecords(
+        return $this->databaseService->getRecords(
             $this->getSysLanguageUid($params),
             $this->getTableName($params),
             $this->getPages($params),
             $this->getRecursive($params),
-        ) ?? [];
+        );
     }
 
     /**
@@ -352,7 +352,7 @@ class ItemsProc
      */
     private function getSettings(array $params, int $sheetId): array
     {
-        $flexForm = $this->flexFormService?->walkFlexFormNode($params['flexParentDatabaseRow']['pi_flexform']) ?? [];
+        $flexForm = $this->flexFormService->walkFlexFormNode($params['flexParentDatabaseRow']['pi_flexform']) ?? [];
         return $flexForm['data'][$sheetId]['lDEF']['settings'] ?? [];
     }
 
