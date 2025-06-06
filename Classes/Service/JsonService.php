@@ -5,8 +5,10 @@ declare(strict_types=1);
 namespace Remind\Extbase\Service;
 
 use JsonSerializable;
+use Psr\EventDispatcher\EventDispatcherInterface;
 use Psr\Http\Message\ServerRequestInterface;
 use Psr\Log\LoggerInterface;
+use Remind\Extbase\Event\AfterListItemSerializedEvent;
 use Remind\Extbase\FlexForms\ListSheets;
 use Remind\Extbase\Service\Dto\FilterableListResult;
 use Remind\Extbase\Service\Dto\ListResult;
@@ -27,6 +29,7 @@ class JsonService
         private readonly UriBuilder $uriBuilder,
         private readonly LoggerInterface $logger,
         private readonly HeadlessJsonService $headlessJsonService,
+        private readonly EventDispatcherInterface $eventDispatcher,
         RequestBuilder $requestBuilder,
         ConfigurationManagerInterface $configurationManager
     ) {
@@ -105,6 +108,13 @@ class JsonService
                 ->setTargetPageUid((int) ($this->settings[ListSheets::DETAIL_PAGE] ?? null))
                 ->uriFor($detailActionName, [$detailUidArgument => $item->getUid()]);
             $serializedItem['link'] = $link;
+
+            /** @var AfterListItemSerializedEvent $afterListItemSerializedEvent */
+            $afterListItemSerializedEvent = $this->eventDispatcher->dispatch(
+                new AfterListItemSerializedEvent($item, $serializedItem)
+            );
+            $serializedItem = $afterListItemSerializedEvent->getSerializedItem();
+
             return $serializedItem;
         }, $items);
     }
