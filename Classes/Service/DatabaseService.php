@@ -453,7 +453,7 @@ class DatabaseService
     /**
      * @param mixed[] $row
      */
-    private function getRecordTitle(string $tableName, array $row): string
+    private function getRecordTitle(string $tableName, array $row): ?string
     {
         $labelField = $GLOBALS['TCA'][$tableName]['ctrl']['label'];
         return $row[$labelField];
