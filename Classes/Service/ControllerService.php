@@ -288,34 +288,41 @@ class ControllerService
                 continue;
             }
 
-            $filterValues = [];
+            $fieldNames = GeneralUtility::trimExplode(',', $filterName, true);
+            $filterValues = $this->cObj ? $this->databaseService->getAvailableFieldValues(
+                $this->cObj->data['sys_language_uid'],
+                $this->tableName,
+                $fieldNames,
+                $this->cObj->data['pages'],
+                $this->cObj->data['recursive'],
+                $predefinedDatabaseFilters,
+            ) : [];
 
             $dynamicValues = (bool) ($filterSetting[FrontendFilterSheets::DYNAMIC_VALUES] ?? false);
 
             if ($dynamicValues) {
-                $fieldNames = GeneralUtility::trimExplode(',', $filterName, true);
-                $dynamicFilterValues = $this->cObj ? $this->databaseService->getAvailableFieldValues(
-                    $this->cObj->data['sys_language_uid'],
-                    $this->tableName,
-                    $fieldNames,
-                    $this->cObj->data['pages'],
-                    $this->cObj->data['recursive'],
-                    $predefinedDatabaseFilters,
-                ) : [];
-
                 $excludedValues = json_decode($filterSetting[FrontendFilterSheets::EXCLUDED_VALUES], true) ?? [];
                 foreach ($excludedValues as $excludedValue) {
-                    foreach ($dynamicFilterValues as $key => $dynamicFilterValue) {
+                    foreach ($filterValues as $key => $dynamicFilterValue) {
                         if ($dynamicFilterValue['value'] === $excludedValue) {
                             unset($dynamicFilterValues[$key]);
                             break;
                         }
                     }
                 }
-
-                $filterValues = array_values($dynamicFilterValues);
+                $filterValues = array_values($filterValues);
             } else {
-                $filterValues = json_decode($filterSetting[FrontendFilterSheets::VALUES] ?? '', true);
+                $selectedValues = json_decode($filterSetting[FrontendFilterSheets::VALUES] ?? '', true) ?? [];
+                $filtered = [];
+                foreach ($selectedValues as $selectedValue) {
+                    foreach ($filterValues as $filterValue) {
+                        if ($filterValue['value'] === $selectedValue) {
+                            $filtered[] = $filterValue;
+                            break;
+                        }
+                    }
+                }
+                $filterValues = $filtered;
             }
 
             if (empty($filterValues)) {
