@@ -455,8 +455,10 @@ class DatabaseService
      */
     private function getRecordTitle(string $tableName, array $row): ?string
     {
-        $labelField = $GLOBALS['TCA'][$tableName]['ctrl']['label'];
-        return $row[$labelField];
+        $labelField = $GLOBALS['TCA'][$tableName]['ctrl']['label'] ?? null;
+        return isset($row[$labelField]) && is_scalar($row[$labelField])
+        ? (string)$row[$labelField]
+        : '[No title]';
     }
 
     private function getBackendUser(): ?BackendUserAuthentication
