@@ -9,4 +9,5 @@ return [
             'path' => 'EXT:rmnd_extbase/Resources/Public/JavaScript/',
         ],
     ],
+    'tags' => ['backend.form'],
 ];
