@@ -217,7 +217,10 @@ class DatabaseService
                     ))
                 );
 
-                $foreignTableSelectFields = BackendUtility::getCommonSelectFields($foreignTable);
+                $foreignTableSelectFields = BackendUtility::getCommonSelectFields(
+                    table: $foreignTable,
+                    fields: $this->tableHasField($foreignTable, 'l10n_parent') ? ['l10n_parent'] : []
+                );
                 $foreignTableSelectFields = GeneralUtility::trimExplode(',', $foreignTableSelectFields, true);
                 $foreignTableSelectFields = array_map(function (string $field) use ($foreignTable) {
                     return $this->formatSelectField($field, $foreignTable);
@@ -376,6 +379,12 @@ class DatabaseService
                 if (array_key_exists($table, $foreignTables)) {
                     $foreignTableRow = $data['foreignTableRows'][$table];
                     $value = $foreignTableRow['uid'] ?? '';
+                    if (
+                        isset($foreignTableRow['l10n_parent']) &&
+                        $foreignTableRow['l10n_parent'] > 0
+                    ) {
+                        $value = $foreignTableRow['l10n_parent'];
+                    }
                     $label = $value
                         ? $this->getRecordTitle($table, $foreignTableRow)
                         : '';
@@ -450,6 +459,16 @@ class DatabaseService
         return $queryBuilder;
     }
 
+    private function tableHasField(string $tableName, string $fieldName): bool
+    {
+        $tca = $GLOBALS['TCA'][$tableName] ?? null;
+        if (!$tca) {
+            return false;
+        }
+        $columns = $tca['columns'] ?? [];
+        return isset($columns[$fieldName]);
+    }
+
     /**
      * @param mixed[] $row
      */
@@ -457,8 +476,8 @@ class DatabaseService
     {
         $labelField = $GLOBALS['TCA'][$tableName]['ctrl']['label'] ?? null;
         return isset($row[$labelField]) && is_scalar($row[$labelField])
-        ? (string)$row[$labelField]
-        : '[No title]';
+            ? (string) $row[$labelField]
+            : '[No title]';
     }
 
     private function getBackendUser(): ?BackendUserAuthentication
