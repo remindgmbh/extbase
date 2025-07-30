@@ -137,7 +137,7 @@ class ItemsProc
     {
         $currentValues = json_decode($params['row'][$params['field']], true) ?? [];
         $items = $this->databaseService?->getAvailableFieldValues(
-            $this->getSysLanguageUid($params),
+            0,
             $this->getTableName($params),
             $this->getFieldNames($params, PredefinedFilterSheets::FIELDS),
             $this->getPages($params),
@@ -177,7 +177,7 @@ class ItemsProc
         );
 
         $items = $this->databaseService?->getAvailableFieldValues(
-            $this->getSysLanguageUid($params),
+            0,
             $tableName,
             $this->getFieldNames($params, FrontendFilterSheets::FIELDS),
             $this->getPages($params),
