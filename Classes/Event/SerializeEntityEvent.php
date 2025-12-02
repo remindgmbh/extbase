@@ -25,6 +25,8 @@ final class SerializeEntityEvent extends AbstractExtbaseEvent
 
     private UriBuilder $uriBuilder;
 
+    private array $settings;
+
     /**
      * @param mixed[] $settings
      */
@@ -43,6 +45,7 @@ final class SerializeEntityEvent extends AbstractExtbaseEvent
         $this->request = $request;
         $this->abstractEntity = $abstractEntity;
         $this->uriBuilder = $uriBuilder;
+        $this->settings = $settings;
 
         $this->json = [ // phpcs:ignore SlevomatCodingStandard.Arrays.AlphabeticallySortedByKeys.IncorrectKeyOrder
             'uid' => $abstractEntity->getPid(),
@@ -77,6 +80,11 @@ final class SerializeEntityEvent extends AbstractExtbaseEvent
     public function getUriBuilder(): UriBuilder
     {
         return $this->uriBuilder;
+    }
+
+    public function getSettings(): array
+    {
+        return $this->settings;
     }
 
     /**

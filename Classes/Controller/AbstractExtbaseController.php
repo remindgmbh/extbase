@@ -454,6 +454,7 @@ abstract class AbstractExtbaseController extends ActionController
                     $queryDatabaseFilters,
                     $value
                 );
+
                 $filterValue->setActive($active);
 
                 $link = $this->getFrontendFilterValueLink(
@@ -509,7 +510,7 @@ abstract class AbstractExtbaseController extends ActionController
             $databaseFilterValues = $databaseFilter->getValues();
             return count(
                 array_filter($databaseFilterValues, function (array $databaseFilterValue) use ($value) {
-                    return $databaseFilterValue === $value;
+                    return $databaseFilterValue == $value;
                 })
             ) > 0;
         }
