@@ -65,6 +65,7 @@ abstract class AbstractExtbaseController extends ActionController
 
     private ?JsonService $jsonService = null;
 
+    // @phpstan-ignore missingType.generics
     public function __construct(
         private readonly FilterableRepository $repository,
     ) {
@@ -264,7 +265,8 @@ abstract class AbstractExtbaseController extends ActionController
     ): array {
         $pagination = $listResult->getPagination();
         $serializedPagination = $pagination
-            ? $this->jsonService?->serializePagination($this->uriBuilder, $pagination, 'page', $page)
+            // @phpstan-ignore-next-line argument.type
+            ? $this->jsonService?->serializePagination($this->uriBuilder, $pagination, 'page', (int) $page)
             : null;
 
         $items = iterator_to_array($listResult->getPaginatedItems() ?? []);
@@ -397,7 +399,7 @@ abstract class AbstractExtbaseController extends ActionController
                 $this->cObj->data['pages'],
                 $this->cObj->data['recursive'],
                 $predefinedDatabaseFilters,
-            ) : [];
+            ) ?? [] : [];
 
             $dynamicValues = (bool) ($filterSetting[FrontendFilterSheets::DYNAMIC_VALUES] ?? false);
 
@@ -406,7 +408,7 @@ abstract class AbstractExtbaseController extends ActionController
                 foreach ($excludedValues as $excludedValue) {
                     foreach ($filterValues as $key => $dynamicFilterValue) {
                         if ($dynamicFilterValue['value'] === $excludedValue) {
-                            unset($dynamicFilterValues[$key]);
+                            unset($filterValues[$key]);
                             break;
                         }
                     }
@@ -517,7 +519,7 @@ abstract class AbstractExtbaseController extends ActionController
             $databaseFilterValues = $databaseFilter->getValues();
             return count(
                 array_filter($databaseFilterValues, function (array $databaseFilterValue) use ($value) {
-                    return $databaseFilterValue == $value;
+                    return $databaseFilterValue === $value;
                 })
             ) > 0;
         }

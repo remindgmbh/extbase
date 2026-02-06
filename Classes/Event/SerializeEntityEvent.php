@@ -25,6 +25,9 @@ final class SerializeEntityEvent extends AbstractExtbaseEvent
 
     private UriBuilder $uriBuilder;
 
+    /**
+     * @var mixed[] $settings
+     */
     private array $settings;
 
     /**
@@ -37,8 +40,8 @@ final class SerializeEntityEvent extends AbstractExtbaseEvent
         AbstractEntity $abstractEntity,
         UriBuilder $uriBuilder,
         array $settings,
-        string $detailActionName = null,
-        string $detailUidArgument = null
+        ?string $detailActionName = null,
+        ?string $detailUidArgument = null
     ) {
         parent::__construct($extensionName);
         $this->type = $type;
@@ -82,6 +85,9 @@ final class SerializeEntityEvent extends AbstractExtbaseEvent
         return $this->uriBuilder;
     }
 
+    /**
+     * @return mixed[]
+     */
     public function getSettings(): array
     {
         return $this->settings;
