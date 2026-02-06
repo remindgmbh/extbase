@@ -65,6 +65,7 @@ abstract class AbstractExtbaseController extends ActionController
 
     private ?JsonService $jsonService = null;
 
+    // @phpstan-ignore missingType.generics
     public function __construct(
         private readonly FilterableRepository $repository,
     ) {
@@ -264,7 +265,8 @@ abstract class AbstractExtbaseController extends ActionController
     ): array {
         $pagination = $listResult->getPagination();
         $serializedPagination = $pagination
-            ? $this->jsonService?->serializePagination($this->uriBuilder, $pagination, 'page', $page)
+            // @phpstan-ignore-next-line argument.type
+            ? $this->jsonService?->serializePagination($this->uriBuilder, $pagination, 'page', (int) $page)
             : null;
 
         $items = iterator_to_array($listResult->getPaginatedItems() ?? []);
@@ -389,34 +391,42 @@ abstract class AbstractExtbaseController extends ActionController
                 continue;
             }
 
-            $filterValues = [];
+            $fieldNames = GeneralUtility::trimExplode(',', $filterName, true);
+            $filterValues = $this->cObj ? $this->databaseService?->getAvailableFieldValues(
+                $this->cObj->data['sys_language_uid'],
+                $this->tableName,
+                $fieldNames,
+                $this->cObj->data['pages'],
+                $this->cObj->data['recursive'],
+                $predefinedDatabaseFilters,
+            ) ?? [] : [];
 
             $dynamicValues = (bool) ($filterSetting[FrontendFilterSheets::DYNAMIC_VALUES] ?? false);
 
             if ($dynamicValues) {
-                $fieldNames = GeneralUtility::trimExplode(',', $filterName, true);
-                $dynamicFilterValues = $this->cObj ? $this->databaseService?->getAvailableFieldValues(
-                    $this->cObj->data['sys_language_uid'],
-                    $this->tableName,
-                    $fieldNames,
-                    $this->cObj->data['pages'],
-                    $this->cObj->data['recursive'],
-                    $predefinedDatabaseFilters,
-                ) ?? [] : [];
-
                 $excludedValues = json_decode($filterSetting[FrontendFilterSheets::EXCLUDED_VALUES], true) ?? [];
                 foreach ($excludedValues as $excludedValue) {
-                    foreach ($dynamicFilterValues as $key => $dynamicFilterValue) {
+                    foreach ($filterValues as $key => $dynamicFilterValue) {
                         if ($dynamicFilterValue['value'] === $excludedValue) {
-                            unset($dynamicFilterValues[$key]);
+                            unset($filterValues[$key]);
                             break;
                         }
                     }
                 }
 
-                $filterValues = array_values($dynamicFilterValues);
+                $filterValues = array_values($filterValues);
             } else {
-                $filterValues = json_decode($filterSetting[FrontendFilterSheets::VALUES] ?? '', true);
+                $selectedValues = json_decode($filterSetting[FrontendFilterSheets::VALUES] ?? '', true) ?? [];
+                $filtered = [];
+                foreach ($selectedValues as $selectedValue) {
+                    foreach ($filterValues as $filterValue) {
+                        if ($filterValue['value'] === $selectedValue) {
+                            $filtered[] = $filterValue;
+                            break;
+                        }
+                    }
+                }
+                $filterValues = $filtered;
             }
 
             if (empty($filterValues)) {
@@ -510,7 +520,7 @@ abstract class AbstractExtbaseController extends ActionController
             $databaseFilterValues = $databaseFilter->getValues();
             return count(
                 array_filter($databaseFilterValues, function (array $databaseFilterValue) use ($value) {
-                    return $databaseFilterValue == $value;
+                    return $databaseFilterValue === $value;
                 })
             ) > 0;
         }
