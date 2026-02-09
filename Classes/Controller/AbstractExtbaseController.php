@@ -138,7 +138,11 @@ abstract class AbstractExtbaseController extends ActionController
         $filterableListResult->setResetFilters($resetFilters);
         /** @var ModifyFilterableListResultEvent $event */
         $event = $this->eventDispatcher->dispatch(
-            new ModifyFilterableListResultEvent($this->extensionName, $filterableListResult)
+            new ModifyFilterableListResultEvent(
+                $this->extensionName,
+                $filterableListResult,
+                $this->uriBuilder,
+            )
         );
         $filterableListResult = $event->getFilterableListResult();
         $this->addCacheTag($this->tableName);
