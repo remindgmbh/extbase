@@ -5,9 +5,9 @@ declare(strict_types=1);
 namespace Remind\Extbase\Service;
 
 use Remind\Headless\Service\FilesService;
-use TYPO3\CMS\Core\Resource\FileType;
 use TYPO3\CMS\Extbase\Domain\Model\FileReference;
 use TYPO3\CMS\Extbase\DomainObject\AbstractEntity;
+use TYPO3\CMS\Extbase\Persistence\ObjectStorage;
 
 class SerializationService
 {
@@ -30,9 +30,15 @@ class SerializationService
             }
             $value = $entity->{$getter}();
             if ($value instanceof FileReference) {
-                $value = FileType::from($value->getOriginalResource()->getOriginalFile()->getType())->name === FileType::IMAGE->name
-                    ? $this->filesService->processImage($value->getOriginalResource())
-                    : $value;
+                $value = $this->filesService->processImage($value->getOriginalResource());
+            }
+            if ($value instanceof ObjectStorage) {
+                $value = array_map(function ($item) {
+                    if ($item instanceof FileReference) {
+                        return $this->filesService->processImage($item->getOriginalResource());
+                    }
+                    return $item;
+                }, $value->toArray());
             }
             $serialized[$property] = $value;
         }
