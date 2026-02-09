@@ -38,6 +38,8 @@ class FilterableRepository extends Repository
                 $fieldConstraints = [];
                 foreach ($fields as $field) {
                     $fieldValue = $value[$field];
+                    // Field name needs to be converted from underscored to lowerCamelCase for queries to work
+                    $field = GeneralUtility::underscoredToLowerCamelCase($field);
                     if ($filter->isMm()) {
                         // $field contains the number of relations, so if $fieldValue is "" it should be 0
                         $fieldConstraints[] = !$fieldValue
