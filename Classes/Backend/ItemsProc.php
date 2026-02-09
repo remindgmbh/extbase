@@ -176,7 +176,7 @@ class ItemsProc
             $tableName,
         );
 
-        $items = $this->databaseService?->getAvailableFieldValues(
+        $items = $this->databaseService->getAvailableFieldValues(
             0,
             $tableName,
             $this->getFieldNames($params, FrontendFilterSheets::FIELDS),
