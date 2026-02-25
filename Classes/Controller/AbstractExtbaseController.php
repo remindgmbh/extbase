@@ -396,7 +396,7 @@ abstract class AbstractExtbaseController extends ActionController
             }
 
             $fieldNames = GeneralUtility::trimExplode(',', $filterName, true);
-            $filterValues = $this->cObj ? $this->databaseService->getAvailableFieldValues(
+            $filterValues = $this->cObj ? $this->databaseService?->getAvailableFieldValues(
                 $this->cObj->data['sys_language_uid'],
                 $this->tableName,
                 $fieldNames,

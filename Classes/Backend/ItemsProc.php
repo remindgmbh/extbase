@@ -136,7 +136,7 @@ class ItemsProc
     public function getPredefinedFilterValues(array &$params): void
     {
         $currentValues = json_decode($params['row'][$params['field']], true) ?? [];
-        $items = $this->databaseService?->getAvailableFieldValues(
+        $items = $this->databaseService->getAvailableFieldValues(
             0,
             $this->getTableName($params),
             $this->getFieldNames($params, PredefinedFilterSheets::FIELDS),
