@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "cc59d5c242c746bb7ba9440c79ec9dbf",
+    "content-hash": "066509b805f8e1ec3518a8ee5109a9a0",
     "packages": [
         {
             "name": "bacon/bacon-qr-code",
@@ -2057,16 +2057,16 @@
         },
         {
             "name": "remind/routing",
-            "version": "v13.x-dev",
+            "version": "v2.0.0",
             "source": {
                 "type": "git",
                 "url": "https://github.com/remindgmbh/routing.git",
-                "reference": "2733b56fe3e22ad965c64ce4d949928a5b4c69ff"
+                "reference": "933aa966ca85b25071cf44c69d4e3007c172f30b"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/remindgmbh/routing/zipball/2733b56fe3e22ad965c64ce4d949928a5b4c69ff",
-                "reference": "2733b56fe3e22ad965c64ce4d949928a5b4c69ff",
+                "url": "https://api.github.com/repos/remindgmbh/routing/zipball/933aa966ca85b25071cf44c69d4e3007c172f30b",
+                "reference": "933aa966ca85b25071cf44c69d4e3007c172f30b",
                 "shasum": ""
             },
             "require": {
@@ -2115,9 +2115,9 @@
             "description": "REMIND - Routing",
             "support": {
                 "issues": "https://github.com/remindgmbh/routing/issues",
-                "source": "https://github.com/remindgmbh/routing/tree/v13"
+                "source": "https://github.com/remindgmbh/routing/tree/v2.0.0"
             },
-            "time": "2025-03-06T12:46:44+00:00"
+            "time": "2025-03-13T08:23:18+00:00"
         },
         {
             "name": "symfony/cache",
@@ -6094,16 +6094,16 @@
         },
         {
             "name": "remind/headless",
-            "version": "v13.x-dev",
+            "version": "v5.0.0",
             "source": {
                 "type": "git",
                 "url": "https://github.com/remindgmbh/headless.git",
-                "reference": "42890106affc8f40249321f6f89afbb8a3d2c050"
+                "reference": "f8164065aedb558fa2e7a8699c62d6540cda5a1c"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/remindgmbh/headless/zipball/42890106affc8f40249321f6f89afbb8a3d2c050",
-                "reference": "42890106affc8f40249321f6f89afbb8a3d2c050",
+                "url": "https://api.github.com/repos/remindgmbh/headless/zipball/f8164065aedb558fa2e7a8699c62d6540cda5a1c",
+                "reference": "f8164065aedb558fa2e7a8699c62d6540cda5a1c",
                 "shasum": ""
             },
             "require": {
@@ -6149,9 +6149,9 @@
             "description": "REMIND - Headless",
             "support": {
                 "issues": "https://github.com/remindgmbh/headless/issues",
-                "source": "https://github.com/remindgmbh/headless/tree/v13"
+                "source": "https://github.com/remindgmbh/headless/tree/v5.0.0"
             },
-            "time": "2025-03-06T13:25:40+00:00"
+            "time": "2026-02-24T14:15:25+00:00"
         },
         {
             "name": "saschaegerer/phpstan-typo3",
@@ -6566,14 +6566,14 @@
     "aliases": [],
     "minimum-stability": "dev",
     "stability-flags": {
-        "remind/headless": 20,
-        "remind/routing": 20
+        "remind/routing": 20,
+        "remind/headless": 20
     },
     "prefer-stable": true,
     "prefer-lowest": false,
     "platform": {
         "php": "^8.2"
     },
-    "platform-dev": {},
+    "platform-dev": [],
     "plugin-api-version": "2.6.0"
 }

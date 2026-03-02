@@ -269,7 +269,6 @@ abstract class AbstractExtbaseController extends ActionController
     ): array {
         $pagination = $listResult->getPagination();
         $serializedPagination = $pagination
-            // @phpstan-ignore-next-line argument.type
             ? $this->jsonService?->serializePagination($this->uriBuilder, $pagination, 'page', (int) $page)
             : null;
 
