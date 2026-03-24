@@ -206,7 +206,7 @@ abstract class AbstractExtbaseController extends ActionController
 
         /** @var EnrichDetailResultEvent $enrichDetailResultEvent */
         $enrichDetailResultEvent = $this->eventDispatcher->dispatch(
-            new EnrichDetailResultEvent($this->extensionName, $result)
+            new EnrichDetailResultEvent($this->extensionName, $result, $this->settings)
         );
 
         $result = $enrichDetailResultEvent->getDetailResult();
